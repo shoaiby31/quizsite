@@ -10,12 +10,14 @@ const AddQuestions = ({ id, title }) => {
   const [options, setOptions] = useState(['', '', '', '']);
   const [correctOptionIndex, setCorrectOptionIndex] = useState('');
   const [loading, setLoading] = useState(false);
+  const [csvUploadWait, setCsvUploadWait] = useState(false);
+
   const [message, setMessage] = useState({ type: '', text: '' });
   // const [questions, setQuestions] = useState([]);
   const [csvFile, setCsvFile] = useState(null);
 
 
- 
+
 
   const handleOptionChange = (index, value) => {
     const updatedOptions = [...options];
@@ -75,6 +77,7 @@ const AddQuestions = ({ id, title }) => {
       setMessage({ type: 'error', text: 'Please select a CSV file to upload.' });
       return;
     }
+    setCsvUploadWait(true);
     Papa.parse(csvFile, {
       header: true,
       skipEmptyLines: true,
@@ -98,14 +101,17 @@ const AddQuestions = ({ id, title }) => {
             await addDoc(collection(db, 'quizzes', id, 'questions'), question);
           }
           setMessage({ type: 'success', text: 'CSV questions uploaded successfully!' });
+          setCsvUploadWait(false);
         } catch (error) {
           console.error('Error uploading CSV questions:', error);
           setMessage({ type: 'error', text: 'Failed to upload CSV questions. Please try again.' });
+          setCsvUploadWait(false);
         }
       },
       error: (error) => {
         console.error('Error parsing CSV file:', error);
         setMessage({ type: 'error', text: 'Failed to parse CSV file. Please check the file format.' });
+        setCsvUploadWait(false);
       },
     });
   };
@@ -116,19 +122,22 @@ const AddQuestions = ({ id, title }) => {
       </Box>
     );
   }
+  if (csvUploadWait) {
+    return (
+      <Box display="flex" flexDirection="column" alignItems="center" mt={4}>
+        <Typography variant='h6' mb={2}>Hold on! Uploading data—this might take some time.</Typography>
+        <CircularProgress size={40} />
+      </Box>
+    );
+  }
 
   return (
     <Box my={3}>
       <ViewQuestions quizId={id} qtitle={title} />
+      <Typography variant='h6' mb={2}>Add Questions</Typography>
 
       <Paper elevation={3} sx={{ padding: 4 }}>
-        
-  
-
-
-
         <Box mt={2}>
-          <Typography variant="h5" gutterBottom>Add Questions</Typography>
           <Tabs value={tabIndex} onChange={(e, newValue) => setTabIndex(newValue)} sx={{ marginBottom: 2 }}>
             <Tab label="Manual Entry" />
             <Tab label="Upload CSV" />
@@ -138,14 +147,7 @@ const AddQuestions = ({ id, title }) => {
 
         {tabIndex === 0 && (
           <Box component="form" onSubmit={handleManualSubmit} noValidate>
-            <TextField
-              label="Question"
-              fullWidth
-              margin="normal"
-              value={questionText}
-              onChange={(e) => setQuestionText(e.target.value)}
-              required
-            />
+            <TextField label="Question" size='small' fullWidth margin="normal" value={questionText} onChange={(e) => setQuestionText(e.target.value)} required/>
             <FormControl component="fieldset" margin="normal">
               <FormLabel component="legend">Options</FormLabel>
               <RadioGroup

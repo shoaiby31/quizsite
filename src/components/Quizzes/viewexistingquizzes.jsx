@@ -61,7 +61,7 @@ const ViewExistingQuizzes = () => {
 
   return (
     <Box sx={{ mt: 4 }}>
-      <Typography variant="h5" gutterBottom>Your Existing Quizzes</Typography>
+      <Typography variant='h6' mb={2}>Your Existing Quizzes</Typography>
       <TableContainer component={Paper}>
         <Table aria-label="quizzes table">
           <TableHead>

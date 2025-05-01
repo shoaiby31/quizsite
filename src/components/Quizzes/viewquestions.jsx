@@ -113,19 +113,19 @@ const ViewQuestions = ({ quizId, qtitle }) => {
 
 
   return (
-    <Paper sx={{ width: '100%', mb: 2, p: 2 }} elevation={questions.length===0? 0 : 3}>
+    <Box sx={{ mt: 4 }} elevation={questions.length===0? 0 : 3}>
         {questions.length === 0 ?
-          (<Typography variant="h6" align="center">You haven't uploaded any question in {qtitle} Quiz.</Typography>)
+          (<Typography variant="h6" align="center" gutterBottom>You haven't uploaded any question in {qtitle} Quiz.</Typography>)
           : 
       <Box>
-        <Typography variant="h6" gutterBottom>Exisitng Questions in {qtitle} Quiz</Typography>
+        <Typography variant='h6' mb={2}>Exisitng Questions in {qtitle} Quiz</Typography>
 
       {selected.length > 0 && (
         <Box sx={{ mb: 2 }}>
           <Button variant="contained" color="secondary" onClick={deleteSelectedQuestions}>Delete Selected</Button>
         </Box>
       )}
-      <TableContainer>
+      <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
@@ -173,7 +173,7 @@ const ViewQuestions = ({ quizId, qtitle }) => {
       </TableContainer>
       <TablePagination rowsPerPageOptions={[5, 10, 25]} component="div" count={questions.length} rowsPerPage={rowsPerPage} page={page} onPageChange={handleChangePage} onRowsPerPageChange={handleChangeRowsPerPage}/>
       </Box>}
-    </Paper>
+    </Box>
   );
 };
 

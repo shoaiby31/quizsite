@@ -1,22 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Grid,
-  CircularProgress,
-  Alert,
-  TextField,
-  InputAdornment,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Pagination,
-  CardActions,
-  Button
-} from '@mui/material';
+import { Box, Card, CardContent, Typography, Grid, CircularProgress, Alert, TextField, InputAdornment, MenuItem, Select, FormControl, InputLabel, Pagination, CardActions, Button} from '@mui/material';
 import { Search } from '@mui/icons-material';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../config/firebase';
@@ -80,39 +63,21 @@ const PublicQuizzes = () => {
   if (error) return <Alert severity="error" sx={{ mt: 5 }}>{error}</Alert>;
 
   return (
-    <Box sx={{ px: { xs: 2, md: 10 }, py: 5 }}>
-      <Typography variant="h4" fontWeight="bold" gutterBottom>
-        Public Quizzes
-      </Typography>
-
+    <Box sx={{ px: { xs: 2, md: 5 }, }}>
       {/* Search and Sort */}
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 4 }}>
-        <TextField
-          placeholder="Search by title..."
-          fullWidth
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search />
-              </InputAdornment>
-            )
-          }}
-        />
-
+      <Box sx={{ display: 'flex', justifyContent:'right', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 4 }}>
+        <TextField placeholder="Search by title..." sx={{width:'30%'}} value={search} size='small' onChange={(e) => setSearch(e.target.value)}
+          InputProps={{ startAdornment: (<InputAdornment position="start"><Search /></InputAdornment>)}}/>
         <FormControl sx={{ minWidth: 150 }}>
           <InputLabel>Sort By</InputLabel>
-          <Select
-            value={sortBy}
-            label="Sort By"
-            onChange={(e) => setSortBy(e.target.value)}
-          >
+          <Select size='small' value={sortBy} label="Sort By" onChange={(e) => setSortBy(e.target.value)}>
             <MenuItem value="recent">Recently Added</MenuItem>
             <MenuItem value="title">Title (A–Z)</MenuItem>
           </Select>
         </FormControl>
       </Box>
+      <Typography variant="h4" fontWeight="bold" gutterBottom>Public Quizzes</Typography>
+      
 
       {/* Quiz Grid */}
       <Grid container spacing={3}>
@@ -120,8 +85,8 @@ const PublicQuizzes = () => {
           <Typography variant="body1">No matching quizzes found.</Typography>
         ) : (
           paginatedQuizzes.map(quiz => (
-            <Grid size={{xs:12, sm: 6, md:4}} key={quiz.id}>
-              <Card elevation={3} sx={{ borderRadius:4 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={quiz.id}>
+              <Card elevation={3} sx={{ borderRadius: 4 }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
                     {quiz.title}
@@ -130,11 +95,13 @@ const PublicQuizzes = () => {
                     {quiz.description || 'No description provided.'}
                   </Typography>
                 </CardContent>
-                <CardActions sx={{ paddingX: 5, display:'flex', justifyContent:'right', paddingTop: 2 }}>
-                            <Button variant='outlined'  sx={{ borderRadius: 20, 
-                            textTransform: 'none'}} size="small">Attempt Quiz</Button>
-                           
-                        </CardActions>
+                <CardActions sx={{ paddingX: 5, display: 'flex', justifyContent: 'right', paddingTop: 2 }}>
+                  <Button variant='outlined' sx={{
+                    borderRadius: 20,
+                    textTransform: 'none'
+                  }} size="small">Attempt Quiz</Button>
+
+                </CardActions>
               </Card>
             </Grid>
           ))
