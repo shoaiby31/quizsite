@@ -13,6 +13,7 @@ import CreactquizPage from './pages/CreactquizPage';
 import PrivateRoute from './components/PrivateRoute/PrivateRoute'
 import Footer from './components/footer';
 import BrowseQuizzes from './pages/QuizzesPages';
+import AttemptQuizPage from './pages/AttemptQuizPage';
 
 
 function App() {
@@ -45,6 +46,9 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/createquiz" element={<PrivateRoute><CreactquizPage /></PrivateRoute>}/>
             <Route path="/browsequiz" element={<BrowseQuizzes />} /> 
+            <Route path="/attemptQuiz/:quizId" element={<AttemptQuizPage />} /> 
+
+            
           </Routes>
           <Footer/>
         </Router>

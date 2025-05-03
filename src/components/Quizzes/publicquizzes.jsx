@@ -3,6 +3,7 @@ import { Box, Card, CardContent, Typography, Grid, CircularProgress, Alert, Text
 import { Search } from '@mui/icons-material';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../config/firebase';
+import { Link } from 'react-router-dom';
 
 
 
@@ -63,10 +64,10 @@ const PublicQuizzes = () => {
   if (error) return <Alert severity="error" sx={{ mt: 5 }}>{error}</Alert>;
 
   return (
-    <Box sx={{ px: { xs: 2, md: 5 }, }}>
+    <Box sx={{ px: { xs: 2, md: 5 } }}>
       {/* Search and Sort */}
       <Box sx={{ display: 'flex', justifyContent:'right', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 4 }}>
-        <TextField placeholder="Search by title..." sx={{width:'30%'}} value={search} size='small' onChange={(e) => setSearch(e.target.value)}
+        <TextField placeholder="Search by title..." sx={{ minWidth: 150}} value={search} size='small' onChange={(e) => setSearch(e.target.value)}
           InputProps={{ startAdornment: (<InputAdornment position="start"><Search /></InputAdornment>)}}/>
         <FormControl sx={{ minWidth: 150 }}>
           <InputLabel>Sort By</InputLabel>
@@ -76,7 +77,7 @@ const PublicQuizzes = () => {
           </Select>
         </FormControl>
       </Box>
-      <Typography variant="h4" fontWeight="bold" gutterBottom>Public Quizzes</Typography>
+      <Typography variant="h5" fontWeight="bold" gutterBottom>Available Quizzes</Typography>
       
 
       {/* Quiz Grid */}
@@ -96,10 +97,7 @@ const PublicQuizzes = () => {
                   </Typography>
                 </CardContent>
                 <CardActions sx={{ paddingX: 5, display: 'flex', justifyContent: 'right', paddingTop: 2 }}>
-                  <Button variant='outlined' sx={{
-                    borderRadius: 20,
-                    textTransform: 'none'
-                  }} size="small">Attempt Quiz</Button>
+                  <Button component={Link} to={`/attemptQuiz/${quiz.id}`} variant='outlined' sx={{borderRadius: 20,textTransform: 'none'}} size="small">Attempt Quiz</Button>
 
                 </CardActions>
               </Card>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography, useTheme } from '@mui/material';
-import pic from '../../assets/quizheader.avif'
+import pic from '../../assets/headerpic2.jpg'
 const QuizHeader = () => {
   const theme = useTheme();
 
@@ -11,18 +11,15 @@ const QuizHeader = () => {
         <Typography variant="h4" fontWeight="bold" sx={{color: 'text.secondary'}} gutterBottom>Explore a World of Knowledge Through Public Quizzes</Typography>
         <Typography variant='body1' color="text.secondary">
         Dive into an ever-growing collection of quizzes shared by users like you. Whether you're brushing up
-          on skills, preparing for exams, or just having fun, there's something here for everyone. Use the search
-          and filters to quickly find quizzes that match your interest.
+          on skills, preparing for exams, or just having fun, there's something here for everyone.
         </Typography>
         
       </Box>
 
       <Box
-        component="img"
-        src={pic} // Replace with your own
-        alt="Browse quizzes illustration"
+        component="img" src={pic} alt="Browse quizzes illustration"
         sx={{
-          width: { xs: '100%', md: '35%' },
+          width: { xs: '100%', md: '30%' },
           maxHeight: 300,
           objectFit: 'contain',
         }}

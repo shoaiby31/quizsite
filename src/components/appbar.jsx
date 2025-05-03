@@ -118,7 +118,7 @@ export default function Appbar(props) {
 
 
   return (
-    <Box sx={{ flexGrow: 1, mb:5 }}>
+    <Box sx={{ flexGrow: 1, pb:10 }}>
       <AppBar position='fixed' color='inherit' elevation={0}>
         <Toolbar sx={{ justifyContent: 'space-between', position: 'relative' }}>
           <IconButton sx={{ display: { xs: 'flex', md: 'none' } }} onClick={handleDrawerToggle} edge="start" color="inherit" aria-label="menu">

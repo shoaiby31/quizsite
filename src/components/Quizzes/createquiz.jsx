@@ -37,7 +37,7 @@ export default function Createquiz() {
 
     const Createquiz = async (e) => {
         e.preventDefault();
-        if (tags.length > 1) {
+        if (tags.length > 0) {
             setError('');
             setLoading(true);
             try {
@@ -60,7 +60,7 @@ export default function Createquiz() {
             }
 
         } else {
-            setError('Please add atleast two tags*')
+            setError('Please add atleast one tag*')
         }
 
     };
@@ -120,7 +120,7 @@ export default function Createquiz() {
                 </Grid>
             </Grid>
             <Divider />
-            <ViewExistingQuizzes />
+            <ViewExistingQuizzes userId={uid} />
         </Box>
     )
 }
