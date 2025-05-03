@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Card, CardContent, Typography, RadioGroup, FormControlLabel, Radio, Button, LinearProgress, Box, Snackbar, Alert } from "@mui/material";
+import { Card, CardContent, Typography, RadioGroup, FormControlLabel, Radio, Button, Box, Snackbar, Alert } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { doc, getDoc, setDoc, collection, getDocs, serverTimestamp, query, where, getDocs as getDocsFromQuery } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { getAuth } from "firebase/auth";
 import { v4 as uuidv4 } from "uuid";
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
-
+import SentimentDissatisfiedIcon from '@mui/icons-material/SentimentDissatisfied';
+import { motion } from 'framer-motion';
+import Resultcard from "./resultcard";
 // Define colors for correct and incorrect
-const COLORS = ["#00C49F", "#FF6B6B"];
 
 const AttemptQuiz = () => {
     const { quizId } = useParams();
@@ -36,7 +36,6 @@ const AttemptQuiz = () => {
             } else {
                 setUser(null);
             }
-            setIsLoading(false); // Set loading to false once user data is available
         });
 
         return () => unsubscribe(); // Cleanup on unmount
@@ -44,7 +43,7 @@ const AttemptQuiz = () => {
 
     // Fetch quiz, user attempt, and start time
     useEffect(() => {
-        if (isLoading || !user || !quizId) return; // Don't fetch until the user is ready and authenticated
+        if (!user || !quizId) return; // Don't fetch until the user is ready and authenticated
 
         const fetchData = async () => {
             const quizRef = doc(db, "quizzes", quizId);
@@ -53,34 +52,45 @@ const AttemptQuiz = () => {
                 setError("Quiz not found.");
                 return;
             }
-
+        
             const quizData = quizSnap.data();
             const limitInSeconds = (quizData.timeLimit || 5) * 60;
-            //   setTimeLimit(limitInSeconds);
-
+        
+            // Fetch questions first
+            const questionsRef = collection(quizRef, "questions");
+            const questionsSnap = await getDocs(questionsRef);
+            const fetchedQuestions = questionsSnap.docs.map(doc => doc.data());
+            setQuestions(fetchedQuestions);
+        
+            if (fetchedQuestions.length === 0) {
+                setIsLoading(false)
+                return; // Don't create an attempt if no questions
+            }
+        
             // Check if user already has an attempt
             const attemptsRef = collection(db, "attempts");
             const q = query(attemptsRef, where("userId", "==", user.uid), where("quizId", "==", quizId));
             const qSnap = await getDocsFromQuery(q);
-
+        
             let startTime;
             if (!qSnap.empty) {
                 const attemptDoc = qSnap.docs[0];
                 const data = attemptDoc.data();
                 setAttemptId(attemptDoc.id);
-
+        
                 if (data.submitted) {
                     setSubmitted(true);
-                    setScore(data.score)
-                    setTotalScore(data.totalScore)
+                    setScore(data.score);
+                    setTotalScore(data.totalScore);
                     setError("You have already submitted this quiz.");
+                    setIsLoading(false)
                     return;
                 }
-
+        
                 startTime = data.startTime.toDate();
             } else {
                 const newAttemptId = uuidv4();
-                const newAttemptRef = doc(db, "attempts", newAttemptId); // Correct collection name
+                const newAttemptRef = doc(db, "attempts", newAttemptId);
                 await setDoc(newAttemptRef, {
                     userId: user.uid,
                     quizId: quizId,
@@ -89,20 +99,16 @@ const AttemptQuiz = () => {
                     score: 0
                 });
                 setAttemptId(newAttemptId);
-
-                // Wait to get accurate server timestamp
+        
                 const newSnap = await getDoc(newAttemptRef);
                 startTime = newSnap.data().startTime.toDate();
             }
-
+        
             const elapsed = Math.floor((Date.now() - startTime.getTime()) / 1000);
             const remaining = Math.max(limitInSeconds - elapsed, 0);
             setRemainingTime(remaining);
+            setIsLoading(false)
 
-            const questionsRef = collection(quizRef, "questions");
-            const questionsSnap = await getDocs(questionsRef);
-            const data = questionsSnap.docs.map(doc => doc.data());
-            setQuestions(data);
         };
 
         fetchData();
@@ -173,8 +179,50 @@ const AttemptQuiz = () => {
         return `${m}:${s}`;
     };
 
-    if ((isLoading || !questions.length || remainingTime === null) && !submitted) {
-        return <LinearProgress sx={{ mt: 4 }} />;
+    if (isLoading) {
+        return (
+          <Box
+            component={motion.div}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            mt={8}
+          >
+            {/* Bouncing emoji */}
+            <motion.div
+              animate={{ y: [0, -20, 0] }}
+              transition={{ repeat: Infinity, duration: 1.2 }}
+              style={{ fontSize: 48 }}
+            >
+              🧠
+            </motion.div>
+      
+            <Typography variant="h6" fontWeight="bold" mt={2}>
+              Loading your quiz...
+            </Typography>
+      
+            <Typography variant="body2" color="text.secondary" mt={1}>
+              Please wait while we think of some tricky questions 🤔
+            </Typography>
+          </Box>
+        );
+      }
+    if (!questions.length) {
+        return (
+            <Box component={motion.div} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} textAlign="center" mt={8}>
+                <SentimentDissatisfiedIcon color="disabled" sx={{ fontSize: 60 }} />
+                <Typography variant="h4" fontWeight="bold" mt={2}>
+                    Oops! No Questions Found 😕
+                </Typography>
+                <Typography variant="subtitle1" color="text.secondary" mt={1}>
+                    This quiz doesn't have any questions yet. Please check back later!
+                </Typography>
+            </Box>
+        )
     }
 
     if (submitted) {
@@ -182,33 +230,7 @@ const AttemptQuiz = () => {
             { name: "Correct", value: score },
             { name: "Incorrect", value: questions.length === 0 ? totalScore : questions.length - score },
         ];
-
-        return (
-            <Box px={{xs:2, md:5}}>
-                <Card sx={{ borderRadius: 4 }} elevation={0}>
-                    <CardContent>
-                        <Typography variant="h5" textAlign="center" gutterBottom>🎉 Quiz Completed!</Typography>
-
-                        <Box sx={{ height: 300, mt: 4 }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} fill="#8884d8" paddingAngle={5} dataKey="value" label={({ name, percent }) =>
-                                        `${name} ${(percent * 100).toFixed(0)}%`} isAnimationActive={true}>
-                                        {pieData.map((entry, index) => (<Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />))}
-                                    </Pie>
-                                    <Tooltip />
-                                    <Legend verticalAlign="bottom" iconSize={12} />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </Box>
-
-                        <Typography variant="h6" textAlign="center" mt={3} color="info">
-                            Your Score: {score} out of {questions.length === 0 ? totalScore : questions.length}
-                        </Typography>
-                    </CardContent>
-                </Card>
-            </Box>
-        );
+        return (<Resultcard data={pieData} score={score} length={questions.length} totalScore={totalScore}  />);
     }
 
     const currentQuestion = questions[currentIdx];

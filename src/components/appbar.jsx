@@ -79,7 +79,27 @@ export default function Appbar(props) {
             </ListItemButton>
           </ListItem>
         ))}
-
+        <Divider />
+        {!user ? (
+          <Box>
+            <ListItem disablePadding>
+              <ListItemButton to={'/signup?mode=signup'} onClick={handleDrawerToggle}>
+                <ListItemText primary='Sign up' />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton to={'/signup'} onClick={handleDrawerToggle}>
+                <ListItemText primary='Log in' />
+              </ListItemButton>
+            </ListItem>
+          </Box>):(
+            <ListItem disablePadding>
+            <ListItemButton to={'/signup'} onClick={()=>{handleDrawerToggle() &&  handleLogout()}}>
+              <ListItemText primary='Logout' />
+            </ListItemButton>
+          </ListItem>
+            
+          )}
       </List>
     </Box>
   );
@@ -118,7 +138,7 @@ export default function Appbar(props) {
 
 
   return (
-    <Box sx={{ flexGrow: 1, pb:10 }}>
+    <Box sx={{ flexGrow: 1, pb: 10 }}>
       <AppBar position='fixed' color='inherit' elevation={0}>
         <Toolbar sx={{ justifyContent: 'space-between', position: 'relative' }}>
           <IconButton sx={{ display: { xs: 'flex', md: 'none' } }} onClick={handleDrawerToggle} edge="start" color="inherit" aria-label="menu">
@@ -142,10 +162,10 @@ export default function Appbar(props) {
             {themeMode ? <Brightness7Icon fontSize='small' /> : <Brightness4Icon fontSize='small' />}
           </IconButton>
           {!user ? (
-            <>
+            <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
               <Button variant='outlined' component={Link} to='/signup?mode=signup' size='small' sx={{ marginLeft: 2, color: 'inherit', display: 'block' }}>Sign up</Button>
               <Button variant='outlined' component={Link} to='/signup' size='small' sx={{ marginLeft: 2, color: 'inherit', display: 'block' }}>Log in</Button>
-            </>
+            </Box>
           ) : (
             <Box sx={{ flexGrow: 0, marginLeft: 2 }}>
               <Tooltip title="Open Menu">
