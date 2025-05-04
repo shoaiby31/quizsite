@@ -16,9 +16,12 @@ export default function Createquiz() {
     const [isPublic, setIsPublic] = useState(true);
     const [tags, setTags] = useState([]);
     const [timeLimit, setTimeLimit] = useState('');
+    const [questionCount, setQuestionCount] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const uid = useSelector((state) => state.auth.uid)
+    const name = useSelector((state) => state.auth.displayName)
+
     const inputRef = useRef();
 
     const handleKeyDown = (event) => {
@@ -45,16 +48,19 @@ export default function Createquiz() {
                     title: title,
                     description: description,
                     createdBy: uid,
+                    ownerNAme: name,
                     createdAt: new Date(),
                     tags: tags,
                     isPublic: isPublic,
-                    timeLimit: timeLimit
+                    timeLimit: timeLimit,
+                    questionCount: parseInt(questionCount)
                 });
                 setLoading(false);
                 setTitle('')
                 setDescription('')
                 setTags([])
                 setTimeLimit('')
+                setQuestionCount('')
             } catch (err) {
                 setError(err.message);
             }
@@ -72,7 +78,7 @@ export default function Createquiz() {
                 <Grid size={{ xs: 12, md: 8 }}>
                     <Card elevation={0}>
                         <CardContent sx={{ paddingTop: 5, paddingX: { xs: 2, sm: 2, md: 5, lg: 5, xl: 5 } }}>
-                            <Typography sx={{ fontWeight: 'bold', typography: { xs: 'h4', sm: 'h3', md: 'h4', lg: 'h4', xl: 'h2' }, color: 'text.secondary' }}>Create a New Quiz 📝</Typography>
+                            <Typography sx={{ fontWeight: 'bold', typography: { xs: 'h4', sm: 'h3', md: 'h4', lg: 'h4', xl: 'h2' }, }}>Create a New Quiz 📝</Typography>
                             <Typography variant="body1" sx={{ typography: { xs: 'body1', sm: 'button', md: 'caption', lg: 'body2', xl: 'h6' }, paddingTop: 3 }}>Welcome! Craft your own quiz effortlessly. Whether it's for your class, academy, or personal practice, our platform makes quiz creation simple and intuitive.</Typography>
                         </CardContent>
                     </Card>
@@ -96,14 +102,14 @@ export default function Createquiz() {
                         <form onSubmit={Createquiz}>
                             <TextField fullWidth placeholder='eg: Mathematics Test - Algebra' size='small' label="Quiz Title" variant="outlined" type='text' required value={title} onChange={(e) => setTitle(e.target.value)} sx={{ mb: 3 }} />
                             <TextField fullWidth placeholder='eg: Quiz on basic algebra concepts' size='small' label="Description" variant="outlined" type='text' required value={description} onChange={(e) => setDescription(e.target.value)} sx={{ mb: 3 }} />
-                            <TextField fullWidth placeholder='Enter time in minutes' size='small' label="Time Limit" variant="outlined" type='number' required value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} sx={{ mb: 3 }} />
+                            <TextField fullWidth placeholder='Enter time in minutes' size='small' label="Time Limit (minutes)" variant="outlined" type='number' required value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} sx={{ mb: 3 }} />
+                            <TextField fullWidth placeholder='Number of questions to appear in the quiz' size='small' label="Number of Questions" variant="outlined" type='number' required value={questionCount} onChange={(e) => setQuestionCount(e.target.value)} sx={{ mb: 3 }} />
                             <TextField size='small' inputRef={inputRef} onKeyDown={handleKeyDown} label="Tags" variant="outlined" placeholder="Press Enter to add tags" fullWidth />
                             <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap" }}>
                                 {tags.map((tag, index) => (
                                     <Chip key={index} label={tag} onDelete={() => handleDelete(tag)} deleteIcon={<CancelIcon />} sx={{ mb: 1 }} />
                                 ))}
                             </Stack>
-
 
                             <Box sx={{ display: 'flex' }}>
                                 <Typography>Public:</Typography>

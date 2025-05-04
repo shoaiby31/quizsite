@@ -42,6 +42,7 @@ const ViewQuestions = ({ quizId, qtitle }) => {
 
   // Delete a single question
   const deleteQuestion = async (questionId) => {
+    setLoading(true)
     try {
       const questionRef = doc(db, 'quizzes', quizId, 'questions', questionId);
       await deleteDoc(questionRef);
@@ -50,6 +51,8 @@ const ViewQuestions = ({ quizId, qtitle }) => {
     } catch (error) {
       console.error('Error deleting question:', error);
     }
+    setLoading(false)
+
   };
 
   // Delete selected questions

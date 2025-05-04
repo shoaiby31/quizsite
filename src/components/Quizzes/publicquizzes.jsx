@@ -71,7 +71,7 @@ const PublicQuizzes = () => {
   if (error) return <Alert severity="error" sx={{ mt: 5 }}>{error}</Alert>;
 
   return (
-    <Box sx={{ px: { xs: 2, md: 5 }, pt:{xs:3, md:0} }} ref={titleRef}>
+    <Box sx={{ px: { xs: 2, md: 5 }, pt: { xs: 3, md: 0 } }} ref={titleRef}>
       {/* Search and Sort */}
       <Box sx={{ display: 'flex', justifyContent: 'right', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 4 }}>
         <TextField placeholder="Search by title..." sx={{ minWidth: 150 }} value={search} size='small' onChange={(e) => setSearch(e.target.value)}
@@ -95,17 +95,19 @@ const PublicQuizzes = () => {
         ) : (
           paginatedQuizzes.map(quiz => (
             <Grid size={{ xs: 12, sm: 6, md: 3 }} key={quiz.id}>
-              <Card elevation={3} sx={{ borderRadius: 4 }}>
+              <Card elevation={3} sx={{ borderRadius: 4, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                {/* <CardHeader title={quiz.title} sx={{fontWeight:'bold'}} /> */}
                 <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    {quiz.title}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {quiz.description || 'No description provided.'}
-                  </Typography>
+                  <Typography variant="body2" fontWeight='bold' gutterBottom>{quiz.title}</Typography>
+                  <Typography variant="caption" gutterBottom>{quiz.description || 'No description provided.'}</Typography>
+                  <Typography variant="body2" gutterBottom>Total Questions: {quiz.questionCount}</Typography>
+                  <Typography variant="body2" gutterBottom>Time Allowed: {quiz.timeLimit} minutes</Typography>
+                  <Typography variant="body2" fontWeight='bold'>Created By: {quiz.ownerNAme}</Typography>
+
                 </CardContent>
-                <CardActions sx={{ paddingX: 5, display: 'flex', justifyContent: 'right', paddingTop: 2 }}>
-                  <Button component={Link} to={`/attemptQuiz/${quiz.id}`} variant='outlined' sx={{ borderRadius: 20, textTransform: 'none' }} size="small">Attempt Quiz</Button>
+
+                <CardActions sx={{ paddingX: 5, justifyContent: 'flex-end', marginTop: 'auto' }}>
+                  <Button component={Link} to={`/attemptQuiz/${quiz.id}`} variant='text' sx={{ borderRadius: 20, textTransform: 'none' }} size="small">Attempt Quiz</Button>
                 </CardActions>
               </Card>
             </Grid>
