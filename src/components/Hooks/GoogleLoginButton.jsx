@@ -13,7 +13,7 @@ const GoogleLoginButton = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  const from = location.state?.from?.pathname || '/signup';
+  const from = location.state?.from?.pathname || '/login';
 
   const handleGoogleLogin = async () => {
     try {

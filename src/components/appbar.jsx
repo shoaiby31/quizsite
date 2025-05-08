@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect  } from 'react';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -22,7 +22,7 @@ const drawerWidth = 240;
 
 const pages = [
   { id: 1, name: 'Home', to: '/' },
-  { id: 2, name: 'Skills', to: '#skills' },
+  { id: 2, name: 'Dashboard', to: '/dashboard' },
   { id: 3, name: 'Experience', to: '#experience' },
   { id: 4, name: 'Services', to: 'services' },
   { id: 5, name: 'About', to: '#about' },
@@ -34,10 +34,16 @@ export default function Appbar(props) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorElUser, setAnchorElUser] = useState(null);
   const location = useLocation();
-  const user = useSelector((state) => state.auth.photoURL);
+  const user = useSelector((state) => state.auth.uid);
+  const userpic = useSelector((state) => state.auth.photoURL);
+
+
+  useEffect(() => {
+    setAnchorElUser(null); // Clear any stale anchor
+  }, [user]);
+
   const themeMode = useSelector((state) => state.mode.value);
   const dispatch = useDispatch();
-
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
@@ -125,32 +131,19 @@ export default function Appbar(props) {
 
           {!user ? (
             <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-              <Button variant="outlined" component={Link} to="/signup?mode=signup" size="small" sx={{ marginLeft: 2, color: 'inherit', display: 'block' }}>
-                Sign up
-              </Button>
-              <Button variant="outlined" component={Link} to="/signup" size="small" sx={{ marginLeft: 2, color: 'inherit', display: 'block' }}>
-                Log in
-              </Button>
+              <Button variant="outlined" component={Link} to="/login?mode=signup" size="small" sx={{ marginLeft: 2, color: 'inherit', display: 'block' }}>Sign up</Button>
+              <Button variant="outlined" component={Link} to="/login" size="small" sx={{ marginLeft: 2, color: 'inherit', display: 'block' }}>Log in</Button>
             </Box>
           ) : (
             <Box sx={{ flexGrow: 0, marginLeft: 2 }}>
               <Tooltip title="Open Menu">
                 <IconButton onClick={handleOpenUserMenu} size="small" sx={{ p: 0 }}>
-                  <Avatar alt="profile pic" src={user} sx={{ width: 32, height: 32 }} />
+                  <Avatar alt="profile pic" src={userpic} sx={{ width: 32, height: 32, backgroundColor:'green' }} />
                 </IconButton>
               </Tooltip>
 
               {anchorElUser && (
-                <Menu
-                  sx={{ mt: '45px' }}
-                  id="menu-appbar"
-                  anchorEl={anchorElUser}
-                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                  keepMounted
-                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                  open={Boolean(anchorElUser)}
-                  onClose={handleCloseUserMenu}
-                >
+                <Menu sx={{ mt: '45px' }} id="menu-appbar" anchorEl={anchorElUser} anchorOrigin={{ vertical: 'top', horizontal: 'right' }} keepMounted transformOrigin={{ vertical: 'top', horizontal: 'right' }} open={Boolean(anchorElUser)} onClose={handleCloseUserMenu}>
                   <MenuItem onClick={() => alert("I am Profile function")}>Profile</MenuItem>
                   <MenuItem onClick={() => alert("I am Settings function")}>Settings</MenuItem>
                   <MenuItem onClick={handleLogout}>Logout</MenuItem>

@@ -5,7 +5,7 @@ import Homepage from "./pages/Homepage"
 import Appbar from "./components/appbar"
 import { Paper } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useMediaQuery } from '@mui/material';
 import { setDarkMode } from './redux/slices/theme/index'
 import Signup from './components/signup';
@@ -14,14 +14,35 @@ import PrivateRoute from './components/PrivateRoute/PrivateRoute'
 import Footer from './components/footer';
 import BrowseQuizzes from './pages/QuizzesPages';
 import AttemptQuizPage from './pages/AttemptQuizPage';
+import ResultCard from './pages/ResultCard';
+import Dashboard from './pages/Dashboard';
+
+const AppRoutes = () => {
+  const location = useLocation();
+  const isDashboard = location.pathname.startsWith('/dashboard');
+
+  return (
+    <>
+      {!isDashboard && <Appbar />}
+      <Routes>
+        <Route path="/" element={<Homepage />} />
+        <Route path="/login" element={<Signup />} />
+        <Route path="/createquiz" element={<PrivateRoute><CreactquizPage /></PrivateRoute>} />
+        <Route path="/browsequiz" element={<BrowseQuizzes />} />
+        <Route path="/attemptQuiz/:quizId" element={<PrivateRoute><AttemptQuizPage /></PrivateRoute>} />
+        <Route path="/result" element={<PrivateRoute><ResultCard /></PrivateRoute>} />
+        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+      </Routes>
+      {!isDashboard && <Footer />}
+    </>
+  );
+};
 
 
 function App() {
   const dispatch = useDispatch();
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
-  const themeMode = useSelector((state) => state.mode.value)
-
-
+  const themeMode = useSelector((state) => state.mode.value);
 
   useEffect(() => {
     if (prefersDarkMode) {
@@ -35,23 +56,11 @@ function App() {
     },
   });
 
-
   return (
     <ThemeProvider theme={darkTheme}>
-      <Paper elevation={0} sx={{ height: "auto" }} square>
+      <Paper elevation={0} sx={{ height: 'auto' }} square>
         <Router>
-          <Appbar />
-          <Routes>
-            <Route path="/" element={<Homepage />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/createquiz" element={<PrivateRoute><CreactquizPage /></PrivateRoute>}/>
-            <Route path="/browsequiz" element={<BrowseQuizzes />} /> 
-            <Route path="/attemptQuiz/:quizId" element={<PrivateRoute><AttemptQuizPage /></PrivateRoute>}/>
-
-
-            
-          </Routes>
-          <Footer/>
+          <AppRoutes />
         </Router>
       </Paper>
     </ThemeProvider>
