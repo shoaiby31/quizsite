@@ -12,10 +12,10 @@ import Signup from './components/signup';
 import CreactquizPage from './pages/CreactquizPage';
 import PrivateRoute from './components/PrivateRoute/PrivateRoute'
 import Footer from './components/footer';
-import BrowseQuizzes from './pages/QuizzesPages';
+import BrowseQuizzes from './pages/QuizzesPage';
 import AttemptQuizPage from './pages/AttemptQuizPage';
 import ResultCard from './pages/ResultCard';
-import Dashboard from './pages/Dashboard';
+import DashboardRoutes from './routes/dashboardroutes';
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -31,7 +31,7 @@ const AppRoutes = () => {
         <Route path="/browsequiz" element={<BrowseQuizzes />} />
         <Route path="/attemptQuiz/:quizId" element={<PrivateRoute><AttemptQuizPage /></PrivateRoute>} />
         <Route path="/result" element={<PrivateRoute><ResultCard /></PrivateRoute>} />
-        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/dashboard/*" element={<PrivateRoute><DashboardRoutes /></PrivateRoute>} />
       </Routes>
       {!isDashboard && <Footer />}
     </>

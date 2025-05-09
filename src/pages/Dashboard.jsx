@@ -1,11 +1,10 @@
 import { Grid, Box } from '@mui/material';
-import DashboardLayout from '../components/DashbaordComponents/dashboardlayout';
 import InfoCard from '../components/DashbaordComponents/infocard';
 import { People, MedicalServices, AttachMoney, LocalCarWash } from '@mui/icons-material';
 
 const Dashboard = () => {
   return (
-    <DashboardLayout>
+    <>
       <Grid container spacing={3}>
         <Grid size={{sx:12, sm:6, md:3}}>
           <InfoCard icon={<People />} label="Total Patients" value="3,256" color="purple" />
@@ -43,7 +42,7 @@ const Dashboard = () => {
           </Box>
         </Grid>
       </Grid>
-    </DashboardLayout>
+    </>
   );
 };
 

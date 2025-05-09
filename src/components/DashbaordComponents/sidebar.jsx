@@ -1,36 +1,129 @@
-import { Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Button } from '@mui/material';
-import { Home, Map, People, History, Settings, AppRegistration } from '@mui/icons-material';
+import {
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Box,
+  Button,
+  Divider,
+  IconButton,
+  Tooltip,
+} from '@mui/material';
+import {
+  Home,
+  Map,
+  People,
+  History,
+  Settings,
+  AppRegistration,
+  ChevronLeft,
+  ChevronRight,
+} from '@mui/icons-material';
 import AppleIcon from '@mui/icons-material/Apple';
 import AndroidIcon from '@mui/icons-material/Android';
-import { Link } from 'react-router-dom';
-import Logo from "../../assets/logo.png";
+import { NavLink } from 'react-router-dom';
+import Logo from '../../assets/logo.png';
+import { useState } from 'react';
 
-const Sidebar = () => (
-  <Drawer variant="permanent"
-    sx={{ width: 240, flexShrink: 0, '& .MuiDrawer-paper': { width: 240, boxSizing: 'border-box', backgroundColor: 'transparent', paddingTop: 2, border: 'none' }, }}>
-    <Box display='flex' justifyContent='center'>
-      <Box component="img" src={Logo} sx={{ padding: 1, width: 80, display: { xs: 'none', md: 'flex' } }} alt="Your logo." />
-    </Box>
-    <Box sx={{ p: 2 }}>
-      <Button variant="contained" fullWidth startIcon={<AppRegistration />} color="secondary">
-        Register Patient
-      </Button>
-    </Box>
-    <List>
-      {[['Home', <Home />, '/'], ['Overview', <People />, '/dashboard'], ['Map', <Map />, '/map'], ['History', <History />, '/history'], ['Settings', <Settings />, '/settings']].map(([text, icon, link]) => (
-        <ListItem button key={text} component={Link} to={link}>
-          <ListItemIcon>{icon}</ListItemIcon>
-          <ListItemText primary={text} />
-        </ListItem>
-      ))}
-    </List>
-    <Box sx={{ mt: 'auto', p: 2 }}>
-      <Box display="flex" justifyContent="space-between">
-        <AppleIcon color="action" />
-        <AndroidIcon color="action" />
+const navItems = [
+  { label: 'Home', icon: <Home />, path: '/dashboard' },
+  { label: 'Overview', icon: <People />, path: '/dashboard' },
+  { label: 'My Quizzes', icon: <Map />, path: '/dashboard/quizzes' },
+  { label: 'Results/Analytics', icon: <History />, path: '/dashboard/' },
+  { label: 'Users Management', icon: <Settings />, path: '/dashboard/' },
+  { label: 'Settings', icon: <Settings />, path: '/dashboard/' },
+];
+
+const Sidebar = () => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const drawerWidth = isCollapsed ? 70 : 240;
+
+  return (
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: drawerWidth,
+        flexShrink: 0,
+        '& .MuiDrawer-paper': {
+          width: drawerWidth,
+          boxSizing: 'border-box',
+          paddingTop: 2,
+          border: 'none',
+          backgroundColor: 'transparent',
+          transition: 'width 0.3s',
+          overflowX: 'hidden',
+        },
+      }}
+    >
+      
+
+      {/* Logo */}
+      <Box display="flex" justifyContent="center">
+        {!isCollapsed && (
+          <Box
+            component="img"
+            src={Logo}
+            sx={{ width: 80, display: { xs: 'none', md: 'flex' } }}
+            alt="Your logo."
+          />
+        )}
       </Box>
-    </Box>
-  </Drawer>
-);
+      
+      {/* Collapse/Expand Toggle */}
+      <Box display="flex" justifyContent={isCollapsed ? 'center' : 'flex-end'} px={1}>
+        <IconButton onClick={() => setIsCollapsed(prev => !prev)}>
+          {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
+        </IconButton>
+      </Box>
+
+      {/* Register Button */}
+      <Box sx={{ p: 2 }}>
+        <Button
+          variant="contained"
+          fullWidth
+          startIcon={!isCollapsed && <AppRegistration />}
+          color="secondary"
+        >
+          {!isCollapsed ? 'Register Patient' : <AppRegistration />}
+        </Button>
+      </Box>
+
+      {/* Navigation Links */}
+      <List>
+        {navItems.map(({ label, icon, path }) => (
+          <Tooltip title={isCollapsed ? label : ''} placement="right" key={label}>
+            <ListItem
+              button
+              component={NavLink}
+              to={path}
+              style={({ isActive }) => ({
+                backgroundColor: isActive ? '#f0f0f0' : 'transparent',
+                borderRadius: 8,
+                margin: '4px 8px',
+                paddingLeft: isCollapsed ? 2 : 3,
+              })}
+            >
+              <ListItemIcon>{icon}</ListItemIcon>
+              {!isCollapsed && <ListItemText primary={label} />}
+            </ListItem>
+          </Tooltip>
+        ))}
+      </List>
+
+      <Box flexGrow={1} />
+
+      <Divider />
+
+      {/* Footer Icons */}
+      <Box sx={{ p: 2 }}>
+        <Box display="flex" justifyContent="space-between">
+          <AppleIcon color="action" />
+          <AndroidIcon color="action" />
+        </Box>
+      </Box>
+    </Drawer>
+  );
+};
 
 export default Sidebar;

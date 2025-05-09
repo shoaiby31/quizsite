@@ -1,20 +1,18 @@
 import React from 'react';
-import { Box, Container } from '@mui/material';
 import Sidebar from './sidebar';
 import TopBar from './topbar';
+import { Box } from '@mui/material';
+import { Outlet } from 'react-router-dom';
 
-const DashboardLayout = ({ children }) => {
+const DashboardLayout = () => {
   return (
-
-    
     <Box sx={{ display: 'flex' }}>
       <Sidebar />
-      
-      <Box component="main" sx={{ flexGrow: 1, bgcolor: '#fff', minHeight: '100vh', }}>
+      <Box sx={{ flexGrow: 1 }}>
         <TopBar />
-        <Container maxWidth="xl" sx={{ pt: 3, bgcolor: '#f3f4f6' }}>
-          {children}
-        </Container>
+        <Box sx={{ p: 3 }}>
+          <Outlet /> {/* This is where nested route components will render */}
+        </Box>
       </Box>
     </Box>
   );

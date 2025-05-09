@@ -37,7 +37,6 @@ export default function Appbar(props) {
   const user = useSelector((state) => state.auth.uid);
   const userpic = useSelector((state) => state.auth.photoURL);
 
-
   useEffect(() => {
     setAnchorElUser(null); // Clear any stale anchor
   }, [user]);

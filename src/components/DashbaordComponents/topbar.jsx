@@ -9,6 +9,7 @@ import { auth } from '../../config/firebase';
 import { signOut } from 'firebase/auth';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
+import { Link } from 'react-router-dom';
 
 const TopBar = () => {
     const dispatch = useDispatch();
@@ -87,6 +88,7 @@ const TopBar = () => {
 
                         {anchorElUser && (
                             <Menu sx={{ mt: '45px' }} id="menu-appbar" anchorEl={anchorElUser} anchorOrigin={{ vertical: 'top', horizontal: 'right' }} keepMounted transformOrigin={{ vertical: 'top', horizontal: 'right' }} open={Boolean(anchorElUser)} onClose={handleCloseUserMenu}>
+                                <MenuItem component={Link}to='/'>Home</MenuItem>
                                 <MenuItem onClick={() => alert("I am Profile function")}>Profile</MenuItem>
                                 <MenuItem onClick={() => alert("I am Settings function")}>Settings</MenuItem>
                                 <MenuItem onClick={handleLogout}>Logout</MenuItem>

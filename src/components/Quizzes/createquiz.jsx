@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Box, Button, CardContent, TextField, Typography, CircularProgress, Paper, Grid, CardMedia, Divider, Card, Switch, Stack, Chip } from '@mui/material'
+import { Box, Button, CardContent, TextField, Typography, CircularProgress, Paper, Grid, CardMedia, Divider, Card, Switch, Stack, Chip, FormControl, InputLabel, Select, MenuItem, FormControlLabel } from '@mui/material'
 import { motion } from 'framer-motion';
 import pic from '../../assets/createquiz.webp'
 import quizpic from '../../assets/quizdetails.webp'
@@ -14,6 +14,8 @@ export default function Createquiz() {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [isPublic, setIsPublic] = useState(true);
+    const [isActive, setIsActive] = useState(true);
+
     const [tags, setTags] = useState([]);
     const [timeLimit, setTimeLimit] = useState('');
     const [questionCount, setQuestionCount] = useState('');
@@ -52,6 +54,7 @@ export default function Createquiz() {
                     createdAt: new Date(),
                     tags: tags,
                     isPublic: isPublic,
+                    isActive: isActive,
                     timeLimit: timeLimit,
                     questionCount: parseInt(questionCount)
                 });
@@ -94,8 +97,10 @@ export default function Createquiz() {
                     <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                         <Typography variant='h4' component='h2'>Enter Quiz Details</Typography>
                     </Box>
-                    <CardMedia component="img" image={quizpic} alt="Quiz Picture"
-                        sx={{ width: '85%', objectFit: 'contain' }} />
+                    <Box sx={{ display: 'flex', justifyContent: 'center', height: '85%', }}>
+                        <CardMedia component="img" image={quizpic} alt="Quiz Picture"
+                            sx={{ width: '100%', objectFit: 'contain' }} />
+                    </Box>
                 </Grid>
                 <Grid size={{ xs: 12, md: 7 }}>
                     <MotionPaper elevation={0} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} sx={{ p: { xs: 1, md: 3 }, borderRadius: 4 }}>
@@ -104,17 +109,21 @@ export default function Createquiz() {
                             <TextField fullWidth placeholder='eg: Quiz on basic algebra concepts' size='small' label="Description" variant="outlined" type='text' required value={description} onChange={(e) => setDescription(e.target.value)} sx={{ mb: 3 }} />
                             <TextField fullWidth placeholder='Enter time in minutes' size='small' label="Time Limit (minutes)" variant="outlined" type='number' required value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} sx={{ mb: 3 }} />
                             <TextField fullWidth placeholder='Number of questions to appear in the quiz' size='small' label="Number of Questions" variant="outlined" type='number' required value={questionCount} onChange={(e) => setQuestionCount(e.target.value)} sx={{ mb: 3 }} />
-                            <TextField size='small' inputRef={inputRef} onKeyDown={handleKeyDown} label="Tags" variant="outlined" placeholder="Press Enter to add tags" fullWidth />
+                            <TextField size='small' inputRef={inputRef} onKeyDown={handleKeyDown} label="Tags" variant="outlined" placeholder="Press Enter to add tags" fullWidth sx={{ mb: 2 }} />
                             <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap" }}>
                                 {tags.map((tag, index) => (
                                     <Chip key={index} label={tag} onDelete={() => handleDelete(tag)} deleteIcon={<CancelIcon />} sx={{ mb: 1 }} />
                                 ))}
                             </Stack>
 
-                            <Box sx={{ display: 'flex' }}>
-                                <Typography>Public:</Typography>
-                                <Switch checked={isPublic} value={isPublic} onChange={() => setIsPublic(!isPublic)} />
-                            </Box>
+                            <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+                                <InputLabel id="public-select-label">Visibility</InputLabel>
+                                <Select labelId="public-select-label" value={isPublic} label="Visibility" onChange={(e) => setIsPublic(e.target.value === 'true')}>
+                                    <MenuItem value="true">Public</MenuItem>
+                                    <MenuItem value="false">Private</MenuItem>
+                                </Select>
+                            </FormControl>
+                            <FormControlLabel sx={{ mb: 2 }} control={<Switch checked={isActive} color='success' value={isActive} onChange={() => setIsActive(!isActive)} />} label={isActive ? 'Active:' : 'Inactive:'} labelPlacement='start' />
                             {error && (
                                 <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
                             )}
