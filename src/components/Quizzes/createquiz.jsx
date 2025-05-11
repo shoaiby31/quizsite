@@ -13,6 +13,8 @@ const MotionPaper = motion.create(Paper);
 export default function Createquiz() {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [secretid, setSecretid] = useState('');
+
     const [isPublic, setIsPublic] = useState(true);
     const [isActive, setIsActive] = useState(true);
 
@@ -49,6 +51,7 @@ export default function Createquiz() {
                 await addDoc(collection(db, 'quizzes'), {
                     title: title,
                     description: description,
+                    secretid:secretid,
                     createdBy: uid,
                     ownerNAme: name,
                     createdAt: new Date(),
@@ -65,6 +68,7 @@ export default function Createquiz() {
                 setTimeLimit('')
                 setQuestionCount('')
             } catch (err) {
+                setLoading(false);
                 setError(err.message);
             }
 
@@ -106,11 +110,11 @@ export default function Createquiz() {
                     <MotionPaper elevation={0} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} sx={{ p: { xs: 1, md: 3 }, borderRadius: 4 }}>
                         <form onSubmit={Createquiz}>
                             <TextField fullWidth placeholder='eg: Mathematics Test - Algebra' size='small' label="Quiz Title" variant="outlined" type='text' required value={title} onChange={(e) => setTitle(e.target.value)} sx={{ mb: 3 }} />
-                            <TextField fullWidth placeholder='eg: Quiz on basic algebra concepts' size='small' label="Description" variant="outlined" type='text' required value={description} onChange={(e) => setDescription(e.target.value)} sx={{ mb: 3 }} />
+                            <TextField fullWidth placeholder='eg: Quiz on basic algebra concepts' size='small' label="Description" variant="outlined" type='text' required value={description} onChange={(e) => setDescription(e.target.value)} sx={{ mb: 3 }} />                            
                             <TextField fullWidth placeholder='Enter time in minutes' size='small' label="Time Limit (minutes)" variant="outlined" type='number' required value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} sx={{ mb: 3 }} />
                             <TextField fullWidth placeholder='Number of questions to appear in the quiz' size='small' label="Number of Questions" variant="outlined" type='number' required value={questionCount} onChange={(e) => setQuestionCount(e.target.value)} sx={{ mb: 3 }} />
                             <TextField size='small' inputRef={inputRef} onKeyDown={handleKeyDown} label="Tags" variant="outlined" placeholder="Press Enter to add tags" fullWidth sx={{ mb: 2 }} />
-                            <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap" }}>
+                            <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: "wrap" }}>
                                 {tags.map((tag, index) => (
                                     <Chip key={index} label={tag} onDelete={() => handleDelete(tag)} deleteIcon={<CancelIcon />} sx={{ mb: 1 }} />
                                 ))}
@@ -123,6 +127,7 @@ export default function Createquiz() {
                                     <MenuItem value="false">Private</MenuItem>
                                 </Select>
                             </FormControl>
+                            {!isPublic && <TextField fullWidth placeholder='Only users with this ID can join the private quiz' size='small' label="Secret Id" variant="outlined" type='text' required value={secretid} onChange={(e) => setSecretid(e.target.value)} sx={{ mb: 3 }} /> }
                             <FormControlLabel sx={{ mb: 2 }} control={<Switch checked={isActive} color='success' value={isActive} onChange={() => setIsActive(!isActive)} />} label={isActive ? 'Active:' : 'Inactive:'} labelPlacement='start' />
                             {error && (
                                 <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>

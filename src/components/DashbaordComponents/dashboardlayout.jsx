@@ -10,7 +10,7 @@ const DashboardLayout = () => {
       <Sidebar />
       <Box sx={{ flexGrow: 1 }}>
         <TopBar />
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ p: 2 }}>
           <Outlet /> {/* This is where nested route components will render */}
         </Box>
       </Box>

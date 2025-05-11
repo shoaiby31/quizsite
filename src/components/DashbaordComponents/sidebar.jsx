@@ -1,43 +1,25 @@
-import {
-  Drawer,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Box,
-  Button,
-  Divider,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
-import {
-  Home,
-  Map,
-  People,
-  History,
-  Settings,
-  AppRegistration,
-  ChevronLeft,
-  ChevronRight,
-} from '@mui/icons-material';
+import { Drawer, List, ListItemIcon, ListItemText, Box, Button, Divider, IconButton, Tooltip, ListItemButton, } from '@mui/material';
+import { Home, Map, People, History, Settings, AppRegistration, ChevronLeft, ChevronRight, } from '@mui/icons-material';
 import AppleIcon from '@mui/icons-material/Apple';
 import AndroidIcon from '@mui/icons-material/Android';
 import { NavLink } from 'react-router-dom';
 import Logo from '../../assets/logo.png';
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
 
 const navItems = [
-  { label: 'Home', icon: <Home />, path: '/dashboard' },
+  { label: 'Home', icon: <Home />, path: '/' },
   { label: 'Overview', icon: <People />, path: '/dashboard' },
-  { label: 'My Quizzes', icon: <Map />, path: '/dashboard/quizzes' },
-  { label: 'Results/Analytics', icon: <History />, path: '/dashboard/' },
-  { label: 'Users Management', icon: <Settings />, path: '/dashboard/' },
-  { label: 'Settings', icon: <Settings />, path: '/dashboard/' },
+  { label: 'View Quizzes', icon: <Map />, path: '/dashboard/quizzes' },
+  { label: 'Manage Quiz', icon: <History />, path: '/dashboard/createquiz' },
+  { label: 'Users Management', icon: <Settings />, path: '/dashboard/abc' },
+  { label: 'Settings', icon: <Settings />, path: '/dashboard/efd' },
 ];
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const drawerWidth = isCollapsed ? 70 : 240;
+  const themeMode = useSelector((state) => state.mode.value);
 
   return (
     <Drawer
@@ -56,7 +38,7 @@ const Sidebar = () => {
         },
       }}
     >
-      
+
 
       {/* Logo */}
       <Box display="flex" justifyContent="center">
@@ -69,7 +51,7 @@ const Sidebar = () => {
           />
         )}
       </Box>
-      
+
       {/* Collapse/Expand Toggle */}
       <Box display="flex" justifyContent={isCollapsed ? 'center' : 'flex-end'} px={1}>
         <IconButton onClick={() => setIsCollapsed(prev => !prev)}>
@@ -93,20 +75,11 @@ const Sidebar = () => {
       <List>
         {navItems.map(({ label, icon, path }) => (
           <Tooltip title={isCollapsed ? label : ''} placement="right" key={label}>
-            <ListItem
-              button
-              component={NavLink}
-              to={path}
-              style={({ isActive }) => ({
-                backgroundColor: isActive ? '#f0f0f0' : 'transparent',
-                borderRadius: 8,
-                margin: '4px 8px',
-                paddingLeft: isCollapsed ? 2 : 3,
-              })}
-            >
+            <ListItemButton component={NavLink} to={path} end={path === '/dashboard'} style={({ isActive }) => ({
+              backgroundColor: isActive ? themeMode? 'gray':'#f0f0f0' : 'transparent', borderRadius: 8, margin: '4px 8px', paddingLeft: isCollapsed ? 2 : 3,})}>
               <ListItemIcon>{icon}</ListItemIcon>
               {!isCollapsed && <ListItemText primary={label} />}
-            </ListItem>
+            </ListItemButton>
           </Tooltip>
         ))}
       </List>
