@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { Box, Button, CardContent, TextField, Typography, CircularProgress, Paper, Grid, CardMedia, Divider, Card, Switch, Stack, Chip, FormControl, InputLabel, Select, MenuItem, FormControlLabel } from '@mui/material'
+import { Box, Button, TextField, Typography, CircularProgress, Paper, Grid, CardMedia, Divider, Switch, Stack, Chip, FormControl, InputLabel, Select, MenuItem, FormControlLabel } from '@mui/material'
 import { motion } from 'framer-motion';
-import pic from '../../assets/createquiz.webp'
 import quizpic from '../../assets/quizdetails.webp'
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
@@ -79,27 +78,11 @@ export default function Createquiz() {
     };
 
     return (
-        <Box sx={{ pt: 5, px: { xs: 3, md: 5 } }}>
-
-            <Grid container>
-                <Grid size={{ xs: 12, md: 8 }}>
-                    <Card elevation={0}>
-                        <CardContent sx={{ paddingTop: 5, paddingX: { xs: 2, sm: 2, md: 5, lg: 5, xl: 5 } }}>
-                            <Typography sx={{ fontWeight: 'bold', typography: { xs: 'h4', sm: 'h3', md: 'h4', lg: 'h4', xl: 'h2' }, }}>Create a New Quiz 📝</Typography>
-                            <Typography variant="body1" sx={{ typography: { xs: 'body1', sm: 'button', md: 'caption', lg: 'body2', xl: 'h6' }, paddingTop: 3 }}>Welcome! Craft your own quiz effortlessly. Whether it's for your class, academy, or personal practice, our platform makes quiz creation simple and intuitive.</Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-                <Grid size={{ xs: 12, md: 4 }}>
-                    <CardMedia component="img" image={pic} alt="Quiz Picture"
-                        sx={{ width: '60%', height: '100%', objectFit: 'contain' }} />
-                </Grid>
-            </Grid>
-            <Divider />
+        <Box sx={{  px: { xs: 3, md: 5 } }}>  
             <Grid container mt={3} spacing={1}>
                 <Grid size={{ xs: 12, md: 5 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                        <Typography variant='h4' component='h2'>Enter Quiz Details</Typography>
+                        <Typography variant='h4' component='h2'>Make New Quiz</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'center', height: '85%', }}>
                         <CardMedia component="img" image={quizpic} alt="Quiz Picture"

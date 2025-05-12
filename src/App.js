@@ -16,6 +16,7 @@ import BrowseQuizzes from './pages/QuizzesPage';
 import AttemptQuizPage from './pages/AttemptQuizPage';
 import ResultCard from './pages/ResultCard';
 import DashboardRoutes from './routes/dashboardroutes';
+import Attemptprivatequiz from './components/Quizzes/attemptprivatequiz';
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -32,6 +33,7 @@ const AppRoutes = () => {
         <Route path="/attemptQuiz/:quizId" element={<PrivateRoute><AttemptQuizPage /></PrivateRoute>} />
         <Route path="/result" element={<PrivateRoute><ResultCard /></PrivateRoute>} />
         <Route path="/dashboard/*" element={<PrivateRoute><DashboardRoutes /></PrivateRoute>} />
+        <Route path="/attemptprivatequiz/:quizId/:secretId?" element={<Attemptprivatequiz />} />
       </Routes>
       {!isDashboard && <Footer />}
     </>

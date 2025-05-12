@@ -17,7 +17,7 @@ const navItems = [
 ];
 
 const Sidebar = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const drawerWidth = isCollapsed ? 70 : 240;
   const themeMode = useSelector((state) => state.mode.value);
 

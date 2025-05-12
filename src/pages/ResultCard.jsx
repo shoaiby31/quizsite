@@ -1,5 +1,5 @@
 import React from 'react'
-import Result from '../components/Quizzes/resultcard'
+import Result from '../components/Results/resultcard'
 
 
 

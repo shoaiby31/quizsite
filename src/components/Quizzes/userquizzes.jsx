@@ -2,15 +2,17 @@ import React, { useEffect, useState, useRef } from 'react';
 import {
   Box, Card, CardContent, Typography, Grid, CircularProgress, Alert,
   TextField, InputAdornment, MenuItem, Select, FormControl, InputLabel,
-  Pagination, IconButton, Tooltip
+  Pagination, IconButton, Tooltip,
+  Button,
 } from '@mui/material';
 import { Search, Edit } from '@mui/icons-material';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useSelector } from 'react-redux';
 import EditQuizModal from './editquiz';
+import { useNavigate } from "react-router-dom";
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 9;
 
 const UserQuizzes = () => {
   const titleRef = useRef(null);
@@ -27,6 +29,7 @@ const UserQuizzes = () => {
   const [privacyFilter, setPrivacyFilter] = useState('all');
   const [tagFilter, setTagFilter] = useState('');
   const [page, setPage] = useState(1);
+  const navigate = useNavigate();
 
   const [editOpen, setEditOpen] = useState(false);
   const [selectedQuiz, setSelectedQuiz] = useState(null);
@@ -103,7 +106,6 @@ const UserQuizzes = () => {
 
   if (loading) return <Box textAlign="center" mt={5}><CircularProgress /></Box>;
   if (error) return <Alert severity="error" sx={{ mt: 5 }}>{error}</Alert>;
-
   return (
     <Box sx={{ px: { xs: 2, md: 0 }, pt: { xs: 3, md: 0 } }} ref={titleRef}>
       {/* Filters */}
@@ -153,19 +155,21 @@ const UserQuizzes = () => {
                 borderColor: quiz.isActive ? '#4CAF50' : 'gray',
                 borderRadius: 2,
                 position: 'relative',
-                overflow: 'visible', height:'100%'
+                overflow: 'visible', height: '100%'
               }}>
-                 {/* Edit Button */}
-                 <Box sx={{width: 20, height: 25, borderRadius: 2,
-                  position: 'absolute', backgroundColor: 'inherit', display:'flex',
-                  justifyContent: 'center', top: -14, right: '12%',}}>
-                    <Tooltip title="Edit Quiz">
-                      <IconButton onClick={() => handleEditClick(quiz)}>
-                        <Edit fontSize='small' color='primary' />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                
+                {/* Edit Button */}
+                <Box sx={{
+                  width: 20, height: 25, borderRadius: 2,
+                  position: 'absolute', backgroundColor: 'inherit', display: 'flex',
+                  justifyContent: 'center', top: -14, right: '12%',
+                }}>
+                  <Tooltip title="Edit Quiz">
+                    <IconButton onClick={() => handleEditClick(quiz)}>
+                      <Edit fontSize='small' color='primary' />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+
                 {/* Status dot */}
                 <Box sx={{
                   width: 12, height: 12, borderRadius: '50%',
@@ -179,7 +183,7 @@ const UserQuizzes = () => {
                   backgroundColor: 'inherit', borderRadius: 2,
                   position: 'absolute', top: -14, left: '30%',
                 }}>
-               
+
                   <Typography variant="body2"><strong>Privacy:</strong> {quiz.isPublic ? ' Public' : ' Private'}</Typography>
                 </Box>
 
@@ -189,9 +193,9 @@ const UserQuizzes = () => {
                   <Typography variant="body2">Total Questions: {quiz.questionCount}</Typography>
                   <Typography variant="body2">Time Allowed: {quiz.timeLimit} minutes</Typography>
                   {quiz.secretid !== '' &&
-                  <Typography variant="body2">
-                    <strong style={{ color: themeMode ? 'white' : 'black' }}>Secret Id:</strong> {quiz.secretid}
-                  </Typography>}
+                    <Typography variant="body2">
+                      <strong style={{ color: themeMode ? 'white' : 'black' }}>Secret Id:</strong> {quiz.secretid}
+                    </Typography>}
                   {/* <Typography variant="body2" color={quiz.isActive ? '#4CAF50' : 'gray'}>
                     <strong style={{ color: themeMode ? 'white' : 'black' }}>Status:</strong> {quiz.isActive ? 'Active' : 'Inactive'}
                   </Typography> */}
@@ -203,10 +207,9 @@ const UserQuizzes = () => {
                           #{tag}
                         </Typography>
                       ))}
+                      <Button onClick={()=>{navigate(`/dashboard/private-results/${quiz.id}/${quiz.timeLimit}`)}}>View Result</Button>
                     </Box>
                   )}
-
-                  
                 </CardContent>
               </Card>
             </Grid>

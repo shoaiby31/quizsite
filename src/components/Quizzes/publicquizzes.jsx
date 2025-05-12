@@ -4,12 +4,12 @@ import { Search } from '@mui/icons-material';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { Link } from 'react-router-dom';
+import Privatequizmodel from './privatequizmodel';
 
 const ITEMS_PER_PAGE = 6;
 
 const PublicQuizzes = () => {
   const titleRef = useRef(null); // Ref for the Typography element (scroll target)
-
   const [quizzes, setQuizzes] = useState([]);
   const [filteredQuizzes, setFilteredQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,7 +17,7 @@ const PublicQuizzes = () => {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('recent'); // 'recent' or 'title'
   const [page, setPage] = useState(1);
-
+  const [modalOpen, setModalOpen] = useState(false);
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
@@ -74,6 +74,10 @@ const PublicQuizzes = () => {
     <Box sx={{ px: { xs: 2, md: 5 }, pt: { xs: 3, md: 0 } }} ref={titleRef}>
       {/* Search and Sort */}
       <Box sx={{ display: 'flex', justifyContent: 'right', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 4 }}>
+        <Button variant='outlined' color='info' onClick={() => setModalOpen(true)} sx={{textTransform: 'none'}} size="large">Join Private Quiz</Button>
+  
+
+      <Privatequizmodel open={modalOpen} onClose={() => setModalOpen(false)} />
         <TextField placeholder="Search by title..." sx={{ minWidth: 150 }} value={search} size='small' onChange={(e) => setSearch(e.target.value)}
           InputProps={{ startAdornment: (<InputAdornment position="start"><Search /></InputAdornment>) }} />
         <FormControl sx={{ minWidth: 150 }}>

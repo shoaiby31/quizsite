@@ -149,6 +149,7 @@ const AttemptQuiz = () => {
         const newAttemptData = {
           userId: user.uid,
           quizId,
+          username: user.displayName,
           questions: selectedQuestions,
           answers: {},
           submitted: false,
