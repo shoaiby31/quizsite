@@ -6,6 +6,8 @@ const initialState = {
   displayName: null,
   photoURL: null,
   isAuthenticated: false,
+  role: null,
+  userReady: false,
 };
 
 const authSlice = createSlice({
@@ -13,18 +15,24 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setUser(state, action) {
-      const { uid, email, displayName, photoURL } = action.payload;
+      const { uid, email, displayName, photoURL, role } = action.payload;
       state.uid = uid;
       state.email = email;
       state.displayName = displayName;
       state.photoURL = photoURL;
+      state.role = role;
       state.isAuthenticated = true;
+    },
+    setUserReadyState: (state, action) => {
+      Object.assign(state, action.payload);
+      state.userReady = true;
     },
     clearUser(state) {
       state.uid = null;
       state.email = null;
       state.displayName = null;
       state.photoURL = null;
+      state.role = null;
       state.isAuthenticated = false;
     },
   },

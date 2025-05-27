@@ -1,4 +1,4 @@
-import React, { useState, useEffect  } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -14,16 +14,16 @@ import { useLocation } from 'react-router-dom';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import { Link } from 'react-router-dom';
-import { auth } from '../config/firebase';
+import { auth, db } from '../config/firebase';
 import { signOut } from 'firebase/auth';
 import Logo from "../assets/logo.png";
-
+import { doc, getDoc } from 'firebase/firestore';
 const drawerWidth = 240;
 
 const pages = [
   { id: 1, name: 'Home', to: '/' },
   { id: 2, name: 'Dashboard', to: '/dashboard' },
-  { id: 3, name: 'Experience', to: '#experience' },
+  { id: 3, name: 'Join Teacher', to: '/join-teacher' },
   { id: 4, name: 'Services', to: 'services' },
   { id: 5, name: 'About', to: '#about' },
   { id: 6, name: 'Contact', to: '#contact' },
@@ -36,9 +36,25 @@ export default function Appbar(props) {
   const location = useLocation();
   const user = useSelector((state) => state.auth.uid);
   const userpic = useSelector((state) => state.auth.photoURL);
-
+  const [userRole, setUserRole] = useState(null);
   useEffect(() => {
-    setAnchorElUser(null); // Clear any stale anchor
+    const fetchUserRole = async () => {
+      if (!user) return;
+
+      try {
+        const docRef = doc(db, 'users', user);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setUserRole(docSnap.data().role);
+        } else {
+          console.warn('User document not found');
+        }
+      } catch (error) {
+        console.error('Failed to fetch user role:', error);
+      }
+    };
+
+    fetchUserRole();
   }, [user]);
 
   const themeMode = useSelector((state) => state.mode.value);
@@ -66,17 +82,30 @@ export default function Appbar(props) {
     }
   };
 
+  const getVisiblePages = () => {
+    return pages.filter(item => {
+      if (item.name === 'Dashboard') {
+        return userRole === null ? false : userRole !== 'student';
+      }
+      if (item.name === 'Join Teacher') {
+        return userRole === null ? false : userRole !== 'admin';
+      }
+      return true;
+    });
+  };
+
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
       <Divider />
       <List sx={{ width: 250 }}>
-        {pages.map((item, k) => (
+        {getVisiblePages().map((item, k) => (
           <ListItem key={k} disablePadding>
             <ListItemButton to={item.to} selected={location.pathname === item.to} onClick={handleDrawerToggle}>
               <ListItemText primary={item.name} />
             </ListItemButton>
           </ListItem>
         ))}
+
         <Divider />
         {!user ? (
           <Box>
@@ -102,6 +131,7 @@ export default function Appbar(props) {
     </Box>
   );
 
+
   const container = window !== undefined ? () => window().document.body : undefined;
 
   return (
@@ -117,7 +147,7 @@ export default function Appbar(props) {
           <Typography sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}></Typography>
 
           <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-            {pages.map((item, key) => (
+            {getVisiblePages().map((item, key) => (
               <Button component={Link} to={item.to} key={key} sx={{ my: 2, color: 'inherit', display: 'block' }}>
                 {item.name}
               </Button>
@@ -137,13 +167,13 @@ export default function Appbar(props) {
             <Box sx={{ flexGrow: 0, marginLeft: 2 }}>
               <Tooltip title="Open Menu">
                 <IconButton onClick={handleOpenUserMenu} size="small" sx={{ p: 0 }}>
-                  <Avatar alt="profile pic" src={userpic} sx={{ width: 32, height: 32, backgroundColor:'green' }} />
+                  <Avatar alt="profile pic" src={userpic} sx={{ width: 32, height: 32, backgroundColor: 'green' }} />
                 </IconButton>
               </Tooltip>
 
               {anchorElUser && (
                 <Menu sx={{ mt: '45px' }} id="menu-appbar" anchorEl={anchorElUser} anchorOrigin={{ vertical: 'top', horizontal: 'right' }} keepMounted transformOrigin={{ vertical: 'top', horizontal: 'right' }} open={Boolean(anchorElUser)} onClose={handleCloseUserMenu}>
-                  <MenuItem onClick={() => alert("I am Profile function")}>Profile</MenuItem>
+                  <MenuItem component={Link} to='/profile'>Profile</MenuItem>
                   <MenuItem onClick={() => alert("I am Settings function")}>Settings</MenuItem>
                   <MenuItem onClick={handleLogout}>Logout</MenuItem>
                 </Menu>

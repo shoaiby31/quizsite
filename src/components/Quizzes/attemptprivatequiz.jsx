@@ -177,7 +177,9 @@ const PrivateQuizAttempt = () => {
                     score: 0,
                     totalScore: selectedQuestions.length,
                     startTime: serverTimestamp(),
-                    currentIdx: 0
+                    currentIdx: 0,
+                    secretId, // ✅ Store the secret ID used to access the quiz
+                    className: quizData.class || null // ✅ Store className if available
                 };
 
                 await setDoc(newAttemptRef, newAttemptData);

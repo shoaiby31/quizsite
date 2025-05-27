@@ -107,7 +107,7 @@ const UserQuizzes = () => {
   if (loading) return <Box textAlign="center" mt={5}><CircularProgress /></Box>;
   if (error) return <Alert severity="error" sx={{ mt: 5 }}>{error}</Alert>;
   return (
-    <Box sx={{ px: { xs: 2, md: 0 }, pt: { xs: 3, md: 0 } }} ref={titleRef}>
+    <Box sx={{ pt: { xs: 3, md: 0 } }} ref={titleRef}>
       {/* Filters */}
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 4, alignItems: 'center', }}>
         <TextField placeholder="Search by title..." sx={{ minWidth: { xs: '100%', md: 150 } }} value={search} size="small" onChange={(e) => setSearch(e.target.value)}
@@ -201,13 +201,13 @@ const UserQuizzes = () => {
                   </Typography> */}
 
                   {quiz.tags && quiz.tags.length > 0 && (
-                    <Box mt={1} display="flex" flexWrap="wrap" gap={0.5}>
+                    <Box mt={1} display="flex" flexWrap="wrap" justifyContent='space-between' gap={0.5}>
                       {quiz.tags.map((tag, i) => (
                         <Typography key={i} variant="caption" sx={{ backgroundColor: themeMode ? '#1f1f1f' : '#f0f0f0', px: 1, borderRadius: 1 }}>
                           #{tag}
                         </Typography>
                       ))}
-                      <Button onClick={()=>{navigate(`/dashboard/private-results/${quiz.id}/${quiz.timeLimit}`)}}>View Result</Button>
+                      <Button sx={{textTransform:'none'}} size='small' onClick={()=>{navigate(`/dashboard/private-results/${quiz.id}/${quiz.timeLimit}`)}}>View Results</Button>
                     </Box>
                   )}
                 </CardContent>

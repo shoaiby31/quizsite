@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, TextField, Button, Typography, Paper, ToggleButton, ToggleButtonGroup, CardContent, Divider, Grid, CardMedia} from '@mui/material';
+import { Box, TextField, Button, Typography, Paper, ToggleButton, ToggleButtonGroup, CardContent, Divider, Grid, CardMedia } from '@mui/material';
 import { motion } from 'framer-motion';
 import GoogleLoginButton from './Hooks/GoogleLoginButton';
 import { useSearchParams } from 'react-router-dom';
@@ -7,9 +7,10 @@ import pic from '../assets/Signup.svg';
 import pic2 from '../assets/login.svg';
 import { useDispatch } from "react-redux";
 import { setUser } from '.././redux/slices/authSlice';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile} from "firebase/auth";
-import { auth, } from "../config/firebase";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { auth, db } from "../config/firebase";
 import { useNavigate, useLocation } from 'react-router-dom';
+import { doc, setDoc } from 'firebase/firestore';
 
 const MotionPaper = motion.create(Paper);
 
@@ -44,13 +45,24 @@ const Signup = (props) => {
                 await updateProfile(userCredential.user, {
                     displayName: name,
                 });
-                setName('')
-                setEmail('')
-                setPassword('')
-                setMode('login')
-                setSuccess('registration successful, please login to continue.')
+
+                const user = userCredential.user;
+                await setDoc(doc(db, 'users', user.uid), {
+                    uid: user.uid,
+                    name: name,
+                    email: email,
+                    photoURL: user.photoURL || '',
+                    role: 'student',
+                    enrolledSubjects: [],
+                    createdAt: new Date(),
+                });
+
+                setName('');
+                setEmail('');
+                setPassword('');
+                navigate(from, { replace: true });
             } catch (err) {
-                setError(err.message)
+                setError(err.message);
             } finally {
                 setLoading(false);
             }
@@ -58,8 +70,8 @@ const Signup = (props) => {
             try {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
-                setEmail('')
-                setPassword('')
+                setEmail('');
+                setPassword('');
                 dispatch(
                     setUser({
                         uid: user.uid,
@@ -67,18 +79,12 @@ const Signup = (props) => {
                         displayName: user.displayName,
                     })
                 );
-                // navigate(from || '/', { replace: true });
                 navigate(from, { replace: true });
             } catch (err) {
-                setError(err.code)
-
+                setError(err.code);
             } finally {
                 setLoading(false);
             }
-
-
-
-
         }
     };
 

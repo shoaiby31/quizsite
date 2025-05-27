@@ -17,6 +17,9 @@ import AttemptQuizPage from './pages/AttemptQuizPage';
 import ResultCard from './pages/ResultCard';
 import DashboardRoutes from './routes/dashboardroutes';
 import Attemptprivatequiz from './components/Quizzes/attemptprivatequiz';
+import JoinTeacherRequest from './components/JoinTeacherRequest';
+import Profile from './components/profile';
+import AdminRoute from './components/PrivateRoute/AdminRoute';
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -32,8 +35,12 @@ const AppRoutes = () => {
         <Route path="/browsequiz" element={<BrowseQuizzes />} />
         <Route path="/attemptQuiz/:quizId" element={<PrivateRoute><AttemptQuizPage /></PrivateRoute>} />
         <Route path="/result" element={<PrivateRoute><ResultCard /></PrivateRoute>} />
-        <Route path="/dashboard/*" element={<PrivateRoute><DashboardRoutes /></PrivateRoute>} />
+        <Route path="/dashboard/*" element={<AdminRoute><DashboardRoutes /></AdminRoute>} />
         <Route path="/attemptprivatequiz/:quizId/:secretId?" element={<Attemptprivatequiz />} />
+        <Route path="/join-teacher" element={<PrivateRoute><JoinTeacherRequest /></PrivateRoute>} />
+        <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+
+
       </Routes>
       {!isDashboard && <Footer />}
     </>

@@ -1,23 +1,40 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Box, Card, CardContent, Typography, Grid, CircularProgress, Alert, TextField, InputAdornment, MenuItem, Select, FormControl, InputLabel, Pagination, CardActions, Button } from '@mui/material';
+import {
+  Box, Card, CardContent, Typography, Grid, CircularProgress, Alert,
+  TextField, InputAdornment, MenuItem, Select, FormControl,
+  InputLabel, Pagination, CardActions, Button
+} from '@mui/material';
 import { Search } from '@mui/icons-material';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../config/firebase';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Privatequizmodel from './privatequizmodel';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 const ITEMS_PER_PAGE = 6;
 
 const PublicQuizzes = () => {
-  const titleRef = useRef(null); // Ref for the Typography element (scroll target)
+  const titleRef = useRef(null);
   const [quizzes, setQuizzes] = useState([]);
   const [filteredQuizzes, setFilteredQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState('recent'); // 'recent' or 'title'
+  const [sortBy, setSortBy] = useState('recent');
   const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
+
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
@@ -39,7 +56,6 @@ const PublicQuizzes = () => {
     fetchQuizzes();
   }, []);
 
-  // Apply search + sort
   useEffect(() => {
     let result = quizzes.filter(quiz =>
       quiz.title?.toLowerCase().includes(search.toLowerCase())
@@ -52,15 +68,22 @@ const PublicQuizzes = () => {
     }
 
     setFilteredQuizzes(result);
-    setPage(1); // Reset to first page on filter change
+    setPage(1);
   }, [search, sortBy, quizzes]);
 
-  // Scroll to "Available Quizzes" after loading
   useEffect(() => {
     if (!loading && titleRef.current) {
       titleRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [loading]);
+
+  const handleJoinClick = () => {
+    if (!currentUser) {
+      navigate('/login');
+    } else {
+      setModalOpen(true);
+    }
+  };
 
   const paginatedQuizzes = filteredQuizzes.slice(
     (page - 1) * ITEMS_PER_PAGE,
@@ -74,12 +97,32 @@ const PublicQuizzes = () => {
     <Box sx={{ px: { xs: 2, md: 5 }, pt: { xs: 3, md: 0 } }} ref={titleRef}>
       {/* Search and Sort */}
       <Box sx={{ display: 'flex', justifyContent: 'right', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 4 }}>
-        <Button variant='outlined' color='info' onClick={() => setModalOpen(true)} sx={{textTransform: 'none'}} size="large">Join Private Quiz</Button>
-  
+        <Button
+          variant='outlined'
+          color='info'
+          onClick={handleJoinClick}
+          sx={{ textTransform: 'none' }}
+          size="large"
+        >
+          Join Private Quiz
+        </Button>
 
-      <Privatequizmodel open={modalOpen} onClose={() => setModalOpen(false)} />
-        <TextField placeholder="Search by title..." sx={{ minWidth: 150 }} value={search} size='small' onChange={(e) => setSearch(e.target.value)}
-          InputProps={{ startAdornment: (<InputAdornment position="start"><Search /></InputAdornment>) }} />
+        <Privatequizmodel open={modalOpen} onClose={() => setModalOpen(false)} />
+
+        <TextField
+          placeholder="Search by title..."
+          sx={{ minWidth: 150 }}
+          value={search}
+          size='small'
+          onChange={(e) => setSearch(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            )
+          }}
+        />
         <FormControl sx={{ minWidth: 150 }}>
           <InputLabel>Sort By</InputLabel>
           <Select size='small' value={sortBy} label="Sort By" onChange={(e) => setSortBy(e.target.value)}>
@@ -89,29 +132,26 @@ const PublicQuizzes = () => {
         </FormControl>
       </Box>
 
-      {/* Scroll target */}
       <Typography variant="h5" fontWeight="bold" gutterBottom>Available Quizzes</Typography>
 
-      {/* Quiz Grid */}
       <Grid container spacing={3}>
         {paginatedQuizzes.length === 0 ? (
           <Typography variant="body1">No matching quizzes found.</Typography>
         ) : (
           paginatedQuizzes.map(quiz => (
-            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={quiz.id}>
+            <Grid size={{sx:12, sm:6, md:3}} key={quiz.id}>
               <Card elevation={3} sx={{ borderRadius: 4, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                {/* <CardHeader title={quiz.title} sx={{fontWeight:'bold'}} /> */}
                 <CardContent>
                   <Typography variant="body2" fontWeight='bold' gutterBottom>{quiz.title}</Typography>
                   <Typography variant="caption" gutterBottom>{quiz.description || 'No description provided.'}</Typography>
                   <Typography variant="body2" gutterBottom>Total Questions: {quiz.questionCount}</Typography>
                   <Typography variant="body2" gutterBottom>Time Allowed: {quiz.timeLimit} minutes</Typography>
                   <Typography variant="body2" fontWeight='bold'>Created By: {quiz.ownerNAme}</Typography>
-
                 </CardContent>
-
                 <CardActions sx={{ paddingX: 5, justifyContent: 'flex-end', marginTop: 'auto' }}>
-                  <Button component={Link} to={`/attemptQuiz/${quiz.id}`} variant='text' sx={{ borderRadius: 20, textTransform: 'none' }} size="small">Attempt Quiz</Button>
+                  <Button component={Link} to={`/attemptQuiz/${quiz.id}`} variant='text' sx={{ borderRadius: 20, textTransform: 'none' }} size="small">
+                    Attempt Quiz
+                  </Button>
                 </CardActions>
               </Card>
             </Grid>
@@ -119,7 +159,6 @@ const PublicQuizzes = () => {
         )}
       </Grid>
 
-      {/* Pagination */}
       {filteredQuizzes.length > ITEMS_PER_PAGE && (
         <Box mt={4} display="flex" justifyContent="center">
           <Pagination
