@@ -6,7 +6,6 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { changeThemeMode } from '../../redux/slices/theme';
 import { auth, db } from '../../config/firebase';
 import { signOut } from 'firebase/auth';
@@ -204,9 +203,7 @@ const TopBar = () => {
                         )}
                     </Menu>
 
-                    <IconButton>
-                        <SettingsOutlinedIcon />
-                    </IconButton>
+                   
 
                     <IconButton onClick={() => dispatch(changeThemeMode())}>
                         {themeMode ? <Brightness7Icon fontSize="small" /> : <Brightness4Icon fontSize="small" />}

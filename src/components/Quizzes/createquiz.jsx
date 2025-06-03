@@ -1,11 +1,9 @@
 import React, { useState, useRef } from 'react';
 import {
-    Box, Button, TextField, Typography, CircularProgress, Paper, Grid,
-    CardMedia, Divider, Switch, Stack, Chip, FormControl, InputLabel,
-    Select, MenuItem, FormControlLabel
+    Box, Button, TextField, Typography, CircularProgress, Paper, Grid, Divider, Switch, Stack, Chip,
+    FormControl, InputLabel, Select, MenuItem, FormControlLabel, Snackbar, Alert
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import quizpic from '../../assets/quizdetails.webp';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useSelector } from 'react-redux';
@@ -21,11 +19,16 @@ export default function Createquiz() {
     const [isPublic, setIsPublic] = useState(true);
     const [isActive, setIsActive] = useState(true);
     const [tags, setTags] = useState([]);
-    const [timeLimit, setTimeLimit] = useState('');
-    const [questionCount, setQuestionCount] = useState('');
     const [selectedClass, setSelectedClass] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
+
+    const [questionTypes, setQuestionTypes] = useState({
+        mcq: { enabled: false, count: 0, timeLimit: '' },
+        truefalse: { enabled: false, count: 0, timeLimit: '' },
+        short: { enabled: false, count: 0, timeLimit: '' }
+    });
 
     const uid = useSelector((state) => state.auth.uid);
     const name = useSelector((state) => state.auth.displayName);
@@ -46,6 +49,13 @@ export default function Createquiz() {
         setTags((prev) => prev.filter((tag) => tag !== tagToDelete));
     };
 
+    const getClassSuffix = (number) => {
+        if (number === 1) return 'st';
+        if (number === 2) return 'nd';
+        if (number === 3) return 'rd';
+        return 'th';
+    };
+
     const Createquiz = async (e) => {
         e.preventDefault();
 
@@ -57,9 +67,22 @@ export default function Createquiz() {
             setError('Please select a class*');
             return;
         }
-
         if (!isPublic && !secretid.trim()) {
             setError('Secret ID is required for private quizzes.');
+            return;
+        }
+
+        const invalidTypes = Object.entries(questionTypes).filter(([key, type]) => {
+            return (
+                type.enabled && (
+                    !type.count || isNaN(type.count) || type.count <= 0 ||
+                    !type.timeLimit || isNaN(type.timeLimit) || type.timeLimit <= 0
+                )
+            );
+        });
+        
+        if (invalidTypes.length > 0) {
+            setError('Please enter a valid count and time limit for all enabled question types.');
             return;
         }
 
@@ -67,7 +90,6 @@ export default function Createquiz() {
         setLoading(true);
 
         try {
-            // Check for duplicate secretid only if quiz is private
             if (!isPublic) {
                 const q = query(collection(db, 'quizzes'), where('secretid', '==', secretid.trim()));
                 const snapshot = await getDocs(q);
@@ -83,24 +105,32 @@ export default function Createquiz() {
                 description,
                 secretid: isPublic ? '' : secretid.trim(),
                 createdBy: uid,
-                ownerNAme: name,
+                ownerName: name,
                 createdAt: new Date(),
                 tags,
                 isPublic,
                 isActive,
-                timeLimit,
-                questionCount: parseInt(questionCount),
-                class: selectedClass
+                class: selectedClass,
+                questionTypes: {
+                    mcq: questionTypes.mcq.enabled ? { count: questionTypes.mcq.count, timeLimit: questionTypes.mcq.timeLimit } : null,
+                    truefalse: questionTypes.truefalse.enabled ? { count: questionTypes.truefalse.count, timeLimit: questionTypes.truefalse.timeLimit } : null,
+                    short: questionTypes.short.enabled ? { count: questionTypes.short.count, timeLimit: questionTypes.short.timeLimit } : null,
+                }
             });
 
-            // Clear form
+            // Reset form
             setTitle('');
             setDescription('');
             setSecretid('');
             setTags([]);
-            setTimeLimit('');
-            setQuestionCount('');
             setSelectedClass('');
+            setQuestionTypes({
+                mcq: { enabled: false, count: 0, timeLimit: '' },
+                truefalse: { enabled: false, count: 0, timeLimit: '' },
+                short: { enabled: false, count: 0, timeLimit: '' }
+            });
+
+            setSuccess(true);
         } catch (err) {
             setError(err.message);
         }
@@ -109,101 +139,173 @@ export default function Createquiz() {
     };
 
     return (
-        <Box sx={{ px: { xs: 2, md: 0 } }}>
-            <Grid container mt={3} spacing={1}>
-                <Grid size={{xs:12, md:5}}>
-                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                        <Typography variant='h4' component='h2'>Make New Quiz</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', height: '85%' }}>
-                        <CardMedia
-                            component="img"
-                            image={quizpic}
-                            alt="Quiz Picture"
-                            sx={{ width: '100%', objectFit: 'contain' }}
-                        />
-                    </Box>
-                </Grid>
+        <Box sx={{ px: { xs: 2, md: 0 }, maxWidth: '1450px', mx: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <Typography variant="h5" fontWeight='bold' sx={{ px: 2 }}>Make New Test</Typography>
 
-                <Grid size={{xs:12, md:7}}>
-                    <MotionPaper
-                        elevation={0}
-                        initial={{ opacity: 0, y: 40 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5 }}
-                        sx={{ p: { xs: 1, md: 3 }, borderRadius: 4 }}
-                    >
-                        <form onSubmit={Createquiz}>
-                            <TextField fullWidth placeholder='eg: Mathematics Test - Algebra' size='small' label="Quiz Title" variant="outlined" type='text' required value={title} onChange={(e) => setTitle(e.target.value)} sx={{ mb: 3 }} />
-                            <TextField fullWidth placeholder='eg: Quiz on basic algebra concepts' size='small' label="Description" variant="outlined" type='text' required value={description} onChange={(e) => setDescription(e.target.value)} sx={{ mb: 3 }} />
-                            <TextField fullWidth placeholder='Enter time in minutes' size='small' label="Time Limit (minutes)" variant="outlined" type='number' required value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} sx={{ mb: 3 }} />
-                            <TextField fullWidth placeholder='Number of questions to appear in the quiz' size='small' label="Number of Questions" variant="outlined" type='number' required value={questionCount} onChange={(e) => setQuestionCount(e.target.value)} sx={{ mb: 3 }} />
-                            
-                            {/* Class Select */}
-                            <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-                                <InputLabel id="class-select-label">Class</InputLabel>
-                                <Select
-                                    labelId="class-select-label"
-                                    value={selectedClass}
-                                    label="Class"
-                                    onChange={(e) => setSelectedClass(e.target.value)}
-                                    required
-                                >
+            <MotionPaper elevation={0} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} sx={{ p: { xs: 2, md: 2 }, borderRadius: 4 }}>
+                <form onSubmit={Createquiz}>
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <TextField fullWidth label="Quiz Title" required size="small" value={title} onChange={(e) => setTitle(e.target.value)} />
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <TextField fullWidth label="Description" required size="small" value={description} onChange={(e) => setDescription(e.target.value)} />
+                        </Grid>
+                    </Grid>
+
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <FormControl fullWidth size="small">
+                                <InputLabel>Class</InputLabel>
+                                <Select value={selectedClass} label="Class" onChange={(e) => setSelectedClass(e.target.value)} required>
                                     {Array.from({ length: 12 }, (_, i) => (
-                                        <MenuItem key={i + 1} value={i + 1}>{`Class ${i + 1}`}</MenuItem>
+                                        <MenuItem key={i + 1} value={i + 1}>
+                                            {`Class ${i + 1}${getClassSuffix(i + 1)}`}
+                                        </MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
-
-                            {/* Tags */}
-                            <TextField size='small' inputRef={inputRef} onKeyDown={handleKeyDown} label="Tags" variant="outlined" placeholder="Press Enter to add tags" fullWidth sx={{ mb: 2 }} />
-                            <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: "wrap" }}>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <TextField size="small" inputRef={inputRef} onKeyDown={handleKeyDown} label="Tags" fullWidth sx={{ mb: 1 }} placeholder="Press Enter to add tags" />
+                            <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
                                 {tags.map((tag, index) => (
-                                    <Chip key={index} label={tag} onDelete={() => handleDelete(tag)} deleteIcon={<CancelIcon />} sx={{ mb: 1 }} />
+                                    <Chip
+                                        key={index}
+                                        label={tag}
+                                        onDelete={() => handleDelete(tag)}
+                                        deleteIcon={<CancelIcon />}
+                                        sx={{ mb: 1 }}
+                                    />
                                 ))}
                             </Stack>
+                        </Grid>
+                    </Grid>
 
-                            {/* Visibility */}
-                            <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-                                <InputLabel id="public-select-label">Visibility</InputLabel>
-                                <Select labelId="public-select-label" value={isPublic} label="Visibility" onChange={(e) => setIsPublic(e.target.value === 'true')}>
+
+
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <FormControl fullWidth size="small">
+                                <InputLabel>Visibility</InputLabel>
+                                <Select
+                                    value={isPublic ? "true" : "false"}
+                                    onChange={(e) => setIsPublic(e.target.value === "true")}
+                                    label="Visibility"
+                                >
                                     <MenuItem value="true">Public</MenuItem>
                                     <MenuItem value="false">Private</MenuItem>
                                 </Select>
                             </FormControl>
+                        </Grid>
+                        {!isPublic && (
+                            <Grid size={{ xs: 12, md: 6 }}>
+                                <TextField fullWidth label="Secret ID" required size="small" value={secretid} onChange={(e) => setSecretid(e.target.value)} />
+                            </Grid>
+                        )}
+                        <FormControlLabel
+                            sx={{ mb: 2 }}
+                            control={
+                                <Switch
+                                    checked={isActive}
+                                    color="success"
+                                    onChange={() => setIsActive(!isActive)}
+                                />
+                            }
+                            label={isActive ? "Active" : "Inactive"}
+                            labelPlacement="start"
+                        />
+                    </Grid>
 
-                            {/* Secret ID for Private Quizzes */}
-                            {!isPublic && (
-                                <TextField fullWidth placeholder='Only users with this ID can join the private quiz' size='small' label="Secret Id" variant="outlined" type='text' required value={secretid} onChange={(e) => setSecretid(e.target.value)} sx={{ mb: 3 }} />
-                            )}
+                    <Divider>
+                        <Typography variant="h6">Define Question Types</Typography>
+                    </Divider>
 
-                            {/* Active Switch */}
-                            <FormControlLabel
-                                sx={{ mb: 2 }}
-                                control={<Switch checked={isActive} color='success' value={isActive} onChange={() => setIsActive(!isActive)} />}
-                                label={isActive ? 'Active:' : 'Inactive:'}
-                                labelPlacement='start'
-                            />
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
+                        {[
+                            { label: "MCQ", key: "mcq" },
+                            { label: "True/False", key: "truefalse" },
+                            { label: "Short Answer", key: "short" },
+                        ].map(({ label, key }) => (
+                            <Grid size={{ xs: 12 }} key={key}>
+                                <Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap">
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={questionTypes[key].enabled}
+                                                onChange={(e) =>
+                                                    setQuestionTypes((prev) => ({
+                                                        ...prev,
+                                                        [key]: {
+                                                            ...prev[key],
+                                                            enabled: e.target.checked,
+                                                        },
+                                                    }))
+                                                }
+                                            />
+                                        }
+                                        label={label}
+                                    />
+                                    {questionTypes[key].enabled && (
+                                        <>
+                                            <TextField
+                                                type="number"
+                                                size="small"
+                                                label={"Number of " + label}
+                                                inputProps={{ min: 1 }}
+                                                value={questionTypes[key].count}
+                                                onChange={(e) =>
+                                                    setQuestionTypes((prev) => ({
+                                                        ...prev,
+                                                        [key]: {
+                                                            ...prev[key],
+                                                            count: parseInt(e.target.value) || 0,
+                                                        },
+                                                    }))
+                                                }
+                                            />
+                                            <TextField
+                                                type="number"
+                                                size="small"
+                                                label={"Time Limit (min)"}
+                                                inputProps={{ min: 1 }}
+                                                value={questionTypes[key].timeLimit}
+                                                onChange={(e) =>
+                                                    setQuestionTypes((prev) => ({
+                                                        ...prev,
+                                                        [key]: {
+                                                            ...prev[key],
+                                                            timeLimit: parseInt(e.target.value) || '',
+                                                        },
+                                                    }))
+                                                }
+                                            />
+                                        </>
+                                    )}
+                                </Stack>
+                            </Grid>
+                        ))}
+                    </Grid>
 
-                            {error && (
-                                <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
-                            )}
+                    {error && (
+                        <Typography color="error" sx={{ mb: 2 }}>
+                            {error}
+                        </Typography>
+                    )}
 
-                            <Button
-                                type="submit"
-                                fullWidth
-                                variant="contained"
-                                color="primary"
-                                disabled={loading}
-                                startIcon={loading && <CircularProgress size={20} />}
-                            >
-                                {loading ? 'Submitting...' : 'Submit'}
-                            </Button>
-                        </form>
-                    </MotionPaper>
-                </Grid>
-            </Grid>
-            <Divider />
+                    <Snackbar open={success} autoHideDuration={5000} onClose={() => setSuccess(false)}>
+                        <Alert onClose={() => setSuccess(false)} severity="success" sx={{ width: '100%' }}>
+                            Quiz created successfully!
+                        </Alert>
+                    </Snackbar>
+
+                    <Button type="submit" fullWidth variant="contained" color="primary" disabled={loading} startIcon={loading && <CircularProgress size={20} />}>
+                        {loading ? "Submitting..." : "Submit"}
+                    </Button>
+                </form>
+            </MotionPaper>
+
+            <Divider sx={{ my: 3 }} />
             <ViewExistingQuizzes userId={uid} />
         </Box>
     );

@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import DashboardLayout from '../components/DashbaordComponents/dashboardlayout';
 import Dashboard from '../pages/Dashboard';
-import ManageQuizzes from '../components/Quizzes/userquizzes';
+import ManageQuizzes from '../components/Quizzes/MyQuizzes';
 import CreactquizPage from '../components/Quizzes/createquiz';
 import Privatequizresults from '../components/Results/privatequizresults';
 import Profile from '../components/profile';

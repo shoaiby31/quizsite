@@ -1,6 +1,6 @@
 import { Grid, Box } from '@mui/material';
 import InfoCard from '../components/DashbaordComponents/infocard';
-import { People, MedicalServices, AttachMoney, LocalCarWash } from '@mui/icons-material';
+import { People, AttachMoney, LocalCarWash, Quiz } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
 import { onSnapshot, collection, query, where, doc, getDoc } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
@@ -9,6 +9,7 @@ import { db } from '../config/firebase';
 const Dashboard = () => {
   const [studentCount, setStudentCount] = useState(0);
   const [adminId, setAdminId] = useState(null);
+  const [quizCount, setQuizCount] = useState(0); // ✅ New state for quiz count
   const currentUid = useSelector((state) => state.auth.uid);
 
   // Step 1: Get adminId from Firestore based on current user's UID
@@ -48,6 +49,22 @@ const Dashboard = () => {
     return () => unsubscribe();
   }, [adminId]);
 
+  useEffect(() => {
+    if (!adminId) return;
+
+    const q = query(
+      collection(db, 'quizzes'),
+      where('createdBy', '==', currentUid)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setQuizCount(snapshot.size);
+    });
+
+    return () => unsubscribe();
+  },);
+
+
   return (
     <>
       <Grid container spacing={3}>
@@ -55,7 +72,7 @@ const Dashboard = () => {
           <InfoCard icon={<People />} label="Total Students" value={studentCount.toString()} color="purple" />
         </Grid>
         <Grid size={{xs:12, sm:6, md:3}}>
-          <InfoCard icon={<MedicalServices />} label="Available Staff" value="394" color="blue" />
+          <InfoCard icon={<Quiz />} label="My Quizzes" value={quizCount.toString()} color="blue" />
         </Grid>
         <Grid size={{xs:12, sm:6, md:3}}>
           <InfoCard icon={<AttachMoney />} label="Avg Treat. Costs" value="$2,536" color="green" />

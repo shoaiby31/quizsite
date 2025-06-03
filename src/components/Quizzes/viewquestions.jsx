@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer, CircularProgress, TableHead,
   TableRow, Paper, Checkbox, TablePagination, Button, Box, Typography,
-  Dialog, DialogTitle, DialogContent, DialogActions
+  Dialog, DialogTitle, DialogContent, DialogActions, ToggleButtonGroup, ToggleButton
 } from '@mui/material';
 import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
@@ -13,23 +13,28 @@ const ViewQuestions = ({ quizId, qtitle }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [loading, setLoading] = useState(true);
+  const [category, setCategory] = useState('all');
 
-  // Dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteMultiple, setDeleteMultiple] = useState(false);
   const [questionToDelete, setQuestionToDelete] = useState(null);
 
-  // Fetch questions from Firestore
   useEffect(() => {
     const fetchQuestions = async () => {
       setLoading(true);
       try {
         const questionsRef = collection(db, 'quizzes', quizId, 'questions');
         const querySnapshot = await getDocs(questionsRef);
-        const questionsData = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const questionsData = querySnapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            text: data.text || '',
+            type: data.type || 'mcq',
+            options: Array.isArray(data.options) ? data.options : [],
+            answer: data.answer ?? null,
+          };
+        });
         setQuestions(questionsData);
       } catch (error) {
         console.error('Error fetching questions:', error);
@@ -40,9 +45,8 @@ const ViewQuestions = ({ quizId, qtitle }) => {
     fetchQuestions();
   }, [quizId]);
 
-  // Delete a single question
   const deleteQuestion = async (questionId) => {
-    setLoading(true)
+    setLoading(true);
     try {
       const questionRef = doc(db, 'quizzes', quizId, 'questions', questionId);
       await deleteDoc(questionRef);
@@ -51,11 +55,9 @@ const ViewQuestions = ({ quizId, qtitle }) => {
     } catch (error) {
       console.error('Error deleting question:', error);
     }
-    setLoading(false)
-
+    setLoading(false);
   };
 
-  // Delete selected questions
   const deleteSelectedQuestions = async () => {
     try {
       const deletePromises = selected.map((id) =>
@@ -69,7 +71,6 @@ const ViewQuestions = ({ quizId, qtitle }) => {
     }
   };
 
-  // Confirmation dialog handlers
   const handleOpenDeleteDialog = (questionId = null) => {
     if (questionId) {
       setQuestionToDelete(questionId);
@@ -97,7 +98,7 @@ const ViewQuestions = ({ quizId, qtitle }) => {
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelected = questions.map((q) => q.id);
+      const newSelected = filteredQuestions.map((q) => q.id);
       setSelected(newSelected);
     } else {
       setSelected([]);
@@ -129,9 +130,12 @@ const ViewQuestions = ({ quizId, qtitle }) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
-  const isSelected = (id) => selected.indexOf(id) !== -1;
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - questions.length) : 0;
+  const isSelected = (id) => selected.indexOf(id) !== -1;
+  const filteredQuestions = category === 'all' ? questions : questions.filter(q => q.type === category);
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - filteredQuestions.length) : 0;
+
+  const uniqueTypes = [...new Set(questions.map(q => q.type))];
 
   if (loading) {
     return (
@@ -142,7 +146,7 @@ const ViewQuestions = ({ quizId, qtitle }) => {
   }
 
   return (
-    <Box sx={{ mt: 4 }} elevation={questions.length === 0 ? 0 : 3}>
+    <Box sx={{ mt: 4 }}>
       {questions.length === 0 ? (
         <Typography variant="h6" align="center" gutterBottom>
           You haven't uploaded any question in {qtitle} Quiz.
@@ -152,6 +156,18 @@ const ViewQuestions = ({ quizId, qtitle }) => {
           <Typography variant="h6" mb={2}>
             Existing Questions in {qtitle} Quiz
           </Typography>
+
+          <ToggleButtonGroup
+            value={category}
+            exclusive
+            onChange={(e, val) => val && setCategory(val)}
+            sx={{ mb: 2 }}
+          >
+            <ToggleButton value="all">All</ToggleButton>
+            {uniqueTypes.map((type) => (
+              <ToggleButton key={type} value={type}>{type.toUpperCase()}</ToggleButton>
+            ))}
+          </ToggleButtonGroup>
 
           {selected.length > 0 && (
             <Box sx={{ mb: 2 }}>
@@ -173,25 +189,24 @@ const ViewQuestions = ({ quizId, qtitle }) => {
                     <Checkbox
                       color="primary"
                       indeterminate={
-                        selected.length > 0 && selected.length < questions.length
+                        selected.length > 0 && selected.length < filteredQuestions.length
                       }
                       checked={
-                        questions.length > 0 &&
-                        selected.length === questions.length
+                        filteredQuestions.length > 0 &&
+                        selected.length === filteredQuestions.length
                       }
                       onChange={handleSelectAllClick}
-                      inputProps={{
-                        'aria-label': 'select all questions',
-                      }}
+                      inputProps={{ 'aria-label': 'select all questions' }}
                     />
                   </TableCell>
                   <TableCell>Question</TableCell>
-                  <TableCell>Options</TableCell>
+                  <TableCell>Type</TableCell>
+                  <TableCell>Details</TableCell>
                   <TableCell align="right">Action</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {questions
+                {filteredQuestions
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((q) => {
                     const isItemSelected = isSelected(q.id);
@@ -211,20 +226,27 @@ const ViewQuestions = ({ quizId, qtitle }) => {
                           <Checkbox
                             color="primary"
                             checked={isItemSelected}
-                            inputProps={{
-                              'aria-labelledby': labelId,
-                            }}
+                            inputProps={{ 'aria-labelledby': labelId }}
                           />
                         </TableCell>
                         <TableCell component="th" id={labelId} scope="row">
                           {q.text}
                         </TableCell>
+                        <TableCell>{q.type}</TableCell>
                         <TableCell>
-                          {q.options.map((opt, idx) => (
-                            <Box key={idx}>
-                              {opt.text} {opt.isCorrect ? '(Correct)' : ''}
-                            </Box>
-                          ))}
+                          {q.type === 'mcq' && Array.isArray(q.options) ? (
+                            q.options.map((opt, idx) => (
+                              <Box key={idx}>
+                                {opt.text} {opt.isCorrect ? '(Correct)' : ''}
+                              </Box>
+                            ))
+                          ) : q.type === 'truefalse' ? (
+                            <Box>Correct Answer: {q.answer === true ? 'True' : 'False'}</Box>
+                          ) : q.type === 'short' ? (
+                            <Box>Answer: {q.answer}</Box>
+                          ) : (
+                            <Box>Unknown question type</Box>
+                          )}
                         </TableCell>
                         <TableCell align="right">
                           <Button
@@ -243,7 +265,7 @@ const ViewQuestions = ({ quizId, qtitle }) => {
                   })}
                 {emptyRows > 0 && (
                   <TableRow style={{ height: 53 * emptyRows }}>
-                    <TableCell colSpan={4} />
+                    <TableCell colSpan={5} />
                   </TableRow>
                 )}
               </TableBody>
@@ -253,7 +275,7 @@ const ViewQuestions = ({ quizId, qtitle }) => {
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={questions.length}
+            count={filteredQuestions.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
@@ -262,7 +284,6 @@ const ViewQuestions = ({ quizId, qtitle }) => {
         </Box>
       )}
 
-      {/* Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog}>
         <DialogTitle>Confirm Deletion</DialogTitle>
         <DialogContent>

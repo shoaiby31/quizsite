@@ -3,7 +3,7 @@ import {
   Box, Card, CardContent, Typography, Grid, CircularProgress, Alert,
   TextField, InputAdornment, MenuItem, Select, FormControl, InputLabel,
   Pagination, IconButton, Tooltip,
-  Button,
+  Button
 } from '@mui/material';
 import { Search, Edit } from '@mui/icons-material';
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 
 const ITEMS_PER_PAGE = 9;
 
-const UserQuizzes = () => {
+const MyQuizzes = () => {
   const titleRef = useRef(null);
   const user = useSelector(state => state.auth);
   const themeMode = useSelector((state) => state.mode.value);
@@ -103,7 +103,6 @@ const UserQuizzes = () => {
     );
     setEditOpen(false);
   };
-
   if (loading) return <Box textAlign="center" mt={5}><CircularProgress /></Box>;
   if (error) return <Alert severity="error" sx={{ mt: 5 }}>{error}</Alert>;
   return (
@@ -187,29 +186,33 @@ const UserQuizzes = () => {
                   <Typography variant="body2"><strong>Privacy:</strong> {quiz.isPublic ? ' Public' : ' Private'}</Typography>
                 </Box>
 
-                <CardContent>
-                  <Typography variant="body2" fontWeight="bold" gutterBottom>{quiz.title}</Typography>
-                  <Typography variant="caption" gutterBottom>{quiz.description || 'No description provided.'}</Typography>
-                  <Typography variant="body2">Total Questions: {quiz.questionCount}</Typography>
-                  <Typography variant="body2">Time Allowed: {quiz.timeLimit} minutes</Typography>
-                  {quiz.secretid !== '' &&
-                    <Typography variant="body2">
-                      <strong style={{ color: themeMode ? 'white' : 'black' }}>Secret Id:</strong> {quiz.secretid}
-                    </Typography>}
-                  {/* <Typography variant="body2" color={quiz.isActive ? '#4CAF50' : 'gray'}>
-                    <strong style={{ color: themeMode ? 'white' : 'black' }}>Status:</strong> {quiz.isActive ? 'Active' : 'Inactive'}
-                  </Typography> */}
+                <CardContent sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  <Box>
+                    <Typography variant="body2" fontWeight="bold" gutterBottom>{quiz.title}</Typography>
+                    <Typography variant="caption" gutterBottom>{quiz.description || 'No description provided.'}</Typography>
+                    <Typography variant="body2">For Class: {quiz.class}{quiz.class === 1 ? 'st' : quiz.class === 2 ? 'nd' : quiz.class === 3 ? 'rd' : 'th'}</Typography>
+                    {quiz.secretid !== '' &&
+                      <Typography variant="body2">
+                        <strong style={{ color: themeMode ? 'white' : 'black' }}>Secret Id:</strong> {quiz.secretid}
+                      </Typography>}
 
-                  {quiz.tags && quiz.tags.length > 0 && (
-                    <Box mt={1} display="flex" flexWrap="wrap" justifyContent='space-between' gap={0.5}>
-                      {quiz.tags.map((tag, i) => (
-                        <Typography key={i} variant="caption" sx={{ backgroundColor: themeMode ? '#1f1f1f' : '#f0f0f0', px: 1, borderRadius: 1 }}>
-                          #{tag}
-                        </Typography>
-                      ))}
-                      <Button sx={{textTransform:'none'}} size='small' onClick={()=>{navigate(`/dashboard/private-results/${quiz.id}/${quiz.timeLimit}`)}}>View Results</Button>
-                    </Box>
-                  )}
+                      {Object.entries(quiz.questionTypes).map(([type, value]) => (
+  <Typography variant="body2" gutterBottom key={type}>
+    {value ? '✅ ' : <span style={{ fontSize: '11px' }}>❌ </span>}
+    {type === 'truefalse' ? 'True/False' : type === 'short' ? 'Short Questions' : "MCQ's"}
+    {value && ` — Time Allowed: ${value.timeLimit} min`}
+  </Typography>
+))}
+
+                  </Box>
+
+                  <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button sx={{ textTransform: 'none' }} size='small' onClick={() => {
+                      navigate(`/dashboard/private-results/${quiz.id}/${quiz.timeLimit}`);
+                    }}>
+                      View Results
+                    </Button>
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>
@@ -236,4 +239,4 @@ const UserQuizzes = () => {
   );
 };
 
-export default UserQuizzes;
+export default MyQuizzes;

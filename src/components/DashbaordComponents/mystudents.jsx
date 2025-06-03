@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  collection, doc, query, where, deleteDoc
+  collection, doc, query, where, deleteDoc, onSnapshot,
 } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
 import {
@@ -9,7 +9,6 @@ import {
   Snackbar, TablePagination, Alert, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText
 } from '@mui/material';
 import { db } from '../../config/firebase';
-import { onSnapshot } from 'firebase/firestore';
 
 const Mystudents = () => {
   const [students, setStudents] = useState([]);
@@ -25,41 +24,42 @@ const Mystudents = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const currentUser = useSelector((state) => state.auth);
 
+  const hasMounted = useRef(false);
+  const previousIds = useRef(new Set());
+
   useEffect(() => {
     if (!currentUser?.uid) return;
-  
+
     let unsubscribeAdmin;
     let unsubscribeStudents;
-  
+
     const fetchStudentsLive = async () => {
       try {
         unsubscribeAdmin = onSnapshot(doc(db, 'users', currentUser.uid), (adminDoc) => {
           const adminid = adminDoc.data()?.adminid;
           if (!adminid) return;
-  
+
           const q = query(collection(db, 'studentTeacherRelations'), where('adminId', '==', adminid));
-  
-          let previousIds = new Set();
-  
+
           unsubscribeStudents = onSnapshot(q, (snapshot) => {
             const studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setStudents(studentsData);
             setFilteredStudents(studentsData);
             setLoading(false);
-  
-            // Detect newly added students:
+
             const currentIds = new Set(snapshot.docs.map(doc => doc.id));
-            const added = [...currentIds].filter(id => !previousIds.has(id));
-  
-            if (added.length > 0) {
+            const added = [...currentIds].filter(id => !previousIds.current.has(id));
+
+            if (hasMounted.current && added.length > 0) {
               setSnackbar({
                 open: true,
                 message: `New student${added.length > 1 ? 's' : ''} joined!`,
                 severity: 'info',
               });
             }
-  
-            previousIds = currentIds;
+
+            previousIds.current = currentIds;
+            hasMounted.current = true;
           });
         });
       } catch (error) {
@@ -67,9 +67,9 @@ const Mystudents = () => {
         setLoading(false);
       }
     };
-  
+
     fetchStudentsLive();
-  
+
     return () => {
       if (unsubscribeAdmin) unsubscribeAdmin();
       if (unsubscribeStudents) unsubscribeStudents();
