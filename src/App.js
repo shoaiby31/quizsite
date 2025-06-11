@@ -40,7 +40,7 @@ const AppRoutes = () => {
         <Route path="/attemptQuiz/:quizId" element={<PrivateRoute><AttemptQuizPage /></PrivateRoute>} />
         <Route path="/result" element={<PrivateRoute><ResultCard /></PrivateRoute>} />
         <Route path="/dashboard/*" element={<AdminRoute><DashboardRoutes /></AdminRoute>} />
-        <Route path="/start-test/:quizId" element={<Attemptprivatequiz />} />
+        <Route path="/start-test/:quizId" element={<PrivateRoute><Attemptprivatequiz /></PrivateRoute>} />
         <Route path="/mcqs-test/:quizId" element={<PrivateRoute><AttemptMcqs /></PrivateRoute>} />
         <Route path="/true-false-test/:quizId" element={<PrivateRoute><AttemptTrueFalse /></PrivateRoute>} />
 

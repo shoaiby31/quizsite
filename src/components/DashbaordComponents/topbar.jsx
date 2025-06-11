@@ -24,6 +24,7 @@ const TopBar = () => {
     const displayName = useSelector((state) => state.auth.displayName);
     const userpic = useSelector((state) => state.auth.photoURL);
     const themeMode = useSelector((state) => state.mode.value);
+    const uid = useSelector((state) => state.auth.uid);
 
     const [adminId, setAdminId] = useState(null);
     const [anchorElUser, setAnchorElUser] = useState(null);
@@ -79,12 +80,12 @@ const TopBar = () => {
     const handleAccept = async (request) => {
         try {
             const { studentEmail, className, adminId, id, rollNo, studentName } = request;
-    
+
             if (!studentEmail || !className || !adminId) {
                 console.error('Missing data in request:', request);
                 return;
             }
-    
+
             // Check if the student already has a relation with this class/admin
             const existingQuery = query(
                 collection(db, 'studentTeacherRelations'),
@@ -92,28 +93,30 @@ const TopBar = () => {
                 where('className', '==', className),
                 where('adminId', '==', adminId)
             );
-    
+
             const existingSnapshot = await getDocs(existingQuery);
-    
+
             if (!existingSnapshot.empty) {
                 console.warn('Student already joined this class.');
                 await deleteDoc(doc(db, 'joinRequests', id));
                 return;
             }
-    
+
             // Add the relation
             await addDoc(collection(db, 'studentTeacherRelations'), {
                 studentEmail,
                 className,
                 adminId,
+                adminUid: uid ,
                 rollNo,
                 studentName,
+                userId: request.studentId,
                 timestamp: new Date()
             });
-    
+
             // Delete the join request after accepting
             await deleteDoc(doc(db, 'joinRequests', id));
-    
+
         } catch (error) {
             console.error('Error accepting request:', error);
         }
@@ -197,13 +200,13 @@ const TopBar = () => {
                             <MenuItem onClick={() => {
                                 handleCloseNotifMenu();
                                 navigate('/dashboard/join-requests');
-                            }} sx={{ justifyContent: 'center', fontWeight: 600, fontSize:14 }}>
+                            }} sx={{ justifyContent: 'center', fontWeight: 600, fontSize: 14 }}>
                                 View All Requests
                             </MenuItem>
                         )}
                     </Menu>
 
-                   
+
 
                     <IconButton onClick={() => dispatch(changeThemeMode())}>
                         {themeMode ? <Brightness7Icon fontSize="small" /> : <Brightness4Icon fontSize="small" />}

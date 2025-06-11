@@ -7,6 +7,7 @@ import {
   TableCell, TableContainer, TableHead, TableRow, TextField, Typography, Alert, CircularProgress
 } from '@mui/material';
 import { db } from '../../config/firebase';
+import { useSelector } from 'react-redux';
 
 const JoinRequestsManager = () => {
   const [requests, setRequests] = useState([]);
@@ -16,7 +17,7 @@ const JoinRequestsManager = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [loading, setLoading] = useState(false);
   const [loading1, setLoading1] = useState(false);
-
+  const uid = useSelector((state) => state.auth.uid);
 
 
   useEffect(() => {
@@ -55,7 +56,7 @@ const JoinRequestsManager = () => {
   const handleAccept = async (request) => {
     setLoading(true)
     try {
-      const { studentEmail, className, adminId, id, rollNo, studentName } = request;
+      const { studentEmail, className, adminId, id, rollNo, studentName, } = request;
 
       if (!studentEmail || !className || !adminId) {
         console.error('Missing data in request:', request);
@@ -77,14 +78,16 @@ const JoinRequestsManager = () => {
         await deleteDoc(doc(db, 'joinRequests', id));
         return true;
       }
-
+console.log("request.uid: ",uid)
       // Add relation
       await addDoc(collection(db, 'studentTeacherRelations'), {
         studentEmail,
         className,
         adminId,
+        adminUid: uid ,
         rollNo,
         studentName,
+        userId:request.studentId,
         timestamp: new Date(),
       });
 
@@ -146,7 +149,6 @@ const JoinRequestsManager = () => {
     });
     setSelectedIds([]);
   };
-
   return (
     <Box sx={{ mt: 3 }}>
       <Typography variant="h6" sx={{ mb: 2 }}>
