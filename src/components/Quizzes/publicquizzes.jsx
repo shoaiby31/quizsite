@@ -102,7 +102,7 @@ const PublicQuizzes = () => {
           color='info'
           onClick={handleJoinClick}
           sx={{ textTransform: 'none' }}
-          size="large"
+          size="small"
         >
           Join Private Quiz
         </Button>

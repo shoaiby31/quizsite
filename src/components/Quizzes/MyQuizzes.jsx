@@ -196,13 +196,13 @@ const MyQuizzes = () => {
                         <strong style={{ color: themeMode ? 'white' : 'black' }}>Secret Id:</strong> {quiz.secretid}
                       </Typography>}
 
-                      {Object.entries(quiz.questionTypes).map(([type, value]) => (
-  <Typography variant="body2" gutterBottom key={type}>
-    {value ? '✅ ' : <span style={{ fontSize: '11px' }}>❌ </span>}
-    {type === 'truefalse' ? 'True/False' : type === 'short' ? 'Short Questions' : "MCQ's"}
-    {value && ` — Time Allowed: ${value.timeLimit} min`}
-  </Typography>
-))}
+                    {Object.entries(quiz.questionTypes).map(([type, value]) => (
+                      <Typography variant="body2" gutterBottom key={type}>
+                        {value ? '✅ ' : <span style={{ fontSize: '11px' }}>❌ </span>}
+                        {type === 'truefalse' ? 'True/False' : type === 'short' ? 'Short Questions' : "MCQ's"}
+                        {value && ` — Time Allowed: ${value.timeLimit} min`}
+                      </Typography>
+                    ))}
 
                   </Box>
 

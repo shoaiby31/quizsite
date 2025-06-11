@@ -34,7 +34,7 @@ const Privatequizmodel = ({ open, onClose }) => {
         if (!quizData.isActive) {
           setError('⚠️ This quiz is currently inactive. Stay tuned!');
         } else {
-          navigate(`/attemptprivatequiz/${quizDoc.id}/${quizData.secretid}`);
+          navigate(`/start-test/${quizDoc.id}`,{ state: { secretId } });
           onClose(); // close modal
         }
       }
