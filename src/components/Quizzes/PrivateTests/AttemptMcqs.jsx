@@ -22,7 +22,6 @@ const AttemptMcqs = () => {
   const navigate = useNavigate();
   const auth = getAuth();
   const [user, setUser] = useState(null);
-  const [title, setTitle] = useState("");
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -52,7 +51,6 @@ const AttemptMcqs = () => {
         if (!quizSnap.exists()) throw new Error("Quiz not found.");
 
         const quizData = quizSnap.data();
-        setTitle(quizData.title);
 
         // Check if quiz is active and if the secretId matches
         if (!quizData.isActive) {
@@ -91,20 +89,7 @@ const AttemptMcqs = () => {
           if (attemptData.mcqsQuestions && attemptData.mcqsQuestions.length > 0) {
             // Already submitted? Redirect to result.
             if (attemptData.mcqsSubmitted) {
-              const pieData = [
-                { name: "Correct", value: attemptData.mcqsScore },
-                { name: "Incorrect", value: attemptData.totalMcqsScore - attemptData.mcqsScore }
-              ];
-              return navigate("/result", {
-                state: {
-                  quizId,
-                  title: quizData.title,
-                  data: pieData,
-                  score: attemptData.mcqsScore,
-                  length: attemptData.mcqsQuestions.length,
-                  totalScore: attemptData.totalMcqsScore
-                }
-              });
+              return navigate(`/start-test/${quizId}`, { state: { secretId } });
             }
 
             const startTime = attemptData.startTime.toDate();
@@ -126,21 +111,7 @@ const AttemptMcqs = () => {
                 totalMcqsScore: storedQuestions.length
               }, { merge: true });
 
-              const pieData = [
-                { name: "Correct", value: score },
-                { name: "Incorrect", value: storedQuestions.length - score }
-              ];
-
-              return navigate("/result", {
-                state: {
-                  quizId,
-                  title: quizData.title,
-                  data: pieData,
-                  mcqsScore: score,
-                  length: storedQuestions.length,
-                  totalMcqsScore: storedQuestions.length
-                }
-              });
+              return navigate(`/start-test/${quizId}`, { state: { secretId } });
             }
 
             // Time remaining — resume quiz
@@ -255,20 +226,8 @@ const AttemptMcqs = () => {
       }, { merge: true });
     }
 
-    const pieData = [
-      { name: "Correct", value: calculatedScore },
-      { name: "Incorrect", value: questions.length - calculatedScore }
-    ];
-
-    navigate("/result", {
-      state: {
-        quizId, title, data: pieData,
-        mcqsScore: calculatedScore,
-        length: questions.length,
-        totalMcqs: questions.length
-      }
-    });
-  }, [answers, questions, attemptId, navigate, quizId, title]);
+    navigate(`/start-test/${quizId}`, { state: { secretId } });
+  }, [answers, questions, attemptId, navigate, quizId, secretId]);
 
   useEffect(() => {
     if (submitted || remainingTime === null) return;

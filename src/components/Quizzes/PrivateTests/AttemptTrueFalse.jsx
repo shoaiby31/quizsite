@@ -22,7 +22,6 @@ const AttemptTrueFalse = () => {
     const navigate = useNavigate();
     const auth = getAuth();
     const [user, setUser] = useState(null);
-    const [title, setTitle] = useState("");
     const [questions, setQuestions] = useState([]);
     const [answers, setAnswers] = useState({});
     const [currentIdx, setCurrentIdx] = useState(0);
@@ -52,7 +51,6 @@ const AttemptTrueFalse = () => {
                 if (!quizSnap.exists()) throw new Error("Quiz not found.");
 
                 const quizData = quizSnap.data();
-                setTitle(quizData.title);
 
                 // Check if quiz is active and if the secretId matches
                 if (!quizData.isActive) {
@@ -91,20 +89,7 @@ const AttemptTrueFalse = () => {
                     if (attemptData.trueFalseQuestions && attemptData.trueFalseQuestions.length > 0) {
                         // Already submitted? Redirect to result.
                         if (attemptData.trueFalseSubmitted) {
-                            const pieData = [
-                                { name: "Correct", value: attemptData.trueFalseScore },
-                                { name: "Incorrect", value: attemptData.totalTrueFalseScore - attemptData.trueFalseScore }
-                            ];
-                            return navigate("/result", {
-                                state: {
-                                    quizId,
-                                    title: quizData.title,
-                                    data: pieData,
-                                    score: attemptData.trueFalseScore,
-                                    length: attemptData.trueFalseQuestions.length,
-                                    totalScore: attemptData.totalTrueFalseScore
-                                }
-                            });
+                            return navigate(`/start-test/${quizId}`, { state: { secretId } });
                         }
                 
                         const startTime = attemptData.startTime.toDate();
@@ -126,21 +111,7 @@ const AttemptTrueFalse = () => {
                                 totalTrueFalseScore: storedQuestions.length
                             }, { merge: true });
                 
-                            const pieData = [
-                                { name: "Correct", value: score },
-                                { name: "Incorrect", value: storedQuestions.length - score }
-                            ];
-                
-                            return navigate("/result", {
-                                state: {
-                                    quizId,
-                                    title: quizData.title,
-                                    data: pieData,
-                                    trueFalseScore: score,
-                                    length: storedQuestions.length,
-                                    totalTrueFalseScore: storedQuestions.length
-                                }
-                            });
+                            return navigate(`/start-test/${quizId}`, { state: { secretId } });
                         }
                 
                         // Time remaining — resume quiz
@@ -258,22 +229,8 @@ const AttemptTrueFalse = () => {
             }, { merge: true });
         }
     
-        const pieData = [
-            { name: "Correct", value: calculatedScore },
-            { name: "Incorrect", value: questions.length - calculatedScore }
-        ];
-    
-        navigate("/result", {
-            state: {
-                quizId,
-                title,
-                data: pieData,
-                trueFalseScore: calculatedScore,
-                length: questions.length,
-                totalScore: questions.length
-            }
-        });
-    }, [answers, questions, attemptId, navigate, quizId, title]);
+        navigate(`/start-test/${quizId}`, { state: { secretId } });
+    }, [answers, questions, attemptId, navigate, quizId, secretId]);
 
     useEffect(() => {
         if (submitted || remainingTime === null) return;
@@ -433,79 +390,3 @@ const AttemptTrueFalse = () => {
 };
 
 export default AttemptTrueFalse;
-
-
-
-
-// if (!attemptSnap.empty) {
-
-//           const docSnap = attemptSnap.docs[0];
-//           const attemptData = docSnap.data();
-//           setAttemptId(docSnap.id);
-//           const warningCountFromFirestore = attemptData.warningCount || 0;
-//           setWarningCount(warningCountFromFirestore);
-//           warningCountRef.current = warningCountFromFirestore; // 🔥 Fix here
-
-//           // Already submitted? Redirect to result.
-//           if (attemptData.mcqsSubmitted) {
-//             const pieData = [
-//               { name: "Correct", value: attemptData.score },
-//               { name: "Incorrect", value: attemptData.totalMcqsScore - attemptData.mcqsScore }
-//             ];
-//             return navigate("/result", {
-//               state: {
-//                 quizId,
-//                 title: quizData.title,
-//                 data: pieData,
-//                 score: attemptData.mcqsScore,
-//                 length: attemptData.mcqsQuestions.length,
-//                 totalScore: attemptData.totalMcqsScore
-//               }
-//             });
-//           }
-
-//           const startTime = attemptData.startTime.toDate();
-//           const elapsed = Math.floor((Date.now() - startTime.getTime()) / 1000);
-
-//           // Time expired — auto-submit silently
-//           if (elapsed >= timeLimit) {
-//             const storedQuestions = attemptData.questions;
-//             const storedAnswers = attemptData.answers || {};
-
-//             let score = 0;
-//             storedQuestions.forEach((q, idx) => {
-//               const correct = q.options.find(o => o.isCorrect)?.text;
-//               if (storedAnswers[idx] === correct) score++;
-//             });
-
-//             await setDoc(doc(db, "attempts", docSnap.id), {
-//               mcqsSubmitted: true,
-//               mcqsScore: score,
-//               totalMcqs: storedQuestions.length
-//             }, { merge: true });
-
-//             const pieData = [
-//               { name: "Correct", value: score },
-//               { name: "Incorrect", value: storedQuestions.length - score }
-//             ];
-
-//             return navigate("/result", {
-//               state: {
-//                 quizId,
-//                 title: quizData.title,
-//                 data: pieData,
-//                 mcqsScore: score,
-//                 length: storedQuestions.length,
-//                 totalScore: storedQuestions.length
-//               }
-//             });
-//           }
-
-//           // Time remaining — resume quiz
-//           setQuestions(attemptData.mcqsQuestions);
-//           setAnswers(attemptData.mcqsAnswers || {});
-//           setCurrentIdx(attemptData.currentIdx || 0);
-//           setRemainingTime(Math.max(timeLimit - elapsed, 0));
-//           setIsLoading(false);
-//           return;
-//         }

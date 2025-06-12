@@ -78,7 +78,6 @@ const JoinRequestsManager = () => {
         await deleteDoc(doc(db, 'joinRequests', id));
         return true;
       }
-console.log("request.uid: ",uid)
       // Add relation
       await addDoc(collection(db, 'studentTeacherRelations'), {
         studentEmail,

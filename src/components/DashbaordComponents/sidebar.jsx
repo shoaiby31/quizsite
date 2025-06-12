@@ -13,7 +13,7 @@ const navItems = [
   { label: 'My Students', icon: <People />, path: '/dashboard/my-students' },
   { label: 'My Quizzes', icon: <Quiz />, path: '/dashboard/private-quizzes' },
   { label: 'Make New Quiz', icon: <History />, path: '/dashboard/createquiz' },
-  { label: 'Students Requests', icon: <LegendToggle />, path: '/dashboard/join-requests' },
+  { label: 'Requests', icon: <LegendToggle />, path: '/dashboard/join-requests' },
   { label: 'Users Management', icon: <Map />, path: '/dashboard/abc' },
   { label: 'Settings', icon: <Settings />, path: '/dashboard/efd' },
 ];
