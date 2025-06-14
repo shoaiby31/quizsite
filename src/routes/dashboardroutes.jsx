@@ -7,6 +7,7 @@ import Privatequizresults from '../components/Results/privatequizresults';
 import Profile from '../components/profile';
 import Mystudents from '../components/DashbaordComponents/mystudents';
 import JoinRequestsManager from '../components/DashbaordComponents/JoinRequestsManager';
+import AdminGradeShortAnswers from '../components/Quizzes/PrivateTests/AdminGradeShortAnswers';
 
 const DashboardRoutes = () => {
   return (
@@ -20,6 +21,8 @@ const DashboardRoutes = () => {
         <Route path="profile" element={<Profile />} />
         <Route path="my-students" element={<Mystudents />} />
         <Route path="join-requests" element={<JoinRequestsManager />} />
+        <Route path="short-answers-grading/:quizId" element={<AdminGradeShortAnswers />} />
+
 
 
 

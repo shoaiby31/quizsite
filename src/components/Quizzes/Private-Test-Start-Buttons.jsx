@@ -107,7 +107,7 @@ const StartButtons = () => {
         const attempted = [];
         if (data?.mcqsSubmitted) attempted.push('mcq');
         if (data?.trueFalseSubmitted) attempted.push('truefalse');
-        if (data?.shortSubmitted) attempted.push('short');
+        if (data?.shortAnswersSubmitted) attempted.push('short');
   
         setAttemptedSections(attempted);
       }

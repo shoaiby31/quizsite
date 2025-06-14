@@ -1,8 +1,5 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
-import {
-    Card, CardContent, Typography, RadioGroup,
-    FormControlLabel, Radio, Button, Box,
-} from "@mui/material";
+import { Card, CardContent, Typography, RadioGroup, FormControlLabel, Radio, Button, Box, } from "@mui/material";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { doc, getDoc, setDoc, collection, getDocs, serverTimestamp, query, where } from "firebase/firestore";
 import { db } from "../../../config/firebase";

@@ -212,6 +212,11 @@ const MyQuizzes = () => {
                     }}>
                       View Results
                     </Button>
+                    <Button sx={{ textTransform: 'none' }} size='small' onClick={() => {
+                      navigate(`/dashboard/short-answers-grading/${quiz.id}`);
+                    }}>
+                      Check Questions
+                    </Button>
                   </Box>
                 </CardContent>
               </Card>

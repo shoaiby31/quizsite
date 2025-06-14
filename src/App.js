@@ -19,7 +19,7 @@ import DashboardRoutes from './routes/dashboardroutes';
 import Attemptprivatequiz from './components/Quizzes/Private-Test-Start-Buttons';
 import AttemptMcqs from './components/Quizzes/PrivateTests/AttemptMcqs';
 import AttemptTrueFalse from './components/Quizzes/PrivateTests/AttemptTrueFalse';
-
+import AttemptShortAnswers from './components/Quizzes/PrivateTests/AttemptShortAnswers';
 
 import JoinTeacherRequest from './components/JoinTeacherRequest';
 import Profile from './components/profile';
@@ -43,6 +43,8 @@ const AppRoutes = () => {
         <Route path="/start-test/:quizId" element={<PrivateRoute><Attemptprivatequiz /></PrivateRoute>} />
         <Route path="/mcqs-test/:quizId" element={<PrivateRoute><AttemptMcqs /></PrivateRoute>} />
         <Route path="/true-false-test/:quizId" element={<PrivateRoute><AttemptTrueFalse /></PrivateRoute>} />
+        <Route path="/short-questions-test/:quizId" element={<PrivateRoute><AttemptShortAnswers /></PrivateRoute>} />
+
 
         
         <Route path="/join-teacher" element={<PrivateRoute><JoinTeacherRequest /></PrivateRoute>} />

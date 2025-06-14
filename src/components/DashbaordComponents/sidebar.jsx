@@ -16,6 +16,8 @@ const navItems = [
   { label: 'Requests', icon: <LegendToggle />, path: '/dashboard/join-requests' },
   { label: 'Users Management', icon: <Map />, path: '/dashboard/abc' },
   { label: 'Settings', icon: <Settings />, path: '/dashboard/efd' },
+
+  
 ];
 
 const Sidebar = () => {
