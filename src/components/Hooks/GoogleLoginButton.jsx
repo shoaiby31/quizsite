@@ -18,34 +18,43 @@ const GoogleLoginButton = () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
-
-      // Check if user document already exists in Firestore
+  
       const userRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userRef);
-
+  
+      let role = 'student'; // default role
+  
       if (!userSnap.exists()) {
+        // Create user document if it doesn't exist
         await setDoc(userRef, {
           uid: user.uid,
           name: user.displayName,
           email: user.email,
-          role: 'student',
+          role,
           enrolledSubjects: [],
           createdAt: new Date().toISOString()
         });
+      } else {
+        // Get role from Firestore
+        const userData = userSnap.data();
+        role = userData.role || 'student';
       }
-
+  
+      // Dispatch user to Redux with role
       dispatch(
         setUser({
           uid: user.uid,
           email: user.email,
           displayName: user.displayName,
           photoURL: user.photoURL,
+          role,
         })
       );
-
+  
       navigate(from, { replace: true });
     } catch (error) {
       console.error('Google sign-in error:', error.message);
+      // Optionally show a user-friendly error message
     }
   };
 

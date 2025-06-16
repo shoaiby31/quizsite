@@ -5,7 +5,7 @@ import {
     Chip, Snackbar, Alert, InputAdornment, MenuItem, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle
 } from "@mui/material";
 import { useParams } from "react-router-dom";
-import { collection, query, where, onSnapshot, doc, deleteDoc, updateDoc } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, deleteDoc, updateDoc, getDoc } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -28,6 +28,8 @@ const Privatequizresults = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedAttempt, setSelectedAttempt] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
+    const [quizData, setQuizData] = useState(null);
+
     const printRef = useRef();
     const [confirmDialog, setConfirmDialog] = useState({
         open: false,
@@ -37,16 +39,39 @@ const Privatequizresults = () => {
     });
 
     useEffect(() => {
+        const fetchQuizData = async () => {
+            const docRef = doc(db, "quizzes", quizId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                setQuizData(data);
+            }
+        };
+        if (quizId) {
+            fetchQuizData();
+        }
+    }, [quizId]);
+
+    useEffect(() => {
         const unsubscribe = onSnapshot(
             query(collection(db, "attempts"), where("quizId", "==", quizId)),
             (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const filtered =
-                    filter === "submitted"
-                        ? data.filter(r => r.submitted)
-                        : filter === "inprogress"
-                            ? data.filter(r => !r.submitted)
-                            : data;
+
+                const filtered = filter === "submitted"
+                    ? data.filter(r =>
+                        r.mcqsSubmitted === true &&
+                        r.trueFalseSubmitted === true &&
+                        r.shortAnswersSubmitted === true
+                    )
+                    : filter === "inprogress"
+                        ? data.filter(r =>
+                            r.mcqsSubmitted !== true ||
+                            r.trueFalseSubmitted !== true ||
+                            r.shortAnswersSubmitted !== true
+                        )
+                        : data;
+
                 setResults(filtered);
                 setLoading(false);
             },
@@ -58,6 +83,7 @@ const Privatequizresults = () => {
 
         return () => unsubscribe();
     }, [quizId, filter]);
+
 
     const handleFilterChange = (_, newFilter) => {
         if (newFilter) {
@@ -147,17 +173,36 @@ const Privatequizresults = () => {
 
     const handleBulkSubmit = async () => {
         try {
-            await Promise.all(
-                selected.map(id =>
-                    updateDoc(doc(db, "attempts", id), { submitted: true })
-                )
-            );
-            setSuccess("Selected attempts marked as submitted.");
-            setSelected([]);
+          // Prepare update payload once
+          const updatePayload = {};
+          if (quizData?.questionTypes?.mcq != null) {
+            updatePayload.mcqsSubmitted = true;
+          }
+          if (quizData?.questionTypes?.truefalse != null) {
+            updatePayload.trueFalseSubmitted = true;
+          }
+          if (quizData?.questionTypes?.short != null) {
+            updatePayload.shortAnswersSubmitted = true;
+          }
+      
+          // If no active question types, do nothing
+          if (Object.keys(updatePayload).length === 0) {
+            setError("No question types are active in this quiz.");
+            return;
+          }
+          // Perform bulk updates
+          const updates = selected.map(id =>
+            updateDoc(doc(db, "attempts", id), updatePayload)
+          );
+      
+          await Promise.all(updates);
+          setSuccess("Selected attempts marked as submitted.");
+          setSelected([]);
         } catch (err) {
-            setError("Failed to submit selected attempts.");
+          console.error(err);
+          setError("Failed to submit selected attempts.");
         }
-    };
+      };
 
     const selectedUnsubmitted = useMemo(() => {
         return selected.filter(id => {
@@ -267,7 +312,8 @@ const Privatequizresults = () => {
                                             onChange={handleSelectAll}
                                         />
                                     </TableCell>
-                                    <TableCell>Username</TableCell>
+                                    <TableCell>Name</TableCell>
+                                    <TableCell>Roll no</TableCell>
                                     <TableCell>Score</TableCell>
                                     <TableCell>Percentage</TableCell>
                                     <TableCell>Status</TableCell>
@@ -276,7 +322,15 @@ const Privatequizresults = () => {
                             </TableHead>
                             <TableBody>
                                 {paginatedResults.map((attempt) => {
-                                    const percentage = calculatePercentage(attempt.score, attempt.totalScore);
+                                    let a = 0;
+                                    if (attempt.mcqsScore) a += attempt.mcqsScore;
+                                    if (attempt.trueFalseScore) a += attempt.trueFalseScore;
+                                    if (attempt.shortAnswerScores) a += attempt.shortAnswerScores;
+                                    let b = 0;
+                                    if (attempt.totalMcqsScore) b += attempt.totalMcqsScore;
+                                    if (attempt.totalTrueFalseScore) b += attempt.totalTrueFalseScore;
+                                    if (attempt.totalShortScore) b += attempt.totalShortScore;
+                                    const percentage = calculatePercentage(a, b);
                                     return (
                                         <TableRow key={attempt.id} hover selected={isSelected(attempt.id)}>
                                             <TableCell padding="checkbox">
@@ -288,30 +342,40 @@ const Privatequizresults = () => {
                                             <TableCell sx={{ fontWeight: 500 }}>
                                                 {attempt.username || "Anonymous"}
                                             </TableCell>
+                                            <TableCell sx={{ fontWeight: 500 }}>
+                                                {attempt.rollNo || "Anonymous"}
+                                            </TableCell>
                                             <TableCell sx={{ color: getScoreColor(attempt.score, attempt.totalScore) }}>
-                                                {attempt.score} / {attempt.totalScore}
+                                                {a} / {b}
                                             </TableCell>
                                             <TableCell>{percentage.toFixed(2)}%</TableCell>
                                             <TableCell>
-                                                <Chip
-                                                    icon={attempt.submitted && <CheckCircleIcon />}
-                                                    label={attempt.submitted ? "Submitted" : "In Progress"}
-                                                    color={attempt.submitted ? "success" : "error"}
+                                                <Chip icon={attempt.mcqsSubmitted && attempt.trueFalseSubmitted && attempt.shortAnswersSubmitted && <CheckCircleIcon />}
+                                                    label={
+                                                        (
+                                                          (quizData?.questionTypes?.mcq != null ? attempt?.mcqsSubmitted === true : true) &&
+                                                          (quizData?.questionTypes?.truefalse != null ? attempt?.trueFalseSubmitted === true : true) &&
+                                                          (quizData?.questionTypes?.short != null ? attempt?.shortAnswersSubmitted === true : true)
+                                                        )
+                                                          ? "Submitted"
+                                                          : "In Progress"
+                                                      }
+                                                    color={
+                                                        (
+                                                          (quizData?.questionTypes?.mcq != null ? attempt?.mcqsSubmitted === true : true) &&
+                                                          (quizData?.questionTypes?.truefalse != null ? attempt?.trueFalseSubmitted === true : true) &&
+                                                          (quizData?.questionTypes?.short != null ? attempt?.shortAnswersSubmitted === true : true)
+                                                        )
+                                                          ? "success" : "error"}
                                                     size="small"
                                                 />
                                             </TableCell>
                                             <TableCell>
-                                                <Button
-                                                    disabled={attempt.submitted}
-                                                    size="small"
-                                                    variant="text"
-                                                    onClick={() => {
-                                                        setSelectedAttempt(attempt);
-                                                        setModalOpen(true);
-                                                    }}
-                                                    sx={{textTransform:'none'}}
-                                                >
-                                                    View Reamining Time
+                                                <Button size="small" variant="text" onClick={() => {
+                                                    setSelectedAttempt(attempt);
+                                                    setModalOpen(true);
+                                                }} sx={{ textTransform: 'none' }}>
+                                                    View Live Detail
                                                 </Button>
                                             </TableCell>
                                         </TableRow>
@@ -325,23 +389,10 @@ const Privatequizresults = () => {
 
             {totalPages > 1 && (
                 <Stack direction="row" spacing={2} alignItems="center" justifyContent="center" mt={4}>
-                    <Pagination
-                        count={totalPages}
-                        page={page}
-                        onChange={(_, val) => setPage(val)}
-                        color="primary"
-                        shape="rounded"
-                    />
-                    <TextField
-                        size="small"
-                        label="Rows per page"
-                        select
-                        value={rowsPerPage}
-                        onChange={(e) => {
-                            setRowsPerPage(parseInt(e.target.value));
-                            setPage(1);
-                        }}
-                    >
+                    <Pagination count={totalPages} page={page} onChange={(_, val) => setPage(val)} color="primary" shape="rounded" />
+                    <TextField size="small" label="Rows per page" select value={rowsPerPage} onChange={(e) => {
+                        setRowsPerPage(parseInt(e.target.value)); setPage(1);
+                    }}>
                         <MenuItem value={6}>6</MenuItem>
                         <MenuItem value={12}>12</MenuItem>
                         <MenuItem value={24}>24</MenuItem>
@@ -365,24 +416,13 @@ const Privatequizresults = () => {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setConfirmDialog({ ...confirmDialog, open: false })}>Cancel</Button>
-                    <Button
-                        color="error"
-                        onClick={() => {
-                            confirmDialog.onConfirm?.();
-                            setConfirmDialog({ ...confirmDialog, open: false });
-                        }}
-                    >
+                    <Button color="error" onClick={() => { confirmDialog.onConfirm?.(); setConfirmDialog({ ...confirmDialog, open: false }); }}>
                         Confirm
                     </Button>
                 </DialogActions>
             </Dialog>
 
-            <AttemptDetailsModal
-                open={modalOpen}
-                onClose={() => setModalOpen(false)}
-                attempt={selectedAttempt}
-                timeLimit={timeLimit}
-            />
+            <AttemptDetailsModal open={modalOpen} questionTypesData={quizData?.questionTypes} onClose={() => setModalOpen(false)} attempt={selectedAttempt} timeLimit={timeLimit} />
         </Box>
     );
 };

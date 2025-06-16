@@ -20,7 +20,8 @@ import {
   EmailAuthProvider,
 } from 'firebase/auth';
 import { doc, updateDoc, onSnapshot } from 'firebase/firestore';
-
+import { useDispatch } from 'react-redux';
+import { changeUserRole } from '../redux/slices/authSlice/index';
 import { db } from '../config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 const Profile = () => {
@@ -40,7 +41,7 @@ const Profile = () => {
   const [openAdminModal, setOpenAdminModal] = useState(false);
   const [secritId, setSecritId] = useState('');
   const [error, setError] = useState('');
-
+  const dispatch = useDispatch();
 
 
 useEffect(() => {
@@ -142,6 +143,8 @@ useEffect(() => {
       
             setMessage({ type: 'success', text: 'You are now an admin!' });
             setOpenAdminModal(false);
+            dispatch(changeUserRole())
+
           } catch (error) {
             setMessage({ type: 'error', text: 'Failed to upgrade to admin.' });
             console.error(error);

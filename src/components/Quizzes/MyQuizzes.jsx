@@ -208,14 +208,9 @@ const MyQuizzes = () => {
 
                   <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'flex-end' }}>
                     <Button sx={{ textTransform: 'none' }} size='small' onClick={() => {
-                      navigate(`/dashboard/private-results/${quiz.id}/${quiz.timeLimit}`);
+                      navigate(`/dashboard/private-results/${quiz.id}`);
                     }}>
                       View Results
-                    </Button>
-                    <Button sx={{ textTransform: 'none' }} size='small' onClick={() => {
-                      navigate(`/dashboard/short-answers-grading/${quiz.id}`);
-                    }}>
-                      Check Questions
                     </Button>
                   </Box>
                 </CardContent>

@@ -25,6 +25,7 @@ const AttemptShort = () => {
   const [user, setUser] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
+  const [perQuestionScore, setPerQuestionScore] = useState(0);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [remainingTime, setRemainingTime] = useState(null);
@@ -52,7 +53,7 @@ const AttemptShort = () => {
         if (!quizSnap.exists()) throw new Error("Quiz not found.");
 
         const quizData = quizSnap.data();
-
+        setPerQuestionScore(quizData.questionTypes.short.scorePerQuestion)
         if (!quizData.isActive) {
           setError("This quiz is currently inactive. Stay tuned!");
           setIsLoading(false);
@@ -138,6 +139,21 @@ const AttemptShort = () => {
 
         const selectedQuestions = shuffleArray(fetchedQuestions)
           .slice(0, questionCount);
+        // 🔍 Fetch roll number from studentTeacherRelations
+        let rollNo = null;
+        try {
+          const relationQuery = query(
+            collection(db, "studentTeacherRelations"),
+            where("userId", "==", user.uid)
+          );
+          const relationSnap = await getDocs(relationQuery);
+          if (!relationSnap.empty) {
+            const relationData = relationSnap.docs[0].data();
+            rollNo = relationData.rollNo || null;
+          }
+        } catch (err) {
+          console.warn("Error fetching roll number:", err.message);
+        }
 
         const newAttemptId = uuidv4();
         const newAttemptRef = doc(db, "attempts", newAttemptId);
@@ -154,6 +170,7 @@ const AttemptShort = () => {
           startTime: serverTimestamp(),
           secretId,
           className: quizData.class || null,
+          rollNo: rollNo || null // ✅ Save roll number
         };
 
         await setDoc(newAttemptRef, newAttemptData);
@@ -161,6 +178,8 @@ const AttemptShort = () => {
         setQuestions(selectedQuestions);
         setRemainingTime(timeLimit);
         setIsLoading(false);
+
+
       } catch (err) {
         setError(err.message);
         setIsLoading(false);
@@ -173,15 +192,52 @@ const AttemptShort = () => {
   const handleSubmit = useCallback(async () => {
     setSubmitted(true);
 
-    if (attemptId) {
-      await setDoc(doc(db, "attempts", attemptId), {
-        shortAnswersSubmitted: true,
-        warningCount: 0
-      }, { merge: true });
-    }
+    try {
+      // Submit final answer and mark as submitted in Firestore
+      if (attemptId) {
+        await setDoc(doc(db, "attempts", attemptId), {
+          shortAnswersSubmitted: true,
+          warningCount: 0,
+          totalShortScore: perQuestionScore * questions.length,
+          shortAnswerScores:10,
 
-    navigate(`/start-test/${quizId}`, { state: { secretId } });
-  }, [attemptId, navigate, quizId, secretId]);
+        }, { merge: true });
+      }
+
+      // Prepare payload for grading API
+      // const gradingPayload = {
+      //   attemptId,
+      //   questions: questions.map(q => ({
+      //     text: q.text,
+      //     answer: q.answer,
+      //     score: perQuestionScore || 1 // fallback if score not found
+      //   })),
+      //   answers
+      // };
+      // Send answers to grading API
+      // const response = await fetch("http://localhost:3001/api/grade", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json"
+      //   },
+      //   body: JSON.stringify(gradingPayload)
+      // });
+
+      // const result = await response.json();
+
+      // if (!response.ok) {
+      //   console.error("Grading error:", result.error);
+      // } else {
+      //   console.log("Scores stored:", result.scores);
+      // }
+
+      // Redirect after grading
+      navigate(`/start-test/${quizId}`, { state: { secretId } });
+
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+    }
+  }, [attemptId, questions, navigate, quizId, secretId, perQuestionScore]);
 
   useEffect(() => {
     if (submitted || remainingTime === null) return;

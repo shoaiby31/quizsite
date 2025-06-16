@@ -27,6 +27,9 @@ const authSlice = createSlice({
       Object.assign(state, action.payload);
       state.userReady = true;
     },
+    changeUserRole: (state) => {
+      state.role = state.role==='student'? 'admin': 'student'
+    },
     clearUser(state) {
       state.uid = null;
       state.email = null;
@@ -38,5 +41,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, clearUser } = authSlice.actions;
+export const { setUser, clearUser, changeUserRole } = authSlice.actions;
 export default authSlice.reducer;

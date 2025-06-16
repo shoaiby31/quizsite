@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    IconButton,
-    Typography,
-    Box,
+    Dialog, DialogTitle, DialogContent,
+    IconButton, Typography, Box
 } from "@mui/material";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../../config/firebase";
@@ -23,10 +19,30 @@ const formatRemainingTime = (seconds) => {
     ].join(":");
 };
 
-const AttemptDetailsModal = ({ open, onClose, attempt, timeLimit }) => {
+const labelMap = {
+    mcq: "MCQs",
+    truefalse: "True/False",
+    short: "Short Answer"
+};
+
+const fieldMap = {
+    mcq: {
+        questions: "mcqsQuestions",
+        submitted: "mcqsSubmitted"
+    },
+    truefalse: {
+        questions: "trueFalseQuestions",
+        submitted: "trueFalseSubmitted"
+    },
+    short: {
+        questions: "shortQuestions",
+        submitted: "shortAnswersSubmitted"
+    }
+};
+
+const AttemptDetailsModal = ({ open, onClose, attempt, questionTypesData }) => {
     const [liveAttempt, setLiveAttempt] = useState(null);
-    const [remainingTime, setRemainingTime] = useState(null);
-    const [showTime, setShowTime] = useState(false);
+    const [remainingTimes, setRemainingTimes] = useState({});
 
     useEffect(() => {
         if (!open || !attempt?.id) return;
@@ -41,31 +57,38 @@ const AttemptDetailsModal = ({ open, onClose, attempt, timeLimit }) => {
     }, [open, attempt?.id]);
 
     useEffect(() => {
-        if (!open || !liveAttempt?.startTime || liveAttempt.submitted) {
-            setRemainingTime(null);
-            return;
-        }
+        if (!open || !liveAttempt?.startTime) return;
 
-        const calculateRemaining = () => {
-            const start = liveAttempt.startTime.toDate();
-            const elapsed = Math.floor((Date.now() - start.getTime()) / 1000);
-            const total = parseInt(timeLimit) * 60;
-            const remaining = total - elapsed;
-            setRemainingTime(remaining > 0 ? remaining : 0);
-            setTimeout(() => setShowTime(true), 100); // Trigger simple fade animation
+        const start = liveAttempt.startTime.toDate();
+
+        const updateTimes = () => {
+            const now = Date.now();
+            const elapsed = Math.floor((now - start.getTime()) / 1000);
+            const newRemaining = {};
+
+            for (const type in questionTypesData) {
+                if (questionTypesData[type] != null) {
+                    const limit = questionTypesData[type]?.timeLimit || 0;
+                    const total = limit * 60;
+                    const remaining = total - elapsed;
+                    newRemaining[type] = remaining > 0 ? remaining : 0;
+                }
+            }
+
+            setRemainingTimes(newRemaining);
         };
 
-        calculateRemaining();
-        const interval = setInterval(calculateRemaining, 1000);
+        updateTimes();
+        const interval = setInterval(updateTimes, 1000);
         return () => clearInterval(interval);
-    }, [open, liveAttempt, timeLimit]);
+    }, [open, liveAttempt, questionTypesData]);
 
     if (!attempt || !liveAttempt) return null;
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
             <DialogTitle sx={{ m: 0, p: 2 }}>
-                ⏰ Live Time Tracker
+                ⏰ Live Attempt Status
                 <IconButton
                     aria-label="close"
                     onClick={onClose}
@@ -76,25 +99,77 @@ const AttemptDetailsModal = ({ open, onClose, attempt, timeLimit }) => {
             </DialogTitle>
 
             <DialogContent>
-                <Box display="flex" flexDirection="column" alignItems="center" gap={3} py={2}>
-                    <Typography variant="h6" fontWeight="bold">{attempt.username || "Anonymous"}</Typography>
-                    <Typography fontSize={20} gutterBottom fontWeight="bold" color="primary">
-                           {showTime}Live Score: {attempt.score+'/'+attempt.totalScore}
-                        </Typography>
-                    <Box textAlign="center">
-                        
-                        <Box component={motion.div} initial={{ scale: 1 }} animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 2 }}
-                            sx={{
-                                backgroundColor: remainingTime <= 60 ? "error.main" : "#3cb570", color: remainingTime <= 60 ? "#ffebee" : "#fff", borderRadius: "12px", px: 2, py: 1, fontWeight: "bold", fontSize: "1.25rem", boxShadow: 2,
-                                display: "flex", alignItems: "center", gap: 1
-                            }}>
+                <Box display="flex" flexDirection="column" gap={2} py={1}>
+                    <Typography variant="h6" fontWeight="bold" align="center">
+                        {attempt.username || "Anonymous"}
+                    </Typography>
 
-                            <Box component="span">
-                                ⏱ {remainingTime !== null ? formatRemainingTime(remainingTime) : "00:00:00"}
-                            </Box>
+                    {Object.keys(questionTypesData)
+                        .filter(type => questionTypesData[type] != null)
+                        .map((type) => {
+                            const questionField = fieldMap[type].questions;
+                            const submittedField = fieldMap[type].submitted;
 
-                        </Box>
-                    </Box>
+                            const questions = liveAttempt?.[questionField] ?? null;
+                            const submitted = liveAttempt?.[submittedField] ?? false;
+                            const isAttempting = questions && !submitted;
+                            const timeLeft = remainingTimes[type] ?? 0;
+
+                            let statusLabel;
+                            if (submitted) {
+                                statusLabel = "✅ Submitted";
+                            } else if (questions) {
+                                statusLabel = "🕒 In Progress";
+                            } else {
+                                statusLabel = "— Not Started";
+                            }
+
+                            return (
+                                <Box
+                                    key={type}
+                                    p={1.5}
+                                    borderRadius={2}
+                                    boxShadow={2}
+                                    sx={{
+                                        backgroundColor: submitted
+                                            ? "#d4edda"
+                                            : isAttempting
+                                                ? "#fff3cd"
+                                                : "#e2e3e5",
+                                        color: submitted
+                                            ? "#155724"
+                                            : isAttempting
+                                                ? "#856404"
+                                                : "#6c757d"
+                                    }}
+                                >
+                                    <Typography fontWeight="bold">
+                                        {labelMap[type]}: {statusLabel}
+                                    </Typography>
+
+                                    {isAttempting && (
+                                        <Box
+                                            component={motion.div}
+                                            initial={{ scale: 1 }}
+                                            animate={{ scale: [1, 1.05, 1] }}
+                                            transition={{ repeat: Infinity, duration: 2 }}
+                                            sx={{
+                                                mt: 1,
+                                                backgroundColor: timeLeft <= 60 ? "error.main" : "primary.main",
+                                                color: "#fff",
+                                                borderRadius: 1,
+                                                py: 0.5,
+                                                px: 2,
+                                                textAlign: "center",
+                                                fontWeight: "bold"
+                                            }}
+                                        >
+                                            ⏱ {formatRemainingTime(timeLeft)}
+                                        </Box>
+                                    )}
+                                </Box>
+                            );
+                        })}
                 </Box>
             </DialogContent>
         </Dialog>

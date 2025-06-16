@@ -161,19 +161,35 @@ const AttemptMcqs = () => {
           query(collection(quizRef, "questions"), where("type", "==", "mcq"))
         );
         let fetchedQuestions = questionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
+        
         if (!fetchedQuestions.length) {
           setIsLoading(false);
           return;
         }
-
+        
         const selectedQuestions = shuffleArray(fetchedQuestions)
           .slice(0, questionCount)
           .map(q => ({ ...q, options: shuffleArray(q.options) }));
-
+        
         const newAttemptId = uuidv4();
         const newAttemptRef = doc(db, "attempts", newAttemptId);
-
+        
+        // 🔍 Fetch roll number from studentTeacherRelations
+        let rollNo = null;
+        try {
+          const relationQuery = query(
+            collection(db, "studentTeacherRelations"),
+            where("userId", "==", user.uid)
+          );
+          const relationSnap = await getDocs(relationQuery);
+          if (!relationSnap.empty) {
+            const relationData = relationSnap.docs[0].data();
+            rollNo = relationData.rollNo || null;
+          }
+        } catch (err) {
+          console.warn("Error fetching roll number:", err.message);
+        }
+        
         const newAttemptData = {
           userId: user.uid,
           quizId,
@@ -186,10 +202,11 @@ const AttemptMcqs = () => {
           totalMcqsScore: selectedQuestions.length,
           startTime: serverTimestamp(),
           currentIdx: 0,
-          secretId, // ✅ Store the secret ID used to access the quiz
-          className: quizData.class || null // ✅ Store className if available
+          secretId,
+          className: quizData.class || null,
+          rollNo: rollNo || null  // ✅ Save rollNo here
         };
-
+        
         await setDoc(newAttemptRef, newAttemptData);
         const newSnap = await getDoc(newAttemptRef);
         newSnap.data().startTime.toDate();

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -14,10 +14,10 @@ import { useLocation } from 'react-router-dom';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import { Link } from 'react-router-dom';
-import { auth, db } from '../config/firebase';
+import { auth } from '../config/firebase';
 import { signOut } from 'firebase/auth';
 import Logo from "../assets/logo.png";
-import { doc, getDoc } from 'firebase/firestore';
+// import { doc, getDoc } from 'firebase/firestore';
 const drawerWidth = 240;
 
 const pages = [
@@ -36,26 +36,29 @@ export default function Appbar(props) {
   const location = useLocation();
   const user = useSelector((state) => state.auth.uid);
   const userpic = useSelector((state) => state.auth.photoURL);
-  const [userRole, setUserRole] = useState(null);
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      if (!user) return;
+  const userRole = useSelector((state) => state.auth.role);
 
-      try {
-        const docRef = doc(db, 'users', user);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setUserRole(docSnap.data().role);
-        } else {
-          console.warn('User document not found');
-        }
-      } catch (error) {
-        console.error('Failed to fetch user role:', error);
-      }
-    };
+  // const [userRole, setUserRole] = useState(null);
+  // console.log("userRole1: ",userRole1)
+  // useEffect(() => {
+  //   const fetchUserRole = async () => {
+  //     if (!user) return;
 
-    fetchUserRole();
-  }, [user]);
+  //     try {
+  //       const docRef = doc(db, 'users', user);
+  //       const docSnap = await getDoc(docRef);
+  //       if (docSnap.exists()) {
+  //         setUserRole(docSnap.data().role);
+  //       } else {
+  //         console.warn('User document not found');
+  //       }
+  //     } catch (error) {
+  //       console.error('Failed to fetch user role:', error);
+  //     }
+  //   };
+
+  //   fetchUserRole();
+  // }, [user]);
 
   const themeMode = useSelector((state) => state.mode.value);
   const dispatch = useDispatch();
@@ -173,7 +176,7 @@ export default function Appbar(props) {
 
               {anchorElUser && (
                 <Menu sx={{ mt: '45px' }} id="menu-appbar" anchorEl={anchorElUser} anchorOrigin={{ vertical: 'top', horizontal: 'right' }} keepMounted transformOrigin={{ vertical: 'top', horizontal: 'right' }} open={Boolean(anchorElUser)} onClose={handleCloseUserMenu}>
-                  <MenuItem component={Link} to='/profile'>Profile</MenuItem>
+                  <MenuItem component={Link} to='/profile' onClick={handleCloseUserMenu}>Profile</MenuItem>
                   <MenuItem onClick={() => alert("I am Settings function")}>Settings</MenuItem>
                   <MenuItem onClick={handleLogout}>Logout</MenuItem>
                 </Menu>

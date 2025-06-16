@@ -10,7 +10,7 @@ import { setUser } from '.././redux/slices/authSlice';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, db } from "../config/firebase";
 import { useNavigate, useLocation } from 'react-router-dom';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const MotionPaper = motion.create(Paper);
 
@@ -70,15 +70,26 @@ const Signup = (props) => {
             try {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
-                setEmail('');
-                setPassword('');
+
+                // 🔍 Get user role from Firestore
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+
+                const role = userDocSnap.exists() ? userDocSnap.data().role || 'student' : 'student';
+
+                // 🧠 Dispatch full user object to Redux
                 dispatch(
                     setUser({
                         uid: user.uid,
                         email: user.email,
                         displayName: user.displayName,
+                        role,// ⬅️ include role from Firestore
                     })
                 );
+
+                // 🔒 Reset form and navigate
+                setEmail('');
+                setPassword('');
                 navigate(from, { replace: true });
             } catch (err) {
                 setError(err.code);

@@ -1,12 +1,18 @@
-import React from 'react'
+import React , { useEffect, useRef } from 'react'
 import { Box, Grid, Typography, Card, CardContent, CardActions, Button, CardMedia } from '@mui/material'
 import pic from '../assets/headerpic.png';
 import { Link } from 'react-router-dom';
 
 function Header() {
-
+    const titleRef = useRef(null);
+useEffect(() => {
+    if (titleRef.current) {
+        const topOffset = titleRef.current.getBoundingClientRect().top + window.pageYOffset - 100;
+        window.scrollTo({ top: topOffset, behavior: 'smooth' });
+    }
+  }, []);
     return (
-        <Box>
+        <Box ref={titleRef}>
             <Grid container spacing={1} sx={{flexDirection: { xs: 'column-reverse', md: 'row' },}}>
                 <Grid size={{ xs: 12, sm: 12, md: 8, lg: 8, xl: 8 }} >
                     <Card elevation={0}>

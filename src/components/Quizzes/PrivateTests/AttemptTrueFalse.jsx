@@ -173,6 +173,21 @@ const AttemptTrueFalse = () => {
                 const newAttemptId = uuidv4();
                 const newAttemptRef = doc(db, "attempts", newAttemptId);
 
+                let rollNo = null;
+                        try {
+                          const relationQuery = query(
+                            collection(db, "studentTeacherRelations"),
+                            where("userId", "==", user.uid)
+                          );
+                          const relationSnap = await getDocs(relationQuery);
+                          if (!relationSnap.empty) {
+                            const relationData = relationSnap.docs[0].data();
+                            rollNo = relationData.rollNo || null;
+                          }
+                        } catch (err) {
+                          console.warn("Error fetching roll number:", err.message);
+                        }
+
                 const newAttemptData = {
                     userId: user.uid,
                     quizId,
@@ -186,7 +201,8 @@ const AttemptTrueFalse = () => {
                     startTime: serverTimestamp(),
                     currentIdx: 0,
                     secretId, // ✅ Store the secret ID used to access the quiz
-                    className: quizData.class || null // ✅ Store className if available
+                    className: quizData.class || null, // ✅ Store className if available
+                    rollNo: rollNo || null  // ✅ Save rollNo here
                 };
 
                 await setDoc(newAttemptRef, newAttemptData);

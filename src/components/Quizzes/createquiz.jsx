@@ -27,7 +27,7 @@ export default function Createquiz() {
     const [questionTypes, setQuestionTypes] = useState({
         mcq: { enabled: false, count: 0, timeLimit: '' },
         truefalse: { enabled: false, count: 0, timeLimit: '' },
-        short: { enabled: false, count: 0, timeLimit: '' }
+        short: { enabled: false, count: 0, timeLimit: '', scorePerQuestion: '' }
     });
 
     const uid = useSelector((state) => state.auth.uid);
@@ -76,13 +76,14 @@ export default function Createquiz() {
             return (
                 type.enabled && (
                     !type.count || isNaN(type.count) || type.count <= 0 ||
-                    !type.timeLimit || isNaN(type.timeLimit) || type.timeLimit <= 0
+                    !type.timeLimit || isNaN(type.timeLimit) || type.timeLimit <= 0 ||
+                    (key === 'short' && (!type.scorePerQuestion || isNaN(type.scorePerQuestion) || type.scorePerQuestion <= 0))
                 )
             );
         });
-        
+
         if (invalidTypes.length > 0) {
-            setError('Please enter a valid count and time limit for all enabled question types.');
+            setError('Please enter a valid count, time limit, and score for all enabled question types.');
             return;
         }
 
@@ -112,13 +113,22 @@ export default function Createquiz() {
                 isActive,
                 class: selectedClass,
                 questionTypes: {
-                    mcq: questionTypes.mcq.enabled ? { count: questionTypes.mcq.count, timeLimit: questionTypes.mcq.timeLimit } : null,
-                    truefalse: questionTypes.truefalse.enabled ? { count: questionTypes.truefalse.count, timeLimit: questionTypes.truefalse.timeLimit } : null,
-                    short: questionTypes.short.enabled ? { count: questionTypes.short.count, timeLimit: questionTypes.short.timeLimit } : null,
+                    mcq: questionTypes.mcq.enabled ? {
+                        count: questionTypes.mcq.count,
+                        timeLimit: questionTypes.mcq.timeLimit
+                    } : null,
+                    truefalse: questionTypes.truefalse.enabled ? {
+                        count: questionTypes.truefalse.count,
+                        timeLimit: questionTypes.truefalse.timeLimit
+                    } : null,
+                    short: questionTypes.short.enabled ? {
+                        count: questionTypes.short.count,
+                        timeLimit: questionTypes.short.timeLimit,
+                        scorePerQuestion: questionTypes.short.scorePerQuestion
+                    } : null,
                 }
             });
 
-            // Reset form
             setTitle('');
             setDescription('');
             setSecretid('');
@@ -127,7 +137,7 @@ export default function Createquiz() {
             setQuestionTypes({
                 mcq: { enabled: false, count: 0, timeLimit: '' },
                 truefalse: { enabled: false, count: 0, timeLimit: '' },
-                short: { enabled: false, count: 0, timeLimit: '' }
+                short: { enabled: false, count: 0, timeLimit: '', scorePerQuestion: '' }
             });
 
             setSuccess(true);
@@ -251,7 +261,7 @@ export default function Createquiz() {
                                             <TextField
                                                 type="number"
                                                 size="small"
-                                                label={"Number of " + label}
+                                                label={`Number of ${label}`}
                                                 inputProps={{ min: 1 }}
                                                 value={questionTypes[key].count}
                                                 onChange={(e) =>
@@ -267,7 +277,7 @@ export default function Createquiz() {
                                             <TextField
                                                 type="number"
                                                 size="small"
-                                                label={"Time Limit (min)"}
+                                                label="Time Limit (min)"
                                                 inputProps={{ min: 1 }}
                                                 value={questionTypes[key].timeLimit}
                                                 onChange={(e) =>
@@ -280,6 +290,24 @@ export default function Createquiz() {
                                                     }))
                                                 }
                                             />
+                                            {key === 'short' && (
+                                                <TextField
+                                                    type="number"
+                                                    size="small"
+                                                    label="Score per Question"
+                                                    inputProps={{ min: 1 }}
+                                                    value={questionTypes.short.scorePerQuestion}
+                                                    onChange={(e) =>
+                                                        setQuestionTypes((prev) => ({
+                                                            ...prev,
+                                                            short: {
+                                                                ...prev.short,
+                                                                scorePerQuestion: parseFloat(e.target.value) || '',
+                                                            },
+                                                        }))
+                                                    }
+                                                />
+                                            )}
                                         </>
                                     )}
                                 </Stack>
