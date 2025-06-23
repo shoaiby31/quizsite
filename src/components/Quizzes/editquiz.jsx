@@ -31,7 +31,7 @@ const EditQuizModal = ({ open, onClose, quiz, onQuizUpdated }) => {
     questionTypes: {
       mcq: { enabled: false, count: '', timeLimit: '' },
       truefalse: { enabled: false, count: '', timeLimit: '' },
-      short: { enabled: false, count: '', timeLimit: '' },
+      short: { enabled: false, count: '', timeLimit: '', scorePerQuestion: '' },
     }
   });
 
@@ -60,6 +60,7 @@ const EditQuizModal = ({ open, onClose, quiz, onQuizUpdated }) => {
             enabled: quiz.questionTypes?.short !== null && quiz.questionTypes?.short !== undefined,
             count: quiz.questionTypes?.short?.count?.toString() || '',
             timeLimit: quiz.questionTypes?.short?.timeLimit?.toString() || '',
+            scorePerQuestion: quiz.questionTypes?.short?.scorePerQuestion?.toString() || '',
           }
         }
       });
@@ -82,7 +83,7 @@ const EditQuizModal = ({ open, onClose, quiz, onQuizUpdated }) => {
       questionTypes: {
         mcq: { enabled: false, count: '', timeLimit: '' },
         truefalse: { enabled: false, count: '', timeLimit: '' },
-        short: { enabled: false, count: '', timeLimit: '' },
+        short: { enabled: false, count: '', timeLimit: '', scorePerQuestion: '' },
       }
     });
     setDisable(true);
@@ -127,7 +128,7 @@ const EditQuizModal = ({ open, onClose, quiz, onQuizUpdated }) => {
           ...prev.questionTypes,
           [qType]: {
             ...prev.questionTypes[qType],
-            [field]: field === 'count' || field === 'timeLimit' ? value : checked,
+            [field]: field === 'count' || field === 'timeLimit' || field === 'scorePerQuestion' ? value : checked,
           }
         }
       }));
@@ -201,7 +202,11 @@ const EditQuizModal = ({ open, onClose, quiz, onQuizUpdated }) => {
           ? { count: Number(values.questionTypes.truefalse.count), timeLimit: Number(values.questionTypes.truefalse.timeLimit) }
           : null,
         short: values.questionTypes.short.enabled
-          ? { count: Number(values.questionTypes.short.count), timeLimit: Number(values.questionTypes.short.timeLimit) }
+          ? {
+            count: Number(values.questionTypes.short.count),
+            timeLimit: Number(values.questionTypes.short.timeLimit),
+            scorePerQuestion: Number(values.questionTypes.short.scorePerQuestion || 1) // fallback to 1 if empty
+          }
           : null,
       };
 
@@ -323,6 +328,23 @@ const EditQuizModal = ({ open, onClose, quiz, onQuizUpdated }) => {
                   inputProps={{ min: 0 }}
                   sx={{ width: 160 }}
                 />
+
+
+                {type === 'short' && (
+                  <TextField
+                    type="number"
+                    size="small"
+                    name={`questionTypes.${type}.scorePerQuestion`}
+                    label="Score per Question"
+                    inputProps={{ min: 1 }}
+                    value={values.questionTypes[type].scorePerQuestion}
+                    onChange={handleChange}
+                    disabled={!values.questionTypes[type].enabled}
+                    sx={{ width: 160 }}
+                  />
+                )}
+
+
               </Box>
             ))}
 

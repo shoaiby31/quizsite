@@ -16,7 +16,9 @@ import BrowseQuizzes from './pages/QuizzesPage';
 import AttemptQuizPage from './pages/AttemptQuizPage';
 import ResultCard from './pages/ResultCard';
 import DashboardRoutes from './routes/dashboardroutes';
-import Attemptprivatequiz from './components/Quizzes/Private-Test-Start-Buttons';
+import Attemptprivatequiz from './components/Quizzes/PrivateTests/Private-Test-Start-Buttons';
+import Attemptpublicquiz from './components/Quizzes/PublicTests/Public-Test-Start-Buttons';
+
 import AttemptMcqs from './components/Quizzes/PrivateTests/AttemptMcqs';
 import AttemptTrueFalse from './components/Quizzes/PrivateTests/AttemptTrueFalse';
 import AttemptShortAnswers from './components/Quizzes/PrivateTests/AttemptShortAnswers';
@@ -38,9 +40,10 @@ const AppRoutes = () => {
         <Route path="/createquiz" element={<PrivateRoute><CreactquizPage /></PrivateRoute>} />
         <Route path="/browsequiz" element={<BrowseQuizzes />} />
         <Route path="/attemptQuiz/:quizId" element={<PrivateRoute><AttemptQuizPage /></PrivateRoute>} />
-        <Route path="/result" element={<PrivateRoute><ResultCard /></PrivateRoute>} />
+        <Route path="/result-card/:quizId" element={<PrivateRoute><ResultCard /></PrivateRoute>} />
         <Route path="/dashboard/*" element={<AdminRoute><DashboardRoutes /></AdminRoute>} />
         <Route path="/start-test/:quizId" element={<PrivateRoute><Attemptprivatequiz /></PrivateRoute>} />
+        <Route path="/start-public-test/:quizId" element={<PrivateRoute><Attemptpublicquiz /></PrivateRoute>} />
         <Route path="/mcqs-test/:quizId" element={<PrivateRoute><AttemptMcqs /></PrivateRoute>} />
         <Route path="/true-false-test/:quizId" element={<PrivateRoute><AttemptTrueFalse /></PrivateRoute>} />
         <Route path="/short-questions-test/:quizId" element={<PrivateRoute><AttemptShortAnswers /></PrivateRoute>} />

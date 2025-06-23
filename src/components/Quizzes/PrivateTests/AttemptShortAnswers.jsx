@@ -32,6 +32,8 @@ const AttemptShort = () => {
   const [attemptId, setAttemptId] = useState(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isPublic, setIsPublic] = useState(true);
+
   const [warningCount, setWarningCount] = useState(0);
   const warningCountRef = useRef(0);
   const lastWarningTimeRef = useRef(0);
@@ -59,8 +61,9 @@ const AttemptShort = () => {
           setIsLoading(false);
           return;
         }
+        setIsPublic(quizData.isPublic)
 
-        if (quizData.secretid !== secretId) {
+        if (quizData.secretid !== secretId && quizData.secretid !== "") {
           setError("Secret ID does not match.");
           setIsLoading(false);
           return;
@@ -86,7 +89,11 @@ const AttemptShort = () => {
 
           if (attemptData.shortQuestions && attemptData.shortQuestions.length > 0) {
             if (attemptData.shortAnswersSubmitted) {
-              return navigate(`/start-test/${quizId}`, { state: { secretId } });
+              if (isPublic) {
+                return navigate(`/start-public-test/${quizId}`, { state: { secretId } })
+              } else {
+                return navigate(`/start-test/${quizId}`, { state: { secretId } })
+              }
             }
 
             const startTime = attemptData.startTime.toDate();
@@ -97,7 +104,11 @@ const AttemptShort = () => {
                 shortAnswersSubmitted: true
               }, { merge: true });
 
-              return navigate(`/start-test/${quizId}`, { state: { secretId } });
+              if (isPublic) {
+                return navigate(`/start-public-test/${quizId}`, { state: { secretId } })
+              } else {
+                return navigate(`/start-test/${quizId}`, { state: { secretId } })
+              }
             }
 
             setQuestions(attemptData.shortQuestions);
@@ -168,7 +179,8 @@ const AttemptShort = () => {
           warningCount: warningCount,
           currentIdx: 0,
           startTime: serverTimestamp(),
-          secretId,
+          secretId: secretId || null,
+          title: quizData.title,
           className: quizData.class || null,
           rollNo: rollNo || null // ✅ Save roll number
         };
@@ -187,7 +199,7 @@ const AttemptShort = () => {
     };
 
     fetchQuiz();
-  }, [user, quizId, navigate, secretId, warningCount]);
+  }, [user, quizId, navigate, secretId, warningCount, isPublic]);
 
   const handleSubmit = useCallback(async () => {
     setSubmitted(true);
@@ -199,7 +211,7 @@ const AttemptShort = () => {
           shortAnswersSubmitted: true,
           warningCount: 0,
           totalShortScore: perQuestionScore * questions.length,
-          shortAnswerScores:10,
+          shortAnswerScores: 10,
 
         }, { merge: true });
       }
@@ -232,12 +244,17 @@ const AttemptShort = () => {
       // }
 
       // Redirect after grading
-      navigate(`/start-test/${quizId}`, { state: { secretId } });
+
+      if (isPublic) {
+        navigate(`/start-public-test/${quizId}`, { state: { secretId } })
+      } else {
+        navigate(`/start-test/${quizId}`, { state: { secretId } })
+      }
 
     } catch (err) {
       console.error("Error in handleSubmit:", err);
     }
-  }, [attemptId, questions, navigate, quizId, secretId, perQuestionScore]);
+  }, [attemptId, questions, navigate, quizId, secretId, perQuestionScore, isPublic]);
 
   useEffect(() => {
     if (submitted || remainingTime === null) return;

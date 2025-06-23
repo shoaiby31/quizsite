@@ -1,22 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  CircularProgress,
-  Button,
-  Grid,
-  Tooltip,
-} from '@mui/material';
+import { Box, Card, CardContent, Typography, CircularProgress, Button, Grid, } from '@mui/material';
 import QuizIcon from '@mui/icons-material/Quiz';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import NotesIcon from '@mui/icons-material/Notes';
 import { doc, onSnapshot, collection, query, where } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { db } from '../../../config/firebase';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getAuth } from 'firebase/auth'; // Required to get UID
-
+import { LegendToggle } from '@mui/icons-material';
 const typeInfo = {
   mcq: { label: 'MCQs', icon: <QuizIcon color="primary" /> },
   truefalse: { label: 'True/False', icon: <CheckCircleIcon color="success" /> },
@@ -33,7 +24,8 @@ const StartButtons = () => {
   const [questionTypes, setQuestionTypes] = useState({});
   const [attemptedSections, setAttemptedSections] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [attemptsLoading, setAttemptsLoading] = useState(true);
+  const [attemptsLoading, setAttemptsLoading] = useState(true)
+
 
   // Redirect if secretId is missing
   useEffect(() => {
@@ -54,6 +46,7 @@ const StartButtons = () => {
             setFirestoreUser(null);
           }
         });
+
         return () => unsubscribeUser();
       } else {
         setFirestoreUser(null);
@@ -65,6 +58,7 @@ const StartButtons = () => {
 
   // 🔁 Listen to quiz document
   useEffect(() => {
+
     if (!quizId) return;
     const docRef = doc(db, 'quizzes', quizId);
     const unsubscribe = onSnapshot(
@@ -89,32 +83,32 @@ const StartButtons = () => {
   // 🔁 Listen to attempt document
   useEffect(() => {
     if (!quizId || !firestoreUser?.uid) return;
-  
+
     const attemptsRef = collection(db, 'attempts');
     const q = query(
       attemptsRef,
       where('quizId', '==', quizId),
       where('userId', '==', firestoreUser.uid)
     );
-  
+
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       if (querySnapshot.empty) {
         setAttemptedSections([]);
       } else {
         const docSnap = querySnapshot.docs[0];
         const data = docSnap.data();
-  
+
         const attempted = [];
         if (data?.mcqsSubmitted) attempted.push('mcq');
         if (data?.trueFalseSubmitted) attempted.push('truefalse');
         if (data?.shortAnswersSubmitted) attempted.push('short');
-  
+
         setAttemptedSections(attempted);
       }
-  
+
       setAttemptsLoading(false); // ✅ Done loading attempts
     });
-  
+
     return () => unsubscribe();
   }, [quizId, firestoreUser?.uid]);
 
@@ -177,26 +171,37 @@ const StartButtons = () => {
                   <Typography variant="body2" color="text.secondary" gutterBottom>
                     {config.count} Questions • Time Allowed: {config.timeLimit} minutes
                   </Typography>
-
-                  <Tooltip title={isAttempted ? "Already Attempted" : "Click to start this section"}>
-                    <span>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        color={isAttempted ? 'secondary' : 'primary'}
-                        onClick={() => handleStart(type)}
-                        disabled={isAttempted}
-                        sx={{ mt: 2, borderRadius: 2 }}
-                      >
-                        {isAttempted ? 'Attempted' : `Start ${label || type}`}
-                      </Button>
-                    </span>
-                  </Tooltip>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    color={isAttempted ? 'secondary' : 'primary'}
+                    onClick={() => handleStart(type)}
+                    disabled={isAttempted}
+                    sx={{ mt: 2, borderRadius: 2 }}
+                  >
+                    {isAttempted ? 'Attempted' : `Start ${label || type}`}
+                  </Button>
                 </CardContent>
               </Card>
             </Grid>
           );
         })}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card variant="outlined" sx={{ borderRadius: 3, boxShadow: 3, opacity: 1 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                <LegendToggle color="primary" />
+                <Typography variant="body1">Detailed Result Card</Typography>
+              </Box>
+              <Button fullWidth variant="contained" color='primary'
+               onClick={() => navigate(`/result-card/${quizId}`, { state: { uid: firestoreUser?.uid } })}
+               >
+                View Result
+              </Button>
+            </CardContent>
+          </Card>
+
+        </Grid>
       </Grid>
     </Box>
   );

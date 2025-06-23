@@ -149,7 +149,7 @@ const PublicQuizzes = () => {
                   <Typography variant="body2" fontWeight='bold'>Created By: {quiz.ownerNAme}</Typography>
                 </CardContent>
                 <CardActions sx={{ paddingX: 5, justifyContent: 'flex-end', marginTop: 'auto' }}>
-                  <Button component={Link} to={`/attemptQuiz/${quiz.id}`} variant='text' sx={{ borderRadius: 20, textTransform: 'none' }} size="small">
+                  <Button component={Link} to={`/start-public-test/${quiz.id}`} variant='text' sx={{ borderRadius: 20, textTransform: 'none' }} size="small">
                     Attempt Quiz
                   </Button>
                 </CardActions>

@@ -31,8 +31,11 @@ const AttemptMcqs = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [warningCount, setWarningCount] = useState(0);
+  const [isPublic, setIsPublic] = useState(true);
+
   const warningCountRef = useRef(0);
   const lastWarningTimeRef = useRef(0);
+
   const location = useLocation();
   const { secretId } = location.state || {};
 
@@ -51,16 +54,16 @@ const AttemptMcqs = () => {
         if (!quizSnap.exists()) throw new Error("Quiz not found.");
 
         const quizData = quizSnap.data();
-
         // Check if quiz is active and if the secretId matches
         if (!quizData.isActive) {
           setError("This quiz is currently inactive. Stay tuned!");
           setIsLoading(false);
           return;
         }
+        setIsPublic(quizData.isPublic)
 
 
-        if (quizData.secretid !== secretId) {
+        if (quizData.secretid !== secretId && quizData.secretid !== "") {
           setError("Secret ID does not match.");
           setIsLoading(false);
           return;
@@ -85,11 +88,15 @@ const AttemptMcqs = () => {
           setWarningCount(warningCountFromFirestore);
           warningCountRef.current = warningCountFromFirestore;
 
-          // Check if trueFalseQuestions exist
+          // Check if mcqsQuestions exist
           if (attemptData.mcqsQuestions && attemptData.mcqsQuestions.length > 0) {
             // Already submitted? Redirect to result.
             if (attemptData.mcqsSubmitted) {
-              return navigate(`/start-test/${quizId}`, { state: { secretId } });
+              if (isPublic) {
+                return navigate(`/start-public-test/${quizId}`, { state: { secretId } })
+              } else {
+                return navigate(`/start-test/${quizId}`, { state: { secretId } })
+              }
             }
 
             const startTime = attemptData.startTime.toDate();
@@ -111,7 +118,11 @@ const AttemptMcqs = () => {
                 totalMcqsScore: storedQuestions.length
               }, { merge: true });
 
-              return navigate(`/start-test/${quizId}`, { state: { secretId } });
+              if (isPublic) {
+                return navigate(`/start-public-test/${quizId}`, { state: { secretId } })
+              } else {
+                return navigate(`/start-test/${quizId}`, { state: { secretId } })
+              }
             }
 
             // Time remaining — resume quiz
@@ -127,12 +138,12 @@ const AttemptMcqs = () => {
               query(collection(quizRef, "questions"), where("type", "==", "mcq"))
             );
             let fetchedQuestions = questionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    
+
             if (!fetchedQuestions.length) {
               setIsLoading(false);
               return;
             }
-    
+
             const selectedQuestions = shuffleArray(fetchedQuestions)
               .slice(0, questionCount)
               .map(q => ({ ...q, options: shuffleArray(q.options) }));
@@ -161,21 +172,21 @@ const AttemptMcqs = () => {
           query(collection(quizRef, "questions"), where("type", "==", "mcq"))
         );
         let fetchedQuestions = questionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
         if (!fetchedQuestions.length) {
           setIsLoading(false);
           return;
         }
-        
+
         const selectedQuestions = shuffleArray(fetchedQuestions)
           .slice(0, questionCount)
           .map(q => ({ ...q, options: shuffleArray(q.options) }));
-        
+
         const newAttemptId = uuidv4();
         const newAttemptRef = doc(db, "attempts", newAttemptId);
-        
+
         // 🔍 Fetch roll number from studentTeacherRelations
         let rollNo = null;
+
         try {
           const relationQuery = query(
             collection(db, "studentTeacherRelations"),
@@ -189,7 +200,8 @@ const AttemptMcqs = () => {
         } catch (err) {
           console.warn("Error fetching roll number:", err.message);
         }
-        
+
+
         const newAttemptData = {
           userId: user.uid,
           quizId,
@@ -202,11 +214,12 @@ const AttemptMcqs = () => {
           totalMcqsScore: selectedQuestions.length,
           startTime: serverTimestamp(),
           currentIdx: 0,
-          secretId,
+          secretId: secretId || null,
+          title: quizData.title,
           className: quizData.class || null,
           rollNo: rollNo || null  // ✅ Save rollNo here
         };
-        
+
         await setDoc(newAttemptRef, newAttemptData);
         const newSnap = await getDoc(newAttemptRef);
         newSnap.data().startTime.toDate();
@@ -222,7 +235,7 @@ const AttemptMcqs = () => {
     };
 
     fetchQuiz();
-  }, [user, quizId, navigate, secretId, warningCount]);
+  }, [user, quizId, navigate, secretId, warningCount, isPublic]);
 
   const handleSubmit = useCallback(async () => {
     let calculatedScore = 0;
@@ -242,9 +255,14 @@ const AttemptMcqs = () => {
         warningCount: 0
       }, { merge: true });
     }
+    if (isPublic) {
+      navigate(`/start-public-test/${quizId}`, { state: { secretId } })
+    } else {
+      navigate(`/start-test/${quizId}`, { state: { secretId } })
+    }
 
-    navigate(`/start-test/${quizId}`, { state: { secretId } });
-  }, [answers, questions, attemptId, navigate, quizId, secretId]);
+    // navigate(`/start-test/${quizId}`, { state: { secretId } });
+  }, [answers, questions, attemptId, navigate, quizId, secretId, isPublic]);
 
   useEffect(() => {
     if (submitted || remainingTime === null) return;

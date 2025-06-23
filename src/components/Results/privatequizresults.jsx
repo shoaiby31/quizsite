@@ -4,7 +4,7 @@ import {
     TableBody, Checkbox, Pagination, TextField, ToggleButtonGroup, ToggleButton, Button,
     Chip, Snackbar, Alert, InputAdornment, MenuItem, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle
 } from "@mui/material";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { collection, query, where, onSnapshot, doc, deleteDoc, updateDoc, getDoc } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -29,7 +29,7 @@ const Privatequizresults = () => {
     const [selectedAttempt, setSelectedAttempt] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [quizData, setQuizData] = useState(null);
-
+    const navigate = useNavigate();
     const printRef = useRef();
     const [confirmDialog, setConfirmDialog] = useState({
         open: false,
@@ -173,36 +173,36 @@ const Privatequizresults = () => {
 
     const handleBulkSubmit = async () => {
         try {
-          // Prepare update payload once
-          const updatePayload = {};
-          if (quizData?.questionTypes?.mcq != null) {
-            updatePayload.mcqsSubmitted = true;
-          }
-          if (quizData?.questionTypes?.truefalse != null) {
-            updatePayload.trueFalseSubmitted = true;
-          }
-          if (quizData?.questionTypes?.short != null) {
-            updatePayload.shortAnswersSubmitted = true;
-          }
-      
-          // If no active question types, do nothing
-          if (Object.keys(updatePayload).length === 0) {
-            setError("No question types are active in this quiz.");
-            return;
-          }
-          // Perform bulk updates
-          const updates = selected.map(id =>
-            updateDoc(doc(db, "attempts", id), updatePayload)
-          );
-      
-          await Promise.all(updates);
-          setSuccess("Selected attempts marked as submitted.");
-          setSelected([]);
+            // Prepare update payload once
+            const updatePayload = {};
+            if (quizData?.questionTypes?.mcq != null) {
+                updatePayload.mcqsSubmitted = true;
+            }
+            if (quizData?.questionTypes?.truefalse != null) {
+                updatePayload.trueFalseSubmitted = true;
+            }
+            if (quizData?.questionTypes?.short != null) {
+                updatePayload.shortAnswersSubmitted = true;
+            }
+
+            // If no active question types, do nothing
+            if (Object.keys(updatePayload).length === 0) {
+                setError("No question types are active in this quiz.");
+                return;
+            }
+            // Perform bulk updates
+            const updates = selected.map(id =>
+                updateDoc(doc(db, "attempts", id), updatePayload)
+            );
+
+            await Promise.all(updates);
+            setSuccess("Selected attempts marked as submitted.");
+            setSelected([]);
         } catch (err) {
-          console.error(err);
-          setError("Failed to submit selected attempts.");
+            console.error(err);
+            setError("Failed to submit selected attempts.");
         }
-      };
+    };
 
     const selectedUnsubmitted = useMemo(() => {
         return selected.filter(id => {
@@ -353,30 +353,36 @@ const Privatequizresults = () => {
                                                 <Chip icon={attempt.mcqsSubmitted && attempt.trueFalseSubmitted && attempt.shortAnswersSubmitted && <CheckCircleIcon />}
                                                     label={
                                                         (
-                                                          (quizData?.questionTypes?.mcq != null ? attempt?.mcqsSubmitted === true : true) &&
-                                                          (quizData?.questionTypes?.truefalse != null ? attempt?.trueFalseSubmitted === true : true) &&
-                                                          (quizData?.questionTypes?.short != null ? attempt?.shortAnswersSubmitted === true : true)
+                                                            (quizData?.questionTypes?.mcq != null ? attempt?.mcqsSubmitted === true : true) &&
+                                                            (quizData?.questionTypes?.truefalse != null ? attempt?.trueFalseSubmitted === true : true) &&
+                                                            (quizData?.questionTypes?.short != null ? attempt?.shortAnswersSubmitted === true : true)
                                                         )
-                                                          ? "Submitted"
-                                                          : "In Progress"
-                                                      }
+                                                            ? "Submitted"
+                                                            : "In Progress"
+                                                    }
                                                     color={
                                                         (
-                                                          (quizData?.questionTypes?.mcq != null ? attempt?.mcqsSubmitted === true : true) &&
-                                                          (quizData?.questionTypes?.truefalse != null ? attempt?.trueFalseSubmitted === true : true) &&
-                                                          (quizData?.questionTypes?.short != null ? attempt?.shortAnswersSubmitted === true : true)
+                                                            (quizData?.questionTypes?.mcq != null ? attempt?.mcqsSubmitted === true : true) &&
+                                                            (quizData?.questionTypes?.truefalse != null ? attempt?.trueFalseSubmitted === true : true) &&
+                                                            (quizData?.questionTypes?.short != null ? attempt?.shortAnswersSubmitted === true : true)
                                                         )
-                                                          ? "success" : "error"}
+                                                            ? "success" : "error"}
                                                     size="small"
                                                 />
                                             </TableCell>
                                             <TableCell>
-                                                <Button size="small" variant="text" onClick={() => {
-                                                    setSelectedAttempt(attempt);
-                                                    setModalOpen(true);
-                                                }} sx={{ textTransform: 'none' }}>
-                                                    View Live Detail
+                                                {(
+                                                            (quizData?.questionTypes?.mcq != null ? attempt?.mcqsSubmitted === true : true) &&
+                                                            (quizData?.questionTypes?.truefalse != null ? attempt?.trueFalseSubmitted === true : true) &&
+                                                            (quizData?.questionTypes?.short != null ? attempt?.shortAnswersSubmitted === true : true)
+                                                        )
+                                                            ? <Button size="small" variant="text" onClick={() => navigate(`/result-card/${quizId}`, { state: { uid: attempt?.userId } })} sx={{ textTransform: 'none' }}>
+                                                    View Result Card
                                                 </Button>
+                                                            : <Button size="small" variant="text" onClick={() => { setSelectedAttempt(attempt); setModalOpen(true); }} sx={{ textTransform: 'none' }}> View Live Detail</Button>}
+                                                
+                                                
+
                                             </TableCell>
                                         </TableRow>
                                     );

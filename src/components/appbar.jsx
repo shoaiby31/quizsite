@@ -38,28 +38,6 @@ export default function Appbar(props) {
   const userpic = useSelector((state) => state.auth.photoURL);
   const userRole = useSelector((state) => state.auth.role);
 
-  // const [userRole, setUserRole] = useState(null);
-  // console.log("userRole1: ",userRole1)
-  // useEffect(() => {
-  //   const fetchUserRole = async () => {
-  //     if (!user) return;
-
-  //     try {
-  //       const docRef = doc(db, 'users', user);
-  //       const docSnap = await getDoc(docRef);
-  //       if (docSnap.exists()) {
-  //         setUserRole(docSnap.data().role);
-  //       } else {
-  //         console.warn('User document not found');
-  //       }
-  //     } catch (error) {
-  //       console.error('Failed to fetch user role:', error);
-  //     }
-  //   };
-
-  //   fetchUserRole();
-  // }, [user]);
-
   const themeMode = useSelector((state) => state.mode.value);
   const dispatch = useDispatch();
   const handleDrawerToggle = () => {

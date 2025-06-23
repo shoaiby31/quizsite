@@ -28,6 +28,7 @@ const AttemptTrueFalse = () => {
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [warningCount, setWarningCount] = useState(0);
+    const [isPublic, setIsPublic] = useState(true);
     const warningCountRef = useRef(0);
     const lastWarningTimeRef = useRef(0);
     const location = useLocation();
@@ -56,8 +57,9 @@ const AttemptTrueFalse = () => {
                     return;
                 }
 
+                setIsPublic(quizData.isPublic)
 
-                if (quizData.secretid !== secretId) {
+                if (quizData.secretid !== secretId && quizData.secretid !== "") {
                     setError("Secret ID does not match.");
                     setIsLoading(false);
                     return;
@@ -81,36 +83,44 @@ const AttemptTrueFalse = () => {
                     const warningCountFromFirestore = attemptData.warningCount || 0;
                     setWarningCount(warningCountFromFirestore);
                     warningCountRef.current = warningCountFromFirestore;
-                
+
                     // Check if trueFalseQuestions exist
                     if (attemptData.trueFalseQuestions && attemptData.trueFalseQuestions.length > 0) {
                         // Already submitted? Redirect to result.
                         if (attemptData.trueFalseSubmitted) {
-                            return navigate(`/start-test/${quizId}`, { state: { secretId } });
+                            if (isPublic) {
+                                return navigate(`/start-public-test/${quizId}`, { state: { secretId } })
+                            } else {
+                                return navigate(`/start-test/${quizId}`, { state: { secretId } })
+                            }
                         }
-                
+
                         const startTime = attemptData.startTime.toDate();
                         const elapsed = Math.floor((Date.now() - startTime.getTime()) / 1000);
-                
+
                         // Time expired — auto-submit silently
                         if (elapsed >= timeLimit) {
                             const storedQuestions = attemptData.trueFalseQuestions;
                             const storedAnswers = attemptData.trueFalseAnswers || {};
-                
+
                             let score = 0;
                             storedQuestions.forEach((q, idx) => {
                                 if (storedAnswers[idx] === q.answer) score++;
                             });
-                
+
                             await setDoc(doc(db, "attempts", docSnap.id), {
                                 trueFalseSubmitted: true,
                                 trueFalseScore: score,
                                 totalTrueFalseScore: storedQuestions.length
                             }, { merge: true });
-                
-                            return navigate(`/start-test/${quizId}`, { state: { secretId } });
+
+                            if (isPublic) {
+                                return navigate(`/start-public-test/${quizId}`, { state: { secretId } })
+                            } else {
+                                return navigate(`/start-test/${quizId}`, { state: { secretId } })
+                            }
                         }
-                
+
                         // Time remaining — resume quiz
                         setQuestions(attemptData.trueFalseQuestions);
                         setAnswers(attemptData.trueFalseAnswers || {});
@@ -124,7 +134,7 @@ const AttemptTrueFalse = () => {
                             query(collection(quizRef, "questions"), where("type", "==", "truefalse"))
                         );
                         let fetchedQuestions = questionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
+
                         if (!fetchedQuestions.length) {
                             setIsLoading(false);
                             return;
@@ -135,16 +145,16 @@ const AttemptTrueFalse = () => {
                                 ...q,
                                 options: shuffleArray([true, false]) // or hardcoded [false, true] if you don't want shuffling
                             }));
-                            
+
                         await setDoc(doc(db, "attempts", docSnap.id), {
-                            trueFalseQuestions:selectedQuestions,
+                            trueFalseQuestions: selectedQuestions,
                             trueFalseAnswers: {},
                             trueFalseSubmitted: false,
                             trueFalseScore: 0,
                             totalTrueFalseScore: selectedQuestions.length,
                             startTime: serverTimestamp(),
                         }, { merge: true });
-                
+
                         setQuestions(selectedQuestions);
                         setAnswers({});
                         setCurrentIdx(0);
@@ -174,19 +184,19 @@ const AttemptTrueFalse = () => {
                 const newAttemptRef = doc(db, "attempts", newAttemptId);
 
                 let rollNo = null;
-                        try {
-                          const relationQuery = query(
-                            collection(db, "studentTeacherRelations"),
-                            where("userId", "==", user.uid)
-                          );
-                          const relationSnap = await getDocs(relationQuery);
-                          if (!relationSnap.empty) {
-                            const relationData = relationSnap.docs[0].data();
-                            rollNo = relationData.rollNo || null;
-                          }
-                        } catch (err) {
-                          console.warn("Error fetching roll number:", err.message);
-                        }
+                try {
+                    const relationQuery = query(
+                        collection(db, "studentTeacherRelations"),
+                        where("userId", "==", user.uid)
+                    );
+                    const relationSnap = await getDocs(relationQuery);
+                    if (!relationSnap.empty) {
+                        const relationData = relationSnap.docs[0].data();
+                        rollNo = relationData.rollNo || null;
+                    }
+                } catch (err) {
+                    console.warn("Error fetching roll number:", err.message);
+                }
 
                 const newAttemptData = {
                     userId: user.uid,
@@ -200,7 +210,8 @@ const AttemptTrueFalse = () => {
                     totalTrueFalseScore: selectedQuestions.length,
                     startTime: serverTimestamp(),
                     currentIdx: 0,
-                    secretId, // ✅ Store the secret ID used to access the quiz
+                    secretId: secretId || null,
+                    title: quizData.title,
                     className: quizData.class || null, // ✅ Store className if available
                     rollNo: rollNo || null  // ✅ Save rollNo here
                 };
@@ -220,19 +231,19 @@ const AttemptTrueFalse = () => {
         };
 
         fetchQuiz();
-    }, [user, quizId, navigate, secretId, warningCount]);
+    }, [user, quizId, navigate, secretId, warningCount, isPublic]);
 
     const handleSubmit = useCallback(async () => {
         let calculatedScore = 0;
-    
+
         questions.forEach((q, idx) => {
             if (answers[idx] === q.answer) {
                 calculatedScore++;
             }
         });
-    
+
         setSubmitted(true);
-    
+
         if (attemptId) {
             await setDoc(doc(db, "attempts", attemptId), {
                 trueFalseSubmitted: true,
@@ -241,9 +252,14 @@ const AttemptTrueFalse = () => {
                 warningCount: 0
             }, { merge: true });
         }
-    
-        navigate(`/start-test/${quizId}`, { state: { secretId } });
-    }, [answers, questions, attemptId, navigate, quizId, secretId]);
+
+        if (isPublic) {
+            navigate(`/start-public-test/${quizId}`, { state: { secretId } })
+        } else {
+            navigate(`/start-test/${quizId}`, { state: { secretId } })
+        }
+
+    }, [answers, questions, attemptId, navigate, quizId, secretId, isPublic]);
 
     useEffect(() => {
         if (submitted || remainingTime === null) return;
@@ -310,7 +326,7 @@ const AttemptTrueFalse = () => {
             [currentIdx]: selectedValue
         };
         setAnswers(updatedAnswers);
-    
+
         if (attemptId) {
             await setDoc(doc(db, "attempts", attemptId), {
                 trueFalseAnswers: updatedAnswers,
