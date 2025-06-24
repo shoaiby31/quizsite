@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import {
   Card, CardContent, Typography, Button, Box, TextField,
+  Grid,
 } from "@mui/material";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
@@ -90,7 +91,7 @@ const AttemptShort = () => {
           if (attemptData.shortQuestions && attemptData.shortQuestions.length > 0) {
             if (attemptData.shortAnswersSubmitted) {
               if (isPublic) {
-                return navigate(`/start-public-test/${quizId}`, { state: { secretId } })
+                return navigate(`/start-public-test/${quizId}`)
               } else {
                 return navigate(`/start-test/${quizId}`, { state: { secretId } })
               }
@@ -105,7 +106,7 @@ const AttemptShort = () => {
               }, { merge: true });
 
               if (isPublic) {
-                return navigate(`/start-public-test/${quizId}`, { state: { secretId } })
+                return navigate(`/start-public-test/${quizId}`)
               } else {
                 return navigate(`/start-test/${quizId}`, { state: { secretId } })
               }
@@ -113,7 +114,7 @@ const AttemptShort = () => {
 
             setQuestions(attemptData.shortQuestions);
             setAnswers(attemptData.shortAnswers || {});
-            setCurrentIdx(attemptData.currentIdx || 0);
+            setCurrentIdx(attemptData.shortQuestions.length<attemptData.currentIdx? 0 : attemptData.currentIdx || 0);
             setRemainingTime(Math.max(timeLimit - elapsed, 0));
             setIsLoading(false);
             return;
@@ -246,7 +247,7 @@ const AttemptShort = () => {
       // Redirect after grading
 
       if (isPublic) {
-        navigate(`/start-public-test/${quizId}`, { state: { secretId } })
+        navigate(`/start-public-test/${quizId}`)
       } else {
         navigate(`/start-test/${quizId}`, { state: { secretId } })
       }
@@ -363,15 +364,21 @@ const AttemptShort = () => {
   return (
     <Card sx={{ px: { xs: 2, md: 5 } }}>
       <CardContent>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h6">Question {currentIdx + 1} of {questions.length}</Typography>
-          {error !== '' &&
-            <Box component={motion.div} initial={{ scale: 1 }} animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 2 }}
-              sx={{ backgroundColor: "#e3f2fd", borderRadius: "12px", px: 2, py: 1, boxShadow: 2, display: "flex", alignItems: "center", gap: 1 }}>
-              <Typography variant="h6" fontWeight='bold' color="error.main">{error}</Typography>
-            </Box>}
-          <CountdownDisplay remainingTime={remainingTime} />
-        </Box>
+        <Grid container spacing={4} alignItems="center">
+          <Grid size={{ xs: 6, md: 4, xl:3 }}>
+            <Typography variant="h6">Question {currentIdx + 1} of {questions.length}</Typography>
+          </Grid>
+          <Grid size={{ xs: 6, md: 4 , xl:2 }}>
+            <CountdownDisplay remainingTime={remainingTime} />
+          </Grid>
+          <Grid size={{ xs: 12, md: 4, xl:3 }}>
+            {error !== '' &&
+              <Box component={motion.div} initial={{ scale: 1 }} animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 2 }}
+                sx={{ backgroundColor: "#e3f2fd", maxWidth:'350px', borderRadius: "12px", px: 2, py: 1, boxShadow: 2, display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography variant="h6" fontWeight='bold' color="error.main">{error}</Typography>
+              </Box>}
+          </Grid>
+        </Grid>
 
         <Typography variant="body1" fontWeight="bold" mt={2}>{currentQuestion.text}</Typography>
 

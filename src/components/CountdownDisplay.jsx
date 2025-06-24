@@ -12,7 +12,7 @@ function CountdownDisplay({ remainingTime }) {
     <Box component={motion.div} initial={{ scale: 1 }} animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 2 }}
       sx={{
         backgroundColor: remainingTime <= 60 ? "#ffebee" : "#e3f2fd", color: remainingTime <= 60 ? "error.main" : "primary.main", borderRadius: "12px", px: 2, py: 1, fontWeight: "bold", fontSize: "1.25rem", boxShadow: 2,
-        display: "flex", alignItems: "center", gap: 1
+        display: "flex", alignItems: "center", gap: 1, width:'120px'
       }}>
       ⏳ {formatTime(remainingTime)}
     </Box>

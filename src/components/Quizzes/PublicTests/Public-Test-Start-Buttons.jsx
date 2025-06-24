@@ -144,14 +144,7 @@ const PublicStartButtons = () => {
                   <Typography variant="body2" color="text.secondary" gutterBottom>
                     {config.count} Questions • Time: {config.timeLimit} mins
                   </Typography>
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    color={isAttempted ? 'secondary' : 'primary'}
-                    onClick={() => handleStart(type)}
-                    disabled={isAttempted}
-                    sx={{ mt: 2, borderRadius: 2 }}
-                  >
+                  <Button fullWidth variant="contained" color={isAttempted ? 'secondary' : 'primary'} onClick={() => handleStart(type)} disabled={isAttempted} sx={{ mt: 2, borderRadius: 2 }}>
                     {isAttempted ? 'Attempted' : `Start ${label || type}`}
                   </Button>
                 </CardContent>
@@ -160,21 +153,33 @@ const PublicStartButtons = () => {
           );
         })}
 
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card variant="outlined" sx={{ borderRadius: 3, boxShadow: 3 }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                <LegendToggle color="primary" />
-                <Typography variant="body1">Detailed Result Card</Typography>
-              </Box>
-              <Button fullWidth variant="contained" color="primary"
-                onClick={() => navigate(`/result-card/${quizId}`, { state: { uid: firestoreUser?.uid } })}
-              >
-                View Result
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
+        {(() => {
+          const allSectionsSubmitted = activeTypes.every(type => attemptedSections.includes(type));
+          return allSectionsSubmitted && (
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Card variant="outlined" sx={{ borderRadius: 3, boxShadow: 3 }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <LegendToggle color="primary" />
+                    <Typography variant="h6">Detailed Result Card</Typography>
+                  </Box>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Analyze your performance in detail
+                  </Typography>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    color="primary"
+                    onClick={() => navigate(`/result-card/${quizId}`, { state: { uid: firestoreUser?.uid } })}
+                    sx={{ mt: 2, borderRadius: 2 }}
+                  >
+                    View Result
+                  </Button>
+                </CardContent>
+              </Card>
+            </Grid>
+          );
+        })()}
       </Grid>
     </Box>
   );

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
-import { Card, CardContent, Typography, RadioGroup, FormControlLabel, Radio, Button, Box, } from "@mui/material";
+import { Card, CardContent, Typography, RadioGroup, FormControlLabel, Radio, Button, Box, Grid, } from "@mui/material";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { doc, getDoc, setDoc, collection, getDocs, serverTimestamp, query, where } from "firebase/firestore";
 import { db } from "../../../config/firebase";
@@ -89,7 +89,7 @@ const AttemptTrueFalse = () => {
                         // Already submitted? Redirect to result.
                         if (attemptData.trueFalseSubmitted) {
                             if (isPublic) {
-                                return navigate(`/start-public-test/${quizId}`, { state: { secretId } })
+                                return navigate(`/start-public-test/${quizId}`)
                             } else {
                                 return navigate(`/start-test/${quizId}`, { state: { secretId } })
                             }
@@ -115,7 +115,7 @@ const AttemptTrueFalse = () => {
                             }, { merge: true });
 
                             if (isPublic) {
-                                return navigate(`/start-public-test/${quizId}`, { state: { secretId } })
+                                return navigate(`/start-public-test/${quizId}`)
                             } else {
                                 return navigate(`/start-test/${quizId}`, { state: { secretId } })
                             }
@@ -254,7 +254,7 @@ const AttemptTrueFalse = () => {
         }
 
         if (isPublic) {
-            navigate(`/start-public-test/${quizId}`, { state: { secretId } })
+            navigate(`/start-public-test/${quizId}`)
         } else {
             navigate(`/start-test/${quizId}`, { state: { secretId } })
         }
@@ -373,16 +373,21 @@ const AttemptTrueFalse = () => {
     return (
         <Card sx={{ px: { xs: 2, md: 5 } }}>
             <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Typography variant="h6">Question {currentIdx + 1} of {questions.length}</Typography>
-                    {error !== '' &&
-                        <Box component={motion.div} initial={{ scale: 1 }} animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 2 }}
-                            sx={{ backgroundColor: "#e3f2fd", borderRadius: "12px", px: 2, py: 1, boxShadow: 2, display: "flex", alignItems: "center", gap: 1 }}>
-                            <Typography variant="h6" fontWeight='bold' color="error.main">{error}</Typography>
-                        </Box>}
-
-                    <CountdownDisplay remainingTime={remainingTime} />
-                </Box>
+                <Grid container spacing={4} alignItems="center">
+                    <Grid size={{ xs: 6, md: 4, xl: 3 }}>
+                        <Typography variant="h6">Question {currentIdx + 1} of {questions.length}</Typography>
+                    </Grid>
+                    <Grid size={{ xs: 6, md: 4, xl: 2 }}>
+                        <CountdownDisplay remainingTime={remainingTime} />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 4, xl: 3 }}>
+                        {error !== '' &&
+                            <Box component={motion.div} initial={{ scale: 1 }} animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 2 }}
+                                sx={{ backgroundColor: "#e3f2fd", maxWidth: '350px', borderRadius: "12px", px: 2, py: 1, boxShadow: 2, display: "flex", alignItems: "center", gap: 1 }}>
+                                <Typography variant="h6" fontWeight='bold' color="error.main">{error}</Typography>
+                            </Box>}
+                    </Grid>
+                </Grid>
 
                 <Typography variant="body1" fontWeight="bold" mt={2}>{currentQuestion.text}</Typography>
                 <RadioGroup
