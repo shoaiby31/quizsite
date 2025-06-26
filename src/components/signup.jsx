@@ -100,7 +100,7 @@ const Signup = (props) => {
     };
 
     return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 0, md: 5 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: { xs: -12, md: 5 } }}>
             <Box sx={{ p: '1px', borderRadius: 3.5, background: { xs: 'none', md: 'linear-gradient(to top left, hsl(315, 93.80%, 44.30%), rgb(104, 70, 253))' } }}>
                 <MotionPaper elevation={0} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} sx={{ p: { xs: 1, md: 3 }, borderRadius: 3 }}>
                     <Grid container>
@@ -118,8 +118,8 @@ const Signup = (props) => {
                                     {mode === 'signup' && (
                                         <TextField fullWidth label="Name" size="small" variant="outlined" type="text" required value={name} onChange={(e) => setName(e.target.value)} sx={{ mb: 3, display: 'block' }} />
                                     )}
-                                    <TextField fullWidth label="Email" size="small" variant="outlined" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} sx={{ mb: 2 }} />
-                                    <TextField fullWidth label="Password" size="small" variant="outlined" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} sx={{ mb: 3 }} />
+                                    <TextField fullWidth label="Email" autoComplete="username" size="small" variant="outlined" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} sx={{ mb: 2 }} />
+                                    <TextField fullWidth label="Password" autoComplete="current-password" size="small" variant="outlined" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} sx={{ mb: 3 }} />
                                     {error && (
                                         <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
                                     )}

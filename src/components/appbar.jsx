@@ -1,32 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
-import { Avatar, Divider, List, ListItem, ListItemButton, ListItemText, Menu, MenuItem, Tooltip } from '@mui/material';
+import {
+  Avatar, Divider, List, ListItem, ListItemButton, ListItemText, Menu, MenuItem, Tooltip
+} from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
-import { changeThemeMode } from '../redux/slices/theme/index';
+import { changeThemeMode } from '../redux/slices/theme';
 import Drawer from '@mui/material/Drawer';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
-import { Link } from 'react-router-dom';
-import { auth } from '../config/firebase';
+import { auth, db } from '../config/firebase';
 import { signOut } from 'firebase/auth';
-import Logo from "../assets/logo.png";
-// import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
+import Logo from '../assets/logo.png';
+import { setUser, clearUser } from '../redux/slices/authSlice/index';
+
 const drawerWidth = 240;
 
 const pages = [
   { id: 1, name: 'Home', to: '/' },
   { id: 2, name: 'Dashboard', to: '/dashboard' },
   { id: 3, name: 'Join Teacher', to: '/join-teacher' },
-  { id: 4, name: 'Services', to: 'services' },
-  { id: 5, name: 'About', to: '#about' },
-  { id: 6, name: 'Contact', to: '#contact' },
+  { id: 4, name: 'My Teachers', to: '/my-teachers' },
+  { id: 5, name: 'Services', to: 'services' },
+  { id: 6, name: 'About', to: '#about' },
+  { id: 7, name: 'Contact', to: '#contact' },
 ];
 
 export default function Appbar(props) {
@@ -34,27 +37,39 @@ export default function Appbar(props) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorElUser, setAnchorElUser] = useState(null);
   const location = useLocation();
+  const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.uid);
   const userpic = useSelector((state) => state.auth.photoURL);
   const userRole = useSelector((state) => state.auth.role);
-
   const themeMode = useSelector((state) => state.mode.value);
-  const dispatch = useDispatch();
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
 
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const { role, photoURL } = userDoc.data();
+          dispatch(setUser({
+            uid: user.uid,
+            email: user.email,
+            photoURL: photoURL || user.photoURL,
+            role: role || null,
+          }));
+        }
+      } else {
+        dispatch(clearUser());
+      }
+    });
+    return () => unsubscribe();
+  }, [dispatch]);
+
+  const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
   const handleOpenUserMenu = (event) => {
-    // Ensure element is visible in layout
     if (event.currentTarget.offsetParent !== null) {
       setAnchorElUser(event.currentTarget);
     }
   };
-
-  const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
-  };
-
+  const handleCloseUserMenu = () => setAnchorElUser(null);
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -65,12 +80,8 @@ export default function Appbar(props) {
 
   const getVisiblePages = () => {
     return pages.filter(item => {
-      if (item.name === 'Dashboard') {
-        return userRole === null ? false : userRole !== 'student';
-      }
-      if (item.name === 'Join Teacher') {
-        return userRole === null ? false : userRole !== 'admin';
-      }
+      if (item.name === 'Dashboard') return userRole && userRole !== 'student';
+      if (item.name === 'Join Teacher') return !userRole || userRole !== 'admin';
       return true;
     });
   };
@@ -81,29 +92,28 @@ export default function Appbar(props) {
       <List sx={{ width: 250 }}>
         {getVisiblePages().map((item, k) => (
           <ListItem key={k} disablePadding>
-            <ListItemButton to={item.to} selected={location.pathname === item.to} onClick={handleDrawerToggle}>
+            <ListItemButton to={item.to} selected={location.pathname === item.to} component={Link}>
               <ListItemText primary={item.name} />
             </ListItemButton>
           </ListItem>
         ))}
-
         <Divider />
         {!user ? (
           <Box>
             <ListItem disablePadding>
-              <ListItemButton to="/signup?mode=signup" onClick={handleDrawerToggle}>
+              <ListItemButton to="/login?mode=signup" component={Link}>
                 <ListItemText primary="Sign up" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
-              <ListItemButton to="/signup" onClick={handleDrawerToggle}>
+              <ListItemButton to="/login" component={Link}>
                 <ListItemText primary="Log in" />
               </ListItemButton>
             </ListItem>
           </Box>
         ) : (
           <ListItem disablePadding>
-            <ListItemButton to="/signup" onClick={() => { handleDrawerToggle(); handleLogout(); }}>
+            <ListItemButton onClick={() => { handleDrawerToggle(); handleLogout(); }}>
               <ListItemText primary="Logout" />
             </ListItemButton>
           </ListItem>
@@ -112,55 +122,72 @@ export default function Appbar(props) {
     </Box>
   );
 
-
   const container = window !== undefined ? () => window().document.body : undefined;
 
   return (
     <Box sx={{ flexGrow: 1, pb: 10 }}>
       <AppBar position="fixed" color="inherit" elevation={0}>
-        <Toolbar sx={{ justifyContent: 'space-between', position: 'relative' }}>
-          <IconButton sx={{ display: { xs: 'flex', md: 'none' } }} onClick={handleDrawerToggle} edge="start" color="inherit" aria-label="menu">
-            <MenuIcon />
-          </IconButton>
-          <a href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <Box component="img" src={Logo} sx={{ padding: 0, width: 80, display: { xs: 'none', md: 'flex' } }} alt="Your logo." />
+        <Toolbar sx={{ display: 'flex', justifyContent: 'flex-start', position: 'relative' }}>
+          <a href="/" style={{ textDecoration: 'none', color: 'inherit', marginRight: 'auto' }}>
+            <Box component="img" src={Logo} sx={{ padding: 0, width: 80 }} alt="Logo" />
           </a>
-          <Typography sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}></Typography>
 
-          <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
             {getVisiblePages().map((item, key) => (
-              <Button component={Link} to={item.to} key={key} sx={{ my: 2, color: 'inherit', display: 'block' }}>
+              <Button component={Link} to={item.to} key={key} sx={{ my: 2, textTransform: 'none', color: 'inherit' }}>
                 {item.name}
               </Button>
             ))}
+
+            
+
+            {!user && (
+              <Button component={Link} to="/login" sx={{ my: 2, textTransform: 'none', color: 'primary' }}>
+                Log in</Button>
+            )}
+            <IconButton edge="end" color="inherit" onClick={() => dispatch(changeThemeMode())}>
+              {themeMode ? <Brightness7Icon fontSize="small" /> : <Brightness4Icon fontSize="small" />}
+            </IconButton>
+            {user && (
+              <Box sx={{ flexGrow: 0, marginLeft: 2 }}>
+                <Tooltip title="Open Menu">
+                  <IconButton onClick={handleOpenUserMenu} size="small" sx={{ p: 0 }}>
+                    <Avatar alt="profile pic" src={userpic} sx={{ width: 32, height: 32, bgcolor: 'green' }} />
+                  </IconButton>
+                </Tooltip>
+                {anchorElUser && document.body.contains(anchorElUser) && (
+  <Menu
+    anchorEl={anchorElUser}
+    open={Boolean(anchorElUser)}
+    onClose={handleCloseUserMenu}
+    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+    transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+    sx={{ mt: '45px' }}
+  >
+    <MenuItem component={Link} to='/profile' onClick={handleCloseUserMenu}>Profile</MenuItem>
+    <MenuItem onClick={() => alert("Settings coming soon")}>Settings</MenuItem>
+    <MenuItem onClick={handleLogout}>Logout</MenuItem>
+  </Menu>
+)}
+                {/* <Menu
+                  sx={{ mt: '45px' }}
+                  anchorEl={anchorElUser}
+                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  open={Boolean(anchorElUser)}
+                  onClose={handleCloseUserMenu}
+                >
+                  <MenuItem component={Link} to='/profile' onClick={handleCloseUserMenu}>Profile</MenuItem>
+                  <MenuItem onClick={() => alert("Settings coming soon")}>Settings</MenuItem>
+                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                </Menu> */}
+              </Box>
+            )}
           </Box>
 
-          <IconButton edge="end" color="inherit" onClick={() => dispatch(changeThemeMode())}>
-            {themeMode ? <Brightness7Icon fontSize="small" /> : <Brightness4Icon fontSize="small" />}
+          <IconButton sx={{ display: { xs: 'flex', md: 'none' }, marginLeft: 'auto' }} onClick={handleDrawerToggle} edge="start" color="inherit" aria-label="menu">
+            <MenuIcon />
           </IconButton>
-
-          {!user ? (
-            <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-              <Button variant="outlined" component={Link} to="/login?mode=signup" size="small" sx={{ marginLeft: 2, color: 'inherit', display: 'block' }}>Sign up</Button>
-              <Button variant="outlined" component={Link} to="/login" size="small" sx={{ marginLeft: 2, color: 'inherit', display: 'block' }}>Log in</Button>
-            </Box>
-          ) : (
-            <Box sx={{ flexGrow: 0, marginLeft: 2 }}>
-              <Tooltip title="Open Menu">
-                <IconButton onClick={handleOpenUserMenu} size="small" sx={{ p: 0 }}>
-                  <Avatar alt="profile pic" src={userpic} sx={{ width: 32, height: 32, backgroundColor: 'green' }} />
-                </IconButton>
-              </Tooltip>
-
-              {anchorElUser && (
-                <Menu sx={{ mt: '45px' }} id="menu-appbar" anchorEl={anchorElUser} anchorOrigin={{ vertical: 'top', horizontal: 'right' }} keepMounted transformOrigin={{ vertical: 'top', horizontal: 'right' }} open={Boolean(anchorElUser)} onClose={handleCloseUserMenu}>
-                  <MenuItem component={Link} to='/profile' onClick={handleCloseUserMenu}>Profile</MenuItem>
-                  <MenuItem onClick={() => alert("I am Settings function")}>Settings</MenuItem>
-                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
-                </Menu>
-              )}
-            </Box>
-          )}
         </Toolbar>
       </AppBar>
 

@@ -10,7 +10,7 @@ import { getAuth } from "firebase/auth";
 import { v4 as uuidv4 } from "uuid";
 import SentimentDissatisfiedIcon from "@mui/icons-material/SentimentDissatisfied";
 import { motion } from "framer-motion";
-import CountdownDisplay from "../CountdownDisplay";
+import CountdownDisplay from "../Hooks/CountdownDisplay";
 
 const shuffleArray = (array) =>
   array.map(item => ({ item, sort: Math.random() }))

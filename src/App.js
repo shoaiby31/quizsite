@@ -26,6 +26,7 @@ import AttemptShortAnswers from './components/Quizzes/PrivateTests/AttemptShortA
 import JoinTeacherRequest from './components/JoinTeacherRequest';
 import Profile from './components/profile';
 import AdminRoute from './components/PrivateRoute/AdminRoute';
+import JoinedAdminsList from './components/JoinedAdminsList';
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -47,6 +48,7 @@ const AppRoutes = () => {
         <Route path="/mcqs-test/:quizId" element={<PrivateRoute><AttemptMcqs /></PrivateRoute>} />
         <Route path="/true-false-test/:quizId" element={<PrivateRoute><AttemptTrueFalse /></PrivateRoute>} />
         <Route path="/short-questions-test/:quizId" element={<PrivateRoute><AttemptShortAnswers /></PrivateRoute>} />
+        <Route path="/my-teachers" element={<PrivateRoute><JoinedAdminsList /></PrivateRoute>} />
 
 
         

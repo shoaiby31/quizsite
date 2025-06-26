@@ -12,7 +12,8 @@ import { getAuth } from "firebase/auth";
 import { v4 as uuidv4 } from "uuid";
 import SentimentDissatisfiedIcon from "@mui/icons-material/SentimentDissatisfied";
 import { motion } from "framer-motion";
-import CountdownDisplay from "../../CountdownDisplay";
+import CountdownDisplay from "../../Hooks/CountdownDisplay";
+import QuizGuard from "../../Hooks/QuizGuard";
 
 const shuffleArray = (array) =>
   array.map(item => ({ item, sort: Math.random() }))
@@ -202,18 +203,15 @@ const AttemptShort = () => {
     fetchQuiz();
   }, [user, quizId, navigate, secretId, warningCount, isPublic]);
 
-  const handleSubmit = useCallback(async () => {
+ const handleSubmit = useCallback(async () => {
     setSubmitted(true);
-
     try {
-      // Submit final answer and mark as submitted in Firestore
       if (attemptId) {
         await setDoc(doc(db, "attempts", attemptId), {
           shortAnswersSubmitted: true,
           warningCount: 0,
           totalShortScore: perQuestionScore * questions.length,
           shortAnswerScores: 10,
-
         }, { merge: true });
       }
 
@@ -247,11 +245,10 @@ const AttemptShort = () => {
       // Redirect after grading
 
       if (isPublic) {
-        navigate(`/start-public-test/${quizId}`)
+        navigate(`/start-public-test/${quizId}`);
       } else {
-        navigate(`/start-test/${quizId}`, { state: { secretId } })
+        navigate(`/start-test/${quizId}`, { state: { secretId } });
       }
-
     } catch (err) {
       console.error("Error in handleSubmit:", err);
     }
@@ -274,51 +271,28 @@ const AttemptShort = () => {
     return () => clearInterval(timer);
   }, [remainingTime, submitted, handleSubmit]);
 
-  useEffect(() => {
-    const triggerWarning = async () => {
-      const now = Date.now();
-      if (now - lastWarningTimeRef.current > 2000) {
-        warningCountRef.current += 1;
-        lastWarningTimeRef.current = now;
-        setWarningCount(warningCountRef.current);
-        setError(`Don't switch tabs! Warning ${warningCountRef.current}/3`);
-
-        if (attemptId) {
-          await setDoc(doc(db, "attempts", attemptId), {
-            warningCount: warningCountRef.current
-          }, { merge: true });
-        }
-
-        if (warningCountRef.current >= 3) {
-          handleSubmit();
-        }
+  const handleWarning = async (reason = "switch tabs") => {
+    const now = Date.now();
+    if (now - lastWarningTimeRef.current > 2000) {
+      warningCountRef.current += 1;
+      lastWarningTimeRef.current = now;
+      setWarningCount(warningCountRef.current);
+      setError(`Don't ${reason}! Warning ${warningCountRef.current}/3`);
+      if (attemptId) {
+        await setDoc(doc(db, "attempts", attemptId), {
+          warningCount: warningCountRef.current
+        }, { merge: true });
       }
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        triggerWarning();
+      if (warningCountRef.current >= 3) {
+        handleSubmit();
       }
-    };
-
-    const handleBlur = () => {
-      triggerWarning();
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("blur", handleBlur);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("blur", handleBlur);
-    };
-  }, [attemptId, handleSubmit]);
+    }
+  };
 
   const handleAnswerChange = async (e) => {
     const value = e.target.value;
     const updatedAnswers = { ...answers, [currentIdx]: value };
     setAnswers(updatedAnswers);
-
     if (attemptId) {
       await setDoc(doc(db, "attempts", attemptId), {
         shortAnswers: updatedAnswers
@@ -330,9 +304,7 @@ const AttemptShort = () => {
     const newIndex = direction === "next"
       ? Math.min(currentIdx + 1, questions.length - 1)
       : Math.max(currentIdx - 1, 0);
-
     setCurrentIdx(newIndex);
-
     if (attemptId) {
       await setDoc(doc(db, "attempts", attemptId), {
         currentIdx: newIndex
@@ -362,46 +334,49 @@ const AttemptShort = () => {
   const currentQuestion = questions[currentIdx];
 
   return (
-    <Card sx={{ px: { xs: 2, md: 5 } }}>
-      <CardContent>
-        <Grid container spacing={4} alignItems="center">
-          <Grid size={{ xs: 6, md: 4, xl:3 }}>
-            <Typography variant="h6">Question {currentIdx + 1} of {questions.length}</Typography>
+    <>
+      <QuizGuard onWarning={handleWarning} />
+      <Card sx={{ px: { xs: 2, md: 5 } }}>
+        <CardContent>
+          <Grid container spacing={4} alignItems="center">
+            <Grid size={{xs:6, md:4, xl:3}}>
+              <Typography variant="h6">Question {currentIdx + 1} of {questions.length}</Typography>
+            </Grid>
+            <Grid size={{xs:6, md:4, xl:2}}>
+              <CountdownDisplay remainingTime={remainingTime} />
+            </Grid>
+            <Grid size={{xs:12, md:4, xl:3}}>
+              {error !== '' &&
+                <Box component={motion.div} initial={{ scale: 1 }} animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 2 }}
+                  sx={{ backgroundColor: "#e3f2fd", maxWidth: '350px', borderRadius: "12px", px: 2, py: 1, boxShadow: 2, display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography variant="h6" fontWeight='bold' color="error.main">{error}</Typography>
+                </Box>}
+            </Grid>
           </Grid>
-          <Grid size={{ xs: 6, md: 4 , xl:2 }}>
-            <CountdownDisplay remainingTime={remainingTime} />
-          </Grid>
-          <Grid size={{ xs: 12, md: 4, xl:3 }}>
-            {error !== '' &&
-              <Box component={motion.div} initial={{ scale: 1 }} animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 2 }}
-                sx={{ backgroundColor: "#e3f2fd", maxWidth:'350px', borderRadius: "12px", px: 2, py: 1, boxShadow: 2, display: "flex", alignItems: "center", gap: 1 }}>
-                <Typography variant="h6" fontWeight='bold' color="error.main">{error}</Typography>
-              </Box>}
-          </Grid>
-        </Grid>
 
-        <Typography variant="body1" fontWeight="bold" mt={2}>{currentQuestion.text}</Typography>
+          <Typography variant="body1" fontWeight="bold" mt={2}>{currentQuestion.text}</Typography>
 
-        <TextField
-          multiline
-          minRows={3}
-          value={answers[currentIdx] || ""}
-          onChange={handleAnswerChange}
-          fullWidth
-          sx={{ mt: 2 }}
-        />
+          <TextField
+            multiline
+            minRows={3}
+            value={answers[currentIdx] || ""}
+            onChange={handleAnswerChange}
+            fullWidth
+            sx={{ mt: 2 }}
+          />
 
-        <Box mt={3} display="flex">
-          <Button variant="outlined" onClick={() => handleNavigation("prev")} disabled={currentIdx === 0} sx={{ mx: 1 }}>Previous</Button>
-          <Button variant="contained" onClick={() => {
-            if (currentIdx === questions.length - 1) handleSubmit();
-            else handleNavigation("next");
-          }}>
-            {currentIdx === questions.length - 1 ? "Submit" : "Next"}
-          </Button>
-        </Box>
-      </CardContent>
-    </Card>
+          <Box mt={3} display="flex">
+            <Button variant="outlined" onClick={() => handleNavigation("prev")} disabled={currentIdx === 0} sx={{ mx: 1 }}>Previous</Button>
+            <Button variant="contained" onClick={() => {
+              if (currentIdx === questions.length - 1) handleSubmit();
+              else handleNavigation("next");
+            }}>
+              {currentIdx === questions.length - 1 ? "Submit" : "Next"}
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
+    </>
   );
 };
 

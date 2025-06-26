@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Card, CardContent, Typography, CircularProgress, Button, Grid, } from '@mui/material';
+import { Box, Card, CardContent, Typography, CircularProgress, Button, Grid, Chip, } from '@mui/material';
 import QuizIcon from '@mui/icons-material/Quiz';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import NotesIcon from '@mui/icons-material/Notes';
@@ -8,6 +8,8 @@ import { db } from '../../../config/firebase';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getAuth } from 'firebase/auth'; // Required to get UID
 import { LegendToggle } from '@mui/icons-material';
+import MultipleStopIcon from '@mui/icons-material/MultipleStop';
+
 const typeInfo = {
   mcq: { label: 'MCQs', icon: <QuizIcon color="primary" /> },
   truefalse: { label: 'True/False', icon: <CheckCircleIcon color="success" /> },
@@ -19,7 +21,7 @@ const StartButtons = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { secretId } = location.state || {};
-
+ const [quizData, setQuizData] = useState(null);
   const [firestoreUser, setFirestoreUser] = useState(null);
   const [questionTypes, setQuestionTypes] = useState({});
   const [attemptedSections, setAttemptedSections] = useState([]);
@@ -66,6 +68,7 @@ const StartButtons = () => {
       (docSnap) => {
         if (docSnap.exists()) {
           const quizData = docSnap.data();
+          setQuizData(quizData)
           setQuestionTypes(quizData.questionTypes || {});
         } else {
           console.error('Quiz not found');
@@ -151,7 +154,10 @@ const StartButtons = () => {
 
   return (
     <Box sx={{ p: 2 }}>
-      <Typography variant="h6" gutterBottom>Select a Section to Begin</Typography>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: { xs: 'flex-start', md: 'center' }, justifyContent: 'flex-start', gap: 2, mb: 4 }}>
+              <Chip icon={<QuizIcon />} label={`Title: ${quizData.title}`} color='secondary' variant="outlined" sx={{ fontSize: { xs: 16, md: 17 }, width:{xs:'100%', md:'auto'}, px: 3, py: 1.5, fontWeight: 'bold', borderRadius: '14px'}} />
+              <Chip icon={<MultipleStopIcon />} label="Select a Section to Begin" color='primary' variant="outlined" sx={{ fontSize: { xs: 16, md: 17 }, width:{xs:'100%', md:'auto'}, px: 3, py: 1.5, fontWeight: 'bold', borderRadius: '14px'}} />
+            </Box>
       <Grid container spacing={3}>
         {activeTypes.map((type) => {
           const config = questionTypes[type];
@@ -187,32 +193,32 @@ const StartButtons = () => {
           );
         })}
         {(() => {
-                  const allSectionsSubmitted = activeTypes.every(type => attemptedSections.includes(type));
-                  return allSectionsSubmitted && (
-                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                      <Card variant="outlined" sx={{ borderRadius: 3, boxShadow: 3 }}>
-                        <CardContent>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                            <LegendToggle color="primary" />
-                            <Typography variant="h6">Detailed Result Card</Typography>
-                          </Box>
-                          <Typography variant="body2" color="text.secondary" gutterBottom>
-                            Analyze your performance in detail
-                          </Typography>
-                          <Button
-                            fullWidth
-                            variant="contained"
-                            color="primary"
-                            onClick={() => navigate(`/result-card/${quizId}`, { state: { uid: firestoreUser?.uid } })}
-                            sx={{ mt: 2, borderRadius: 2 }}
-                          >
-                            View Result
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  );
-                })()}
+          const allSectionsSubmitted = activeTypes.every(type => attemptedSections.includes(type));
+          return allSectionsSubmitted && (
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Card variant="outlined" sx={{ borderRadius: 3, boxShadow: 3 }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <LegendToggle color="primary" />
+                    <Typography variant="h6">Result Info</Typography>
+                  </Box>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Analyze your performance in detail
+                  </Typography>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    color="primary"
+                    onClick={() => navigate(`/result-card/${quizId}`, { state: { uid: firestoreUser?.uid } })}
+                    sx={{ mt: 2, borderRadius: 2 }}
+                  >
+                    View Result
+                  </Button>
+                </CardContent>
+              </Card>
+            </Grid>
+          );
+        })()}
       </Grid>
     </Box>
   );

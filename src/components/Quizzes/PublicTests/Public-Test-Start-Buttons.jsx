@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Box, Card, CardContent, Typography, CircularProgress, Button, Grid,
-} from '@mui/material';
+  Chip,} from '@mui/material';
 import QuizIcon from '@mui/icons-material/Quiz';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import NotesIcon from '@mui/icons-material/Notes';
@@ -10,7 +10,7 @@ import { doc, onSnapshot, collection, query, where } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
-
+import MultipleStopIcon from '@mui/icons-material/MultipleStop';
 const typeInfo = {
   mcq: { label: 'MCQs', icon: <QuizIcon color="primary" /> },
   truefalse: { label: 'True/False', icon: <CheckCircleIcon color="success" /> },
@@ -126,7 +126,10 @@ const PublicStartButtons = () => {
 
   return (
     <Box sx={{ p: 2 }}>
-      <Typography variant="h6" gutterBottom>Select a Section to Begin</Typography>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: { xs: 'flex-start', md: 'center' }, justifyContent: 'flex-start', gap: 2, mb: 4 }}>
+        <Chip icon={<QuizIcon />} label={`Title: ${quizData.title}`} color='secondary' variant="outlined" sx={{ fontSize: { xs: 16, md: 17 }, width:{xs:'100%', md:'auto'}, px: 3, py: 1.5, fontWeight: 'bold', borderRadius: '14px'}} />
+        <Chip icon={<MultipleStopIcon />} label="Select a Section to Begin" color="primary" variant="outlined"  sx={{ fontSize: { xs: 16, md: 17 }, width:{xs:'100%', md:'auto'}, px: 3, py: 1.5, fontWeight: 'bold', borderRadius: '14px'}} />
+      </Box>
       <Grid container spacing={3}>
         {activeTypes.map((type) => {
           const config = questionTypes[type];
@@ -161,10 +164,10 @@ const PublicStartButtons = () => {
                 <CardContent>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                     <LegendToggle color="primary" />
-                    <Typography variant="h6">Detailed Result Card</Typography>
+                    <Typography variant="h6">Result Info</Typography>
                   </Box>
                   <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Analyze your performance in detail
+                    Analyze performance in detail
                   </Typography>
                   <Button
                     fullWidth
