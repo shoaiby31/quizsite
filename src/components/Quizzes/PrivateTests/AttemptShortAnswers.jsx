@@ -34,13 +34,14 @@ const AttemptShort = () => {
   const [attemptId, setAttemptId] = useState(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [isPublic, setIsPublic] = useState(true);
+  const isPublicRef = useRef(true);
+
 
   const [warningCount, setWarningCount] = useState(0);
   const warningCountRef = useRef(0);
   const lastWarningTimeRef = useRef(0);
   const location = useLocation();
-  const { secretId } = location.state || {};
+  const secretId = location.state?.secretId || localStorage.getItem("secretId");
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(setUser);
@@ -63,7 +64,7 @@ const AttemptShort = () => {
           setIsLoading(false);
           return;
         }
-        setIsPublic(quizData.isPublic)
+        isPublicRef.current = quizData.isPublic;
 
         if (quizData.secretid !== secretId && quizData.secretid !== "") {
           setError("Secret ID does not match.");
@@ -91,7 +92,7 @@ const AttemptShort = () => {
 
           if (attemptData.shortQuestions && attemptData.shortQuestions.length > 0) {
             if (attemptData.shortAnswersSubmitted) {
-              if (isPublic) {
+              if (isPublicRef.current) {
                 return navigate(`/start-public-test/${quizId}`)
               } else {
                 return navigate(`/start-test/${quizId}`, { state: { secretId } })
@@ -106,7 +107,7 @@ const AttemptShort = () => {
                 shortAnswersSubmitted: true
               }, { merge: true });
 
-              if (isPublic) {
+              if (isPublicRef.current) {
                 return navigate(`/start-public-test/${quizId}`)
               } else {
                 return navigate(`/start-test/${quizId}`, { state: { secretId } })
@@ -115,7 +116,7 @@ const AttemptShort = () => {
 
             setQuestions(attemptData.shortQuestions);
             setAnswers(attemptData.shortAnswers || {});
-            setCurrentIdx(attemptData.shortQuestions.length<attemptData.currentIdx? 0 : attemptData.currentIdx || 0);
+            setCurrentIdx(attemptData.shortQuestions.length < attemptData.currentIdx ? 0 : attemptData.currentIdx || 0);
             setRemainingTime(Math.max(timeLimit - elapsed, 0));
             setIsLoading(false);
             return;
@@ -175,6 +176,7 @@ const AttemptShort = () => {
           userId: user.uid,
           quizId,
           username: user.displayName,
+          adminUid: quizData.createdBy,
           shortQuestions: selectedQuestions,
           shortAnswers: {},
           shortAnswersSubmitted: false,
@@ -201,14 +203,15 @@ const AttemptShort = () => {
     };
 
     fetchQuiz();
-  }, [user, quizId, navigate, secretId, warningCount, isPublic]);
+  }, [user, quizId, navigate, secretId, warningCount]);
 
- const handleSubmit = useCallback(async () => {
+  const handleSubmit = useCallback(async () => {
     setSubmitted(true);
     try {
       if (attemptId) {
         await setDoc(doc(db, "attempts", attemptId), {
           shortAnswersSubmitted: true,
+          hasSubmitted: true,
           warningCount: 0,
           totalShortScore: perQuestionScore * questions.length,
           shortAnswerScores: 10,
@@ -244,7 +247,7 @@ const AttemptShort = () => {
 
       // Redirect after grading
 
-      if (isPublic) {
+      if (isPublicRef.current) {
         navigate(`/start-public-test/${quizId}`);
       } else {
         navigate(`/start-test/${quizId}`, { state: { secretId } });
@@ -252,7 +255,7 @@ const AttemptShort = () => {
     } catch (err) {
       console.error("Error in handleSubmit:", err);
     }
-  }, [attemptId, questions, navigate, quizId, secretId, perQuestionScore, isPublic]);
+  }, [attemptId, questions, navigate, quizId, secretId, perQuestionScore]);
 
   useEffect(() => {
     if (submitted || remainingTime === null) return;
@@ -339,13 +342,13 @@ const AttemptShort = () => {
       <Card sx={{ px: { xs: 2, md: 5 } }}>
         <CardContent>
           <Grid container spacing={4} alignItems="center">
-            <Grid size={{xs:6, md:4, xl:3}}>
+            <Grid size={{ xs: 6, md: 4, xl: 3 }}>
               <Typography variant="h6">Question {currentIdx + 1} of {questions.length}</Typography>
             </Grid>
-            <Grid size={{xs:6, md:4, xl:2}}>
+            <Grid size={{ xs: 6, md: 3, xl: 2 }}>
               <CountdownDisplay remainingTime={remainingTime} />
             </Grid>
-            <Grid size={{xs:12, md:4, xl:3}}>
+            <Grid size={{ xs: 12, md: 5, xl: 3 }}>
               {error !== '' &&
                 <Box component={motion.div} initial={{ scale: 1 }} animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 2 }}
                   sx={{ backgroundColor: "#e3f2fd", maxWidth: '350px', borderRadius: "12px", px: 2, py: 1, boxShadow: 2, display: "flex", alignItems: "center", gap: 1 }}>

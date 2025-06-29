@@ -116,6 +116,7 @@ const StartButtons = () => {
   }, [quizId, firestoreUser?.uid]);
 
   const handleStart = (type) => {
+    localStorage.setItem("secretId", secretId);
     const routes = {
       mcq: `/mcqs-test/${quizId}`,
       truefalse: `/true-false-test/${quizId}`,

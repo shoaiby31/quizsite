@@ -33,13 +33,14 @@ const AttemptMcqs = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [warningCount, setWarningCount] = useState(0);
-  const [isPublic, setIsPublic] = useState(true);
+
+  const isPublicRef = useRef(true);
 
   const warningCountRef = useRef(0);
   const lastWarningTimeRef = useRef(0);
 
   const location = useLocation();
-  const { secretId } = location.state || {};
+  const secretId = location.state?.secretId || localStorage.getItem("secretId");
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(setUser);
@@ -61,7 +62,7 @@ const AttemptMcqs = () => {
           setIsLoading(false);
           return;
         }
-        setIsPublic(quizData.isPublic);
+        isPublicRef.current = quizData.isPublic;
 
         if (quizData.secretid !== secretId && quizData.secretid !== "") {
           setError("Secret ID does not match.");
@@ -89,7 +90,7 @@ const AttemptMcqs = () => {
 
           if (attemptData.mcqsQuestions && attemptData.mcqsQuestions.length > 0) {
             if (attemptData.mcqsSubmitted) {
-              if (isPublic) {
+              if (isPublicRef.current) {
                 return navigate(`/start-public-test/${quizId}`);
               } else {
                 return navigate(`/start-test/${quizId}`, { state: { secretId } });
@@ -115,7 +116,7 @@ const AttemptMcqs = () => {
                 mcqsScore: score,
                 totalMcqsScore: storedQuestions.length
               }, { merge: true });
-              if (isPublic) {
+              if (isPublicRef.current) {
                 return navigate(`/start-public-test/${quizId}`);
               } else {
                 return navigate(`/start-test/${quizId}`, { state: { secretId } });
@@ -193,6 +194,7 @@ const AttemptMcqs = () => {
           userId: user.uid,
           quizId,
           username: user.displayName,
+          adminUid: quizData.createdBy,
           mcqsQuestions: selectedQuestions,
           mcqsAnswers: {},
           mcqsSubmitted: false,
@@ -220,7 +222,7 @@ const AttemptMcqs = () => {
     };
 
     fetchQuiz();
-  }, [user, quizId, navigate, secretId, warningCount, isPublic]);
+  }, [user, quizId, navigate, secretId, warningCount]);
 
   const handleSubmit = useCallback(async () => {
     let calculatedScore = 0;
@@ -232,18 +234,20 @@ const AttemptMcqs = () => {
     if (attemptId) {
       await setDoc(doc(db, "attempts", attemptId), {
         mcqsSubmitted: true,
+        hasSubmitted: true,
         mcqsScore: calculatedScore,
         totalMcqsScore: questions.length,
         warningCount: 0,
         currentIdx: 0,
       }, { merge: true });
     }
-    if (isPublic) {
+    localStorage.removeItem("secretId");
+    if (isPublicRef.current) {
       navigate(`/start-public-test/${quizId}`);
     } else {
       navigate(`/start-test/${quizId}`, { state: { secretId } });
     }
-  }, [answers, questions, attemptId, navigate, quizId, secretId, isPublic]);
+  }, [answers, questions, attemptId, navigate, quizId, secretId]);
 
   useEffect(() => {
     if (submitted || remainingTime === null) return;
@@ -337,10 +341,10 @@ const AttemptMcqs = () => {
             <Grid size={{ xs: 6, md: 4, xl: 3 }}>
               <Typography variant="h6">Question {currentIdx + 1} of {questions.length}</Typography>
             </Grid>
-            <Grid size={{ xs: 6, md: 4, xl: 2 }}>
+            <Grid size={{ xs: 6, md: 3, xl: 2 }}>
               <CountdownDisplay remainingTime={remainingTime} />
             </Grid>
-            <Grid size={{ xs: 12, md: 4, xl: 3 }}>
+            <Grid size={{ xs: 12, md: 5, xl: 3 }}>
               {error !== '' &&
                 <Box component={motion.div} initial={{ scale: 1 }} animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 2 }}
                   sx={{ backgroundColor: "#e3f2fd", maxWidth: '350px', borderRadius: "12px", px: 2, py: 1, boxShadow: 2, display: "flex", alignItems: "center", gap: 1 }}>

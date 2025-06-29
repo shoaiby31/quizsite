@@ -13,6 +13,7 @@ import PrintIcon from "@mui/icons-material/Print";
 import Papa from "papaparse";
 import { Search } from "@mui/icons-material";
 import AttemptDetailsModal from "./attemptdetailsmodal";
+import { getAuth } from "firebase/auth";
 const DEFAULT_ITEMS_PER_PAGE = 24;
 
 const Privatequizresults = () => {
@@ -37,7 +38,6 @@ const Privatequizresults = () => {
         message: "",
         onConfirm: null,
     });
-
     useEffect(() => {
         const fetchQuizData = async () => {
             const docRef = doc(db, "quizzes", quizId);
@@ -52,37 +52,43 @@ const Privatequizresults = () => {
         }
     }, [quizId]);
 
-    useEffect(() => {
-        const unsubscribe = onSnapshot(
-            query(collection(db, "attempts"), where("quizId", "==", quizId)),
-            (snapshot) => {
-                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+   useEffect(() => {
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
 
-                const filtered = filter === "submitted"
-                    ? data.filter(r =>
-                        r.mcqsSubmitted === true &&
-                        r.trueFalseSubmitted === true &&
-                        r.shortAnswersSubmitted === true
-                    )
-                    : filter === "inprogress"
-                        ? data.filter(r =>
-                            r.mcqsSubmitted !== true ||
-                            r.trueFalseSubmitted !== true ||
-                            r.shortAnswersSubmitted !== true
-                        )
-                        : data;
+    if (!currentUser) return;
 
-                setResults(filtered);
-                setLoading(false);
-            },
-            () => {
-                setError("Failed to load results.");
-                setLoading(false);
-            }
-        );
+    const attemptsRef = collection(db, "attempts");
+    const q = query(
+        attemptsRef,
+        where("quizId", "==", quizId),
+        where("adminUid", "==", currentUser.uid)
+    );
 
-        return () => unsubscribe();
-    }, [quizId, filter]);
+    const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            const filtered = filter === "submitted"
+                ? data.filter(r => r.mcqsSubmitted === true && r.trueFalseSubmitted === true && r.shortAnswersSubmitted === true)
+                : filter === "inprogress"
+                    ? data.filter(r => r.mcqsSubmitted !== true || r.trueFalseSubmitted !== true || r.shortAnswersSubmitted !== true)
+                    : data;
+
+            setResults(filtered);
+            setError("");
+            setLoading(false);
+        },
+        (error) => {
+            console.error("Error listening to attempts snapshot:", error);
+            setError("Failed to load results.");
+            setLoading(false);
+        }
+    );
+
+    return () => unsubscribe();
+}, [quizId, filter]);
 
 
     const handleFilterChange = (_, newFilter) => {
@@ -120,7 +126,6 @@ const Privatequizresults = () => {
         const start = (page - 1) * rowsPerPage;
         return filteredResults.slice(start, start + rowsPerPage);
     }, [filteredResults, page, rowsPerPage]);
-
     const totalPages = rowsPerPage === -1 ? 1 : Math.ceil(filteredResults.length / rowsPerPage);
 
     const handleSelectAll = (event) => {
@@ -372,16 +377,16 @@ const Privatequizresults = () => {
                                             </TableCell>
                                             <TableCell>
                                                 {(
-                                                            (quizData?.questionTypes?.mcq != null ? attempt?.mcqsSubmitted === true : true) &&
-                                                            (quizData?.questionTypes?.truefalse != null ? attempt?.trueFalseSubmitted === true : true) &&
-                                                            (quizData?.questionTypes?.short != null ? attempt?.shortAnswersSubmitted === true : true)
-                                                        )
-                                                            ? <Button size="small" variant="text" onClick={() => navigate(`/result-card/${quizId}`, { state: { uid: attempt?.userId } })} sx={{ textTransform: 'none' }}>
-                                                    View Result Card
-                                                </Button>
-                                                            : <Button size="small" variant="text" onClick={() => { setSelectedAttempt(attempt); setModalOpen(true); }} sx={{ textTransform: 'none' }}> View Live Detail</Button>}
-                                                
-                                                
+                                                    (quizData?.questionTypes?.mcq != null ? attempt?.mcqsSubmitted === true : true) &&
+                                                    (quizData?.questionTypes?.truefalse != null ? attempt?.trueFalseSubmitted === true : true) &&
+                                                    (quizData?.questionTypes?.short != null ? attempt?.shortAnswersSubmitted === true : true)
+                                                )
+                                                    ? <Button size="small" variant="text" onClick={() => navigate(`/result-card/${quizId}`, { state: { uid: attempt?.userId } })} sx={{ textTransform: 'none' }}>
+                                                        View Result Card
+                                                    </Button>
+                                                    : <Button size="small" variant="text" onClick={() => { setSelectedAttempt(attempt); setModalOpen(true); }} sx={{ textTransform: 'none' }}> View Live Detail</Button>}
+
+
 
                                             </TableCell>
                                         </TableRow>
@@ -407,7 +412,7 @@ const Privatequizresults = () => {
                 </Stack>
             )}
 
-            <Snackbar open={!!error} autoHideDuration={4000} onClose={() => setError("")}>
+            <Snackbar open={!!error && !loading} autoHideDuration={4000} onClose={() => setError("")}>
                 <Alert severity="error" onClose={() => setError("")}>{error}</Alert>
             </Snackbar>
 
