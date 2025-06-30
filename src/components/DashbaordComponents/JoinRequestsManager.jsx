@@ -205,11 +205,10 @@ const JoinRequestsManager = () => {
                   onChange={(e) => handleSelectAll(e.target.checked)}
                 />
               </TableCell>
+              <TableCell>Roll No</TableCell>
               <TableCell>Student Name</TableCell>
-              <TableCell>Roll Number</TableCell>
               <TableCell>Class</TableCell>
-              <TableCell>Student Email</TableCell>
-              <TableCell>Admin ID</TableCell>
+              <TableCell>Email</TableCell>
             </TableRow>
           </TableHead>
 
@@ -229,11 +228,10 @@ const JoinRequestsManager = () => {
                       onChange={() => handleSelect(req.id)}
                     />
                   </TableCell>
-                  <TableCell>{req.studentName}</TableCell>
                   <TableCell>{req.rollNo || '-'}</TableCell>
+                  <TableCell>{req.studentName}</TableCell>
                   <TableCell>{req.className}</TableCell>
                   <TableCell>{req.studentEmail}</TableCell>
-                  <TableCell>{req.adminId}</TableCell>
                 </TableRow>
               ))
             )}

@@ -226,22 +226,49 @@ const AttemptMcqs = () => {
 
   const handleSubmit = useCallback(async () => {
     let calculatedScore = 0;
+
     questions.forEach((q, idx) => {
       const correct = q.options.find(o => o.isCorrect)?.text;
       if (answers[idx] === correct) calculatedScore++;
     });
+
     setSubmitted(true);
+
     if (attemptId) {
-      await setDoc(doc(db, "attempts", attemptId), {
+      // Step 1: Get the existing attempt
+      const attemptRef = doc(db, "attempts", attemptId);
+      const attemptSnap = await getDoc(attemptRef);
+      const existing = attemptSnap.exists() ? attemptSnap.data() : {};
+
+      // Step 2: Pull other section scores (default to 0 if missing)
+      const trueFalseScore = existing.trueFalseScore || 0;
+      const totalTrueFalseScore = existing.totalTrueFalseScore || 0;
+      const shortAnswerScores = existing.shortAnswerScores || 0;
+      const totalShortScore = existing.totalShortScore || 0;
+
+      const totalMcqsScore = questions.length;
+
+      // Step 3: Compute overall total and score
+      const overallTotal = totalMcqsScore + totalTrueFalseScore + totalShortScore;
+      const overallScore = calculatedScore + trueFalseScore + shortAnswerScores;
+
+      const percentage = overallTotal > 0 ? (overallScore / overallTotal) * 100 : 0;
+
+      // Step 4: Save the updated attempt with percentage
+      await setDoc(attemptRef, {
         mcqsSubmitted: true,
         hasSubmitted: true,
         mcqsScore: calculatedScore,
-        totalMcqsScore: questions.length,
+        totalMcqsScore: totalMcqsScore,
+        percentage: parseFloat(percentage.toFixed(2)),
         warningCount: 0,
         currentIdx: 0,
       }, { merge: true });
     }
+
+    // Step 5: Redirect
     localStorage.removeItem("secretId");
+
     if (isPublicRef.current) {
       navigate(`/start-public-test/${quizId}`);
     } else {

@@ -81,7 +81,7 @@ const Sidebar = () => {
           variant="contained"
           fullWidth
           startIcon={!isCollapsed && <AppRegistration />}
-          color="secondary" component={NavLink} to={'/dashboard'}
+          color="secondary" onClick={() => { dispatch(setdrawerState()) }} component={NavLink} to={'/dashboard'}
         >
           {!isCollapsed ? 'Overview' : <AppRegistration />}
         </Button>

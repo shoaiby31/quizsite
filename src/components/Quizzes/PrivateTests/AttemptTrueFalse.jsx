@@ -32,8 +32,8 @@ const AttemptTrueFalse = () => {
     const isPublicRef = useRef(true);
     const warningCountRef = useRef(0);
     const lastWarningTimeRef = useRef(0);
-  const location = useLocation();
-  const secretId = location.state?.secretId || localStorage.getItem("secretId");
+    const location = useLocation();
+    const secretId = location.state?.secretId || localStorage.getItem("secretId");
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(setUser);
@@ -210,16 +210,46 @@ const AttemptTrueFalse = () => {
         questions.forEach((q, idx) => {
             if (answers[idx] === q.answer) calculatedScore++;
         });
+
         setSubmitted(true);
+
         if (attemptId) {
-            await setDoc(doc(db, "attempts", attemptId), {
-                trueFalseSubmitted: true,
-                hasSubmitted: true,
-                trueFalseScore: calculatedScore,
-                totalTrueFalseScore: questions.length,
-                warningCount: 0
-            }, { merge: true });
+            const attemptRef = doc(db, "attempts", attemptId);
+
+            try {
+                // Step 1: Read existing attempt document
+                const attemptSnap = await getDoc(attemptRef);
+                const existing = attemptSnap.exists() ? attemptSnap.data() : {};
+
+                // Step 2: Extract other section scores (fallback to 0 if missing)
+                const mcqsScore = existing.mcqsScore || 0;
+                const totalMcqsScore = existing.totalMcqsScore || 0;
+                const shortAnswerScores = existing.shortAnswerScores || 0;
+                const totalShortScore = existing.totalShortScore || 0;
+
+                // Step 3: Combine scores
+                const trueFalseScore = calculatedScore;
+                const totalTrueFalseScore = questions.length;
+
+                const overallScore = mcqsScore + trueFalseScore + shortAnswerScores;
+                const overallTotal = totalMcqsScore + totalTrueFalseScore + totalShortScore;
+                const percentage = overallTotal > 0 ? (overallScore / overallTotal) * 100 : 0;
+
+                // Step 4: Write updated data
+                await setDoc(attemptRef, {
+                    trueFalseSubmitted: true,
+                    hasSubmitted: true,
+                    trueFalseScore,
+                    totalTrueFalseScore,
+                    warningCount: 0,
+                    percentage: parseFloat(percentage.toFixed(2))
+                }, { merge: true });
+            } catch (err) {
+                console.error("Failed to submit true/false answers:", err);
+            }
         }
+
+        // Step 5: Navigate back
         if (isPublicRef.current) navigate(`/start-public-test/${quizId}`);
         else navigate(`/start-test/${quizId}`, { state: { secretId } });
     }, [answers, questions, attemptId, navigate, quizId, secretId]);

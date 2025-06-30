@@ -11,7 +11,7 @@ import { db } from '../../config/firebase';
 import { useSelector } from 'react-redux';
 import EditQuizModal from './editquiz';
 import { useNavigate } from "react-router-dom";
-
+import AddQuestions from './addquestions';
 const ITEMS_PER_PAGE = 9;
 
 const MyQuizzes = () => {
@@ -27,10 +27,11 @@ const MyQuizzes = () => {
   const [sortBy, setSortBy] = useState('recent');
   const [statusFilter, setStatusFilter] = useState('all');
   const [privacyFilter, setPrivacyFilter] = useState('all');
-  const [tagFilter, setTagFilter] = useState('');
+  const [classFilter, setClassFilter] = useState('all');
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
-
+  const [id, setId] = useState(null);
+  const [title, setTitle] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
   const [selectedQuiz, setSelectedQuiz] = useState(null);
 
@@ -69,12 +70,8 @@ const MyQuizzes = () => {
     if (privacyFilter === 'public') result = result.filter(q => q.isPublic);
     if (privacyFilter === 'private') result = result.filter(q => !q.isPublic);
 
-    if (tagFilter.trim() !== '') {
-      result = result.filter(q =>
-        q.tags?.some(tag =>
-          tag.toLowerCase().includes(tagFilter.toLowerCase())
-        )
-      );
+    if (classFilter !== 'all') {
+      result = result.filter(q => String(q.class) === classFilter);
     }
 
     if (sortBy === 'title') {
@@ -85,7 +82,7 @@ const MyQuizzes = () => {
 
     setFilteredQuizzes(result);
     setPage(1);
-  }, [search, sortBy, quizzes, statusFilter, privacyFilter, tagFilter]);
+  }, [search, sortBy, quizzes, statusFilter, privacyFilter, classFilter]);
 
   const paginatedQuizzes = filteredQuizzes.slice(
     (page - 1) * ITEMS_PER_PAGE,
@@ -102,6 +99,10 @@ const MyQuizzes = () => {
       prev.map((q) => (q.id === updatedQuiz.id ? updatedQuiz : q))
     );
     setEditOpen(false);
+  };
+  const viewQuestionsftn = (id, title) => {
+    setId(id);
+    setTitle(title);
   };
   if (loading) return <Box textAlign="center" mt={5}><CircularProgress /></Box>;
   if (error) return <Alert severity="error" sx={{ mt: 5 }}>{error}</Alert>;
@@ -130,8 +131,22 @@ const MyQuizzes = () => {
           </Select>
         </FormControl>
 
-        <TextField label="Tag" size="small" placeholder="Enter tag..." value={tagFilter} onChange={(e) => setTagFilter(e.target.value)} sx={{ minWidth: { xs: '100%', md: 150 } }} />
-
+        <FormControl sx={{ minWidth: { xs: '100%', md: 150 } }}>
+          <InputLabel>Class</InputLabel>
+          <Select size="small" value={classFilter} label="Class" onChange={(e) => setClassFilter(e.target.value)}>
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="1">Class 1</MenuItem>
+            <MenuItem value="2">Class 2</MenuItem>
+            <MenuItem value="3">Class 3</MenuItem>
+            <MenuItem value="4">Class 4</MenuItem>
+            <MenuItem value="5">Class 5</MenuItem>
+            <MenuItem value="6">Class 6</MenuItem>
+            <MenuItem value="7">Class 7</MenuItem>
+            <MenuItem value="8">Class 8</MenuItem>
+            <MenuItem value="9">Class 9</MenuItem>
+            <MenuItem value="10">Class 10</MenuItem>
+          </Select>
+        </FormControl>
         <FormControl sx={{ minWidth: { xs: '100%', md: 150 } }}>
           <InputLabel>Sort By</InputLabel>
           <Select size="small" value={sortBy} label="Sort By" onChange={(e) => setSortBy(e.target.value)}>
@@ -207,6 +222,8 @@ const MyQuizzes = () => {
                   </Box>
 
                   <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button sx={{ textTransform: 'none', mx:2 }} size="small" onClick={() => viewQuestionsftn(quiz.id, quiz.title)}>view / add questions</Button>
+
                     <Button sx={{ textTransform: 'none' }} size='small' onClick={() => {
                       navigate(`/dashboard/private-results/${quiz.id}`);
                     }}>
@@ -235,6 +252,8 @@ const MyQuizzes = () => {
           onQuizUpdated={handleQuizUpdated}
         />
       )}
+      {id && <AddQuestions id={id} title={title} />}
+
     </Box>
   );
 };

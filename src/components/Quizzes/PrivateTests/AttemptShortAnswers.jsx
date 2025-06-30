@@ -209,12 +209,34 @@ const AttemptShort = () => {
     setSubmitted(true);
     try {
       if (attemptId) {
-        await setDoc(doc(db, "attempts", attemptId), {
+        const attemptRef = doc(db, "attempts", attemptId);
+
+        // Step 1: Get the existing attempt
+        const attemptSnap = await getDoc(attemptRef);
+        const existing = attemptSnap.exists() ? attemptSnap.data() : {};
+
+        // Step 2: Fetch other section scores
+        const mcqsScore = existing.mcqsScore || 0;
+        const totalMcqsScore = existing.totalMcqsScore || 0;
+        const trueFalseScore = existing.trueFalseScore || 0;
+        const totalTrueFalseScore = existing.totalTrueFalseScore || 0;
+
+        const shortAnswerScores = 10; // Placeholder or computed score
+        const totalShortScore = perQuestionScore * questions.length;
+
+        // Step 3: Calculate overall
+        const overallScore = mcqsScore + trueFalseScore + shortAnswerScores;
+        const overallTotal = totalMcqsScore + totalTrueFalseScore + totalShortScore;
+        const percentage = overallTotal > 0 ? (overallScore / overallTotal) * 100 : 0;
+
+        // Step 4: Save to Firestore
+        await setDoc(attemptRef, {
           shortAnswersSubmitted: true,
           hasSubmitted: true,
           warningCount: 0,
-          totalShortScore: perQuestionScore * questions.length,
-          shortAnswerScores: 10,
+          totalShortScore,
+          shortAnswerScores,
+          percentage: parseFloat(percentage.toFixed(2)),
         }, { merge: true });
       }
 
@@ -245,8 +267,7 @@ const AttemptShort = () => {
       //   console.log("Scores stored:", result.scores);
       // }
 
-      // Redirect after grading
-
+      // Step 5: Redirect
       if (isPublicRef.current) {
         navigate(`/start-public-test/${quizId}`);
       } else {
@@ -256,7 +277,6 @@ const AttemptShort = () => {
       console.error("Error in handleSubmit:", err);
     }
   }, [attemptId, questions, navigate, quizId, secretId, perQuestionScore]);
-
   useEffect(() => {
     if (submitted || remainingTime === null) return;
 

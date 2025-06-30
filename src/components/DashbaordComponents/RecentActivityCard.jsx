@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, Typography, CircularProgress, Box, Divider } from '@mui/material';
+import { Card, CardContent, Typography, Box, Divider, Stack, Skeleton } from '@mui/material';
 import HistoryIcon from '@mui/icons-material/History';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
@@ -39,7 +39,7 @@ const RecentActivityCard = () => {
   }, [userId]);
 
   return (
-    <Card sx={{ borderRadius: 3, minWidth: 300, }}>
+    <Card sx={{ borderRadius: 3, minWidth: 300, height: '100%' }}>
       <CardContent>
         <Box display="flex" alignItems="center" gap={2} mb={2}>
           <HistoryIcon sx={{ fontSize: 30, color: '#f9a825' }} />
@@ -49,7 +49,15 @@ const RecentActivityCard = () => {
         </Box>
 
         {loading ? (
-          <CircularProgress size={24} />
+          <Stack spacing={2}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Box key={i}>
+                <Skeleton variant="text" width="60%" height={20} />
+                <Skeleton variant="text" width="80%" height={18} />
+                {i < 3 && <Divider sx={{ my: 1 }} />}
+              </Box>
+            ))}
+          </Stack>
         ) : recentAttempts.length === 0 ? (
           <Typography variant="body2" color="text.secondary">No recent activity.</Typography>
         ) : (

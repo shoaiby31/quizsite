@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, Typography, CircularProgress, Box } from '@mui/material';
+import { Card, CardContent, Typography, Box, Skeleton } from '@mui/material';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
@@ -38,7 +38,7 @@ const QuizzesAttemptedCard = () => {
                     <Box>
                         <Typography variant="subtitle2" color="text.secondary">Total Attempts</Typography>
                         {loading ? (
-                            <CircularProgress size={24} thickness={4} />
+                            <Skeleton variant="text" width={60} height={30} />
                         ) : (
                             <Typography variant="h6">{String(attemptCount).padStart(2, '0')}</Typography>
                         )}

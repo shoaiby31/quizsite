@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, Typography, CircularProgress, Box } from '@mui/material';
+import { Card, CardContent, Typography, Box, Skeleton } from '@mui/material';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import { collection, query, where, getDocs, and, or } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
@@ -61,7 +61,7 @@ const AverageScoreCard = () => {
                             Average. Score
                         </Typography>
                         {loading ? (
-                            <CircularProgress size={24} />
+                            <Skeleton variant="text" width={60} height={30} />
                         ) : (
                             <Typography variant="h6">
                                 {averageScore.padStart(4, '0')}%

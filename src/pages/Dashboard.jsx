@@ -11,6 +11,7 @@ import QuizzesAttemptedCard from '../components/DashbaordComponents/QuizzesAttem
 import AverageScoreCard from '../components/DashbaordComponents/AverageScoreCard';
 import RecentActivityCard from '../components/DashbaordComponents/RecentActivityCard';
 import AverageScorePieChart from '../components/DashbaordComponents/AverageScorePieChart';
+import TopScorersCard from '../components/DashbaordComponents/TopScorersCard';
 
 const Dashboard = () => {
   const [studentCount, setStudentCount] = useState(0);
@@ -90,19 +91,17 @@ const Dashboard = () => {
 
       <Grid container spacing={3} rowSpacing={2} sx={{ mt: 2 }}>
         <Grid size={{xs:12, md:8, xl:5}}>
-          {/* <Box sx={{ height: {xs:380, md:360}, bgcolor: 'white', borderRadius: 2 }}> */}
             <AverageScorePieChart/>
-          {/* </Box> */}
         </Grid>
-        <Grid size={{xs:12, md:4, xl:4}}>
-       
+        <Grid size={{xs:12, md:4, xl:3}}>
+          <TopScorersCard/>
+
+        </Grid>
+        <Grid size={{xs:12, md:6, lg:4, xl:4}}>
             <RecentActivityCard/>
-        
-        </Grid>
-        <Grid size={{xs:12, md:6, lg:4, xl:3}}>
-          <Box sx={{ height: 300, bgcolor: 'white', borderRadius: 2 }}>
+          {/* <Box sx={{ height: 300, bgcolor: 'white', borderRadius: 2 }}>
             Chart: Time Admitted
-          </Box>
+          </Box> */}
         </Grid>
         <Grid size={{xs:12, md:4}}>
           <Box sx={{ height: 300, bgcolor: 'white', borderRadius: 2 }}>

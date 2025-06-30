@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Card, CardContent, Typography, CircularProgress, Box
+  Card, CardContent, Typography, Box,
+  Skeleton
 } from '@mui/material';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -77,7 +78,7 @@ const AverageScorePieChart = () => {
   }, [userId]);
 
   return (
-    <Card sx={{ borderRadius: 3 }}>
+    <Card sx={{ borderRadius: 3, height: '100%' }}>
       <CardContent>
         <Box display="flex" alignItems="center" gap={2} mb={2}>
           <PercentIcon color="primary" sx={{ fontSize: 36 }} />
@@ -85,13 +86,20 @@ const AverageScorePieChart = () => {
         </Box>
 
         {loading ? (
-          <Box display="flex" justifyContent="center" mt={4}>
-            <CircularProgress />
-          </Box>
+           <Box mt={2}>
+    <Skeleton variant="text" width="60%" height={30} sx={{ mb: 2 }} />
+    <Skeleton
+      variant="circular"
+      width={180}
+      height={180}
+      sx={{ mx: 'auto', display: 'block' }}
+    />
+    <Skeleton variant="text" width="80%" height={20} sx={{ mt: 2, mx: 'auto' }} />
+  </Box>
         ) : chartData.length === 0 ? (
           <Typography>No submissions yet to calculate average scores.</Typography>
         ) : (
-           <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
                 data={chartData}

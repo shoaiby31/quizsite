@@ -34,10 +34,10 @@ const ResultCard = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (!quizId || !uid){
+        if (!quizId || !uid) {
             setLoading(false)
             return;
-        } 
+        }
         const fetchAttempt = async () => {
             try {
                 const q = query(
@@ -224,11 +224,11 @@ const ResultCard = () => {
             <Grid container spacing={2}>
                 <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                     <Box>
-                        <Box sx={{ display: 'flex', justifyContent: {xs:'center', md:'left'}, mb: 1 }}>
-                                    <Chip icon={<QueryStatsIcon />} label={`Overall Score: ${overallScore} / ${overallTotal}`} color="primary" sx={{ fontSize: 18, px: 3, py: 1.5, fontWeight: 'bold' }} />
-                                </Box>
+                        <Box sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'left' }, mb: 1 }}>
+                            <Chip icon={<QueryStatsIcon />} label={`Overall Score: ${overallScore} / ${overallTotal}`} color="primary" sx={{ fontSize: 18, px: 3, py: 1.5, fontWeight: 'bold' }} />
+                        </Box>
                         <Typography variant="body1" mt={1.5} color="text.secondary">
-                            You got {((overallScore / overallTotal) * 100).toFixed(1)}% of the questions correct.
+                            You got {attempt.percentage?.toFixed(1)}% of the questions correct.
                         </Typography>
 
                         <Box mt={4}>
