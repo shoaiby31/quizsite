@@ -33,7 +33,6 @@ export default function Createquiz() {
     const uid = useSelector((state) => state.auth.uid);
     const name = useSelector((state) => state.auth.displayName);
     const inputRef = useRef();
-
     const handleKeyDown = (event) => {
         if (event.key === "Enter" && inputRef.current.value) {
             const newTag = inputRef.current.value.trim();

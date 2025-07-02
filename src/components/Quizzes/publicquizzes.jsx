@@ -139,14 +139,21 @@ const PublicQuizzes = () => {
           <Typography variant="body1">No matching quizzes found.</Typography>
         ) : (
           paginatedQuizzes.map(quiz => (
-            <Grid size={{sx:12, sm:6, md:3}} key={quiz.id}>
+            <Grid size={{ sx: 12, sm: 6, md: 3 }} key={quiz.id}>
               <Card elevation={3} sx={{ borderRadius: 4, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <CardContent>
                   <Typography variant="body2" fontWeight='bold' gutterBottom>{quiz.title}</Typography>
                   <Typography variant="caption" gutterBottom>{quiz.description || 'No description provided.'}</Typography>
-                  <Typography variant="body2" gutterBottom>Total Questions: {quiz.questionCount}</Typography>
-                  <Typography variant="body2" gutterBottom>Time Allowed: {quiz.timeLimit} minutes</Typography>
-                  <Typography variant="body2" fontWeight='bold'>Created By: {quiz.ownerNAme}</Typography>
+                  <Typography variant="body2">For Class: {quiz.class}{quiz.class === 1 ? 'st' : quiz.class === 2 ? 'nd' : quiz.class === 3 ? 'rd' : 'th'}</Typography>
+
+                  {Object.entries(quiz.questionTypes).map(([type, value]) => (
+                    <Typography variant="body2" gutterBottom key={type}>
+                      {value ? '✅ ' : <span style={{ fontSize: '11px' }}>❌ </span>}
+                      {type === 'truefalse' ? 'True/False' : type === 'short' ? 'Short Questions' : "MCQ's"}
+                      {value && ` — Time: ${value.timeLimit} min`}
+                    </Typography>
+                  ))}
+                  {/* <Typography variant="body2" fontWeight='bold'>Created By: {quiz.ownerName}</Typography> */}
                 </CardContent>
                 <CardActions sx={{ paddingX: 5, justifyContent: 'flex-end', marginTop: 'auto' }}>
                   <Button component={Link} to={`/start-public-test/${quiz.id}`} variant='text' sx={{ borderRadius: 20, textTransform: 'none' }} size="small">

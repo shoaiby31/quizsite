@@ -1,32 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import AppBar from '@mui/material/AppBar';
-import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
-import Button from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
 import {
-  Avatar, Divider, List, ListItem, ListItemButton, ListItemText, Menu, MenuItem, Tooltip
+  AppBar, Box, Toolbar, Button, IconButton, Avatar, Divider, List,
+  ListItem, ListItemButton, ListItemText, Drawer, Tooltip, Paper, Popper, Menu, MenuItem, Collapse
 } from '@mui/material';
-import { useSelector, useDispatch } from 'react-redux';
-import { changeThemeMode } from '../redux/slices/theme';
-import Drawer from '@mui/material/Drawer';
-import { useLocation, Link } from 'react-router-dom';
+import MenuIcon from '@mui/icons-material/Menu';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
-import { auth, db } from '../config/firebase';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { useSelector, useDispatch } from 'react-redux';
+import { useLocation, Link } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import Logo from '../assets/logo.png';
+import { auth, db } from '../config/firebase';
 import { setUser, clearUser } from '../redux/slices/authSlice/index';
+import { changeThemeMode } from '../redux/slices/theme';
+import Logo from '../assets/logo.png';
+import Privatequizmodel from './Quizzes/privatequizmodel';
 
 const drawerWidth = 240;
 
 const pages = [
   { id: 1, name: 'Home', to: '/' },
   { id: 2, name: 'Dashboard', to: '/dashboard' },
-  { id: 3, name: 'Join Teacher', to: '/join-teacher' },
-  { id: 4, name: 'My Teachers', to: '/my-teachers' },
+  { id: 3, name: 'My Teachers', to: '/my-teachers' },
+  {
+    id: 4, name: 'Join', submenu: [
+      { name: 'Join Teacher', to: '/join-teacher' },
+      { name: 'Join Quiz', to: '/join-quiz' }
+    ]
+  },
   { id: 5, name: 'Services', to: 'services' },
   { id: 6, name: 'About', to: '#about' },
   { id: 7, name: 'Contact', to: '#contact' },
@@ -36,12 +39,16 @@ export default function Appbar(props) {
   const { window } = props;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorElUser, setAnchorElUser] = useState(null);
+  const [submenuAnchorEl, setSubmenuAnchorEl] = useState(null);
+  const [isSubmenuOpen, setIsSubmenuOpen] = useState(false);
+  const [openDrawerSubmenus, setOpenDrawerSubmenus] = useState({});
   const location = useLocation();
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.uid);
   const userpic = useSelector((state) => state.auth.photoURL);
   const userRole = useSelector((state) => state.auth.role);
   const themeMode = useSelector((state) => state.mode.value);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -78,10 +85,13 @@ export default function Appbar(props) {
     }
   };
 
+  const toggleDrawerSubmenu = (id) => {
+    setOpenDrawerSubmenus((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
   const getVisiblePages = () => {
     return pages.filter(item => {
       if (item.name === 'Dashboard') return userRole && userRole !== 'student';
-      if (item.name === 'Join Teacher') return !userRole || userRole !== 'admin';
       return true;
     });
   };
@@ -91,11 +101,40 @@ export default function Appbar(props) {
       <Divider />
       <List sx={{ width: 250 }}>
         {getVisiblePages().map((item, k) => (
-          <ListItem key={k} disablePadding>
-            <ListItemButton to={item.to} selected={location.pathname === item.to} component={Link}>
-              <ListItemText primary={item.name} />
-            </ListItemButton>
-          </ListItem>
+          item.submenu ? (
+            <Box key={k}>
+              <ListItemButton onClick={(e) => { e.stopPropagation(); toggleDrawerSubmenu(item.id); }}>
+                <ListItemText primary={item.name} />
+                {openDrawerSubmenus[item.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </ListItemButton>
+              <Collapse in={openDrawerSubmenus[item.id]} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  {item.submenu.map((subItem, subKey) => (
+                    <ListItemButton
+                      key={subKey}
+                      sx={{ pl: 4 }}
+                      component={Link}
+                      to={subItem.to}
+                      onClick={(e) => {
+                        if (subItem.name === 'Join Quiz') {
+                          e.preventDefault();
+                          setModalOpen(true);
+                        }
+                      }}
+                    >
+                      <ListItemText primary={subItem.name} />
+                    </ListItemButton>
+                  ))}
+                </List>
+              </Collapse>
+            </Box>
+          ) : (
+            <ListItem key={k} disablePadding>
+              <ListItemButton to={item.to} selected={location.pathname === item.to} component={Link}>
+                <ListItemText primary={item.name} />
+              </ListItemButton>
+            </ListItem>
+          )
         ))}
         <Divider />
         {!user ? (
@@ -126,6 +165,7 @@ export default function Appbar(props) {
 
   return (
     <Box sx={{ flexGrow: 1, pb: 10 }}>
+      <Privatequizmodel open={modalOpen} onClose={() => setModalOpen(false)} />
       <AppBar position="fixed" color="inherit" elevation={0}>
         <Toolbar sx={{ display: 'flex', justifyContent: 'flex-start', position: 'relative' }}>
           <a href="/" style={{ textDecoration: 'none', color: 'inherit', marginRight: 'auto' }}>
@@ -134,16 +174,42 @@ export default function Appbar(props) {
 
           <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
             {getVisiblePages().map((item, key) => (
-              <Button component={Link} to={item.to} key={key} sx={{ my: 2, textTransform: 'none', color: 'inherit' }}>
-                {item.name}
-              </Button>
+              item.submenu ? (
+                <Box key={key} onMouseEnter={(e) => { setSubmenuAnchorEl(e.currentTarget); setIsSubmenuOpen(true);
+                  }} onMouseLeave={() => setIsSubmenuOpen(false)}
+                  sx={{ position: 'relative', display: 'inline-block' }}>
+                  <Button sx={{ my: 1, textTransform: 'none', color: 'inherit' }} endIcon={<ExpandMoreIcon />} >
+                    {item.name}
+                  </Button>
+                  <Popper open={isSubmenuOpen} anchorEl={submenuAnchorEl} placement="bottom-start" disablePortal style={{ zIndex: 1300, width: '150px' }}>
+                    <Paper onMouseEnter={() => setIsSubmenuOpen(true)} onMouseLeave={() => setIsSubmenuOpen(false)} elevation={3}>
+                      <List sx={{ p: 0 }}>
+                        {item.submenu.map((subItem, subKey) => (
+                          <ListItemButton key={subKey} component={Link} to={subItem.to} onClick={(e) => {
+                              setIsSubmenuOpen(false);
+                              if (subItem.name === 'Join Quiz') {
+                                e.preventDefault();
+                                setModalOpen(true);
+                              }
+                            }}>
+                            <ListItemText primary={subItem.name} />
+                          </ListItemButton>
+                        ))}
+                      </List>
+                    </Paper>
+                  </Popper>
+                </Box>
+              ) : (
+                <Button component={Link} to={item.to} key={key} sx={{ my: 2, textTransform: 'none', color: 'inherit' }}>
+                  {item.name}
+                </Button>
+              )
             ))}
-
-            
 
             {!user && (
               <Button component={Link} to="/login" sx={{ my: 2, textTransform: 'none', color: 'primary' }}>
-                Log in</Button>
+                Log in
+              </Button>
             )}
             <IconButton edge="end" color="inherit" onClick={() => dispatch(changeThemeMode())}>
               {themeMode ? <Brightness7Icon fontSize="small" /> : <Brightness4Icon fontSize="small" />}
@@ -155,32 +221,11 @@ export default function Appbar(props) {
                     <Avatar alt="profile pic" src={userpic} sx={{ width: 32, height: 32, bgcolor: 'green' }} />
                   </IconButton>
                 </Tooltip>
-                {anchorElUser && document.body.contains(anchorElUser) && (
-  <Menu
-    anchorEl={anchorElUser}
-    open={Boolean(anchorElUser)}
-    onClose={handleCloseUserMenu}
-    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-    transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-    sx={{ mt: '45px' }}
-  >
-    <MenuItem component={Link} to='/profile' onClick={handleCloseUserMenu}>Profile</MenuItem>
-    <MenuItem onClick={() => alert("Settings coming soon")}>Settings</MenuItem>
-    <MenuItem onClick={handleLogout}>Logout</MenuItem>
-  </Menu>
-)}
-                {/* <Menu
-                  sx={{ mt: '45px' }}
-                  anchorEl={anchorElUser}
-                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                  open={Boolean(anchorElUser)}
-                  onClose={handleCloseUserMenu}
-                >
+                <Menu anchorEl={anchorElUser} open={Boolean(anchorElUser)} onClose={handleCloseUserMenu} anchorOrigin={{ vertical: 'top', horizontal: 'right' }} transformOrigin={{ vertical: 'top', horizontal: 'right' }} sx={{ mt: '45px' }}>
                   <MenuItem component={Link} to='/profile' onClick={handleCloseUserMenu}>Profile</MenuItem>
                   <MenuItem onClick={() => alert("Settings coming soon")}>Settings</MenuItem>
                   <MenuItem onClick={handleLogout}>Logout</MenuItem>
-                </Menu> */}
+                </Menu>
               </Box>
             )}
           </Box>

@@ -99,9 +99,6 @@ const Dashboard = () => {
         </Grid>
         <Grid size={{xs:12, md:6, lg:4, xl:4}}>
             <RecentActivityCard/>
-          {/* <Box sx={{ height: 300, bgcolor: 'white', borderRadius: 2 }}>
-            Chart: Time Admitted
-          </Box> */}
         </Grid>
         <Grid size={{xs:12, md:4}}>
           <Box sx={{ height: 300, bgcolor: 'white', borderRadius: 2 }}>

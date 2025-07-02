@@ -54,28 +54,38 @@ const ViewExistingQuizzes = ({userId}) => {
   };
 
   const handleDeleteConfirmed = async () => {
-    try {
-      for (const quizId of selectedQuizzes) {
-        // Delete all questions in subcollection
-        const questionsRef = collection(db, 'quizzes', quizId, 'questions');
-        const questionsSnapshot = await getDocs(questionsRef);
-        const deleteQuestions = questionsSnapshot.docs.map(docSnap =>
-          deleteDoc(doc(db, 'quizzes', quizId, 'questions', docSnap.id))
-        );
-        await Promise.all(deleteQuestions);
+  try {
+    for (const quizId of selectedQuizzes) {
+      // 1. Delete all questions in subcollection
+      const questionsRef = collection(db, 'quizzes', quizId, 'questions');
+      const questionsSnapshot = await getDocs(questionsRef);
+      const deleteQuestions = questionsSnapshot.docs.map(docSnap =>
+        deleteDoc(doc(db, 'quizzes', quizId, 'questions', docSnap.id))
+      );
 
-        // Delete the quiz document itself
-        await deleteDoc(doc(db, 'quizzes', quizId));
-      }
+      // 2. Delete all attempts associated with this quiz
+      const attemptsRef = collection(db, 'attempts');
+      const attemptsQuery = query(attemptsRef, where('quizId', '==', quizId));
+      const attemptsSnapshot = await getDocs(attemptsQuery);
+      const deleteAttempts = attemptsSnapshot.docs.map(docSnap =>
+        deleteDoc(doc(db, 'attempts', docSnap.id))
+      );
 
-      // Update UI
-      setQuizzes(prev => prev.filter(q => !selectedQuizzes.includes(q.id)));
-      setSelectedQuizzes([]);
-      setConfirmOpen(false);
-    } catch (error) {
-      console.error('Error deleting quiz or questions:', error);
+      // Wait for both deletions
+      await Promise.all([...deleteQuestions, ...deleteAttempts]);
+
+      // 3. Delete the quiz document itself
+      await deleteDoc(doc(db, 'quizzes', quizId));
     }
-  };
+
+    // Update UI
+    setQuizzes(prev => prev.filter(q => !selectedQuizzes.includes(q.id)));
+    setSelectedQuizzes([]);
+    setConfirmOpen(false);
+  } catch (error) {
+    console.error('Error deleting quiz, questions, or attempts:', error);
+  }
+};
 
   if (loading) {
     return (
