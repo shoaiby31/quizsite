@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     Box, Button, TextField, Typography, CircularProgress, Paper, Grid, Divider, Switch, Stack, Chip,
     FormControl, InputLabel, Select, MenuItem, FormControlLabel, Snackbar, Alert
@@ -6,10 +6,9 @@ import {
 import { motion } from 'framer-motion';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../config/firebase';
-import { useSelector } from 'react-redux';
 import CancelIcon from "@mui/icons-material/Cancel";
 import ViewExistingQuizzes from './viewexistingquizzes';
-
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 const MotionPaper = motion.create(Paper);
 
 export default function Createquiz() {
@@ -23,15 +22,27 @@ export default function Createquiz() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
-
+    const [uid, setUid] = useState('');
+    const [name, setName] = useState('');
     const [questionTypes, setQuestionTypes] = useState({
-        mcq: { enabled: false, count: 0, timeLimit: '' },
-        truefalse: { enabled: false, count: 0, timeLimit: '' },
-        short: { enabled: false, count: 0, timeLimit: '', scorePerQuestion: '' }
+        mcq: { enabled: false, count: '', timeLimit: '' },
+        truefalse: { enabled: false, count: '', timeLimit: '' },
+        short: { enabled: false, count: '', timeLimit: '', scorePerQuestion: '' }
     });
 
-    const uid = useSelector((state) => state.auth.uid);
-    const name = useSelector((state) => state.auth.displayName);
+    useEffect(() => {
+        const auth = getAuth();
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                setUid(user.uid); // 🔹 get uid
+                setName(user.displayName || 'nill'); // 🔹 get displayName if available
+            } else {
+                setUid('');
+                setName('nill');
+            }
+        });
+        return () => unsubscribe();
+    }, []);
     const inputRef = useRef();
     const handleKeyDown = (event) => {
         if (event.key === "Enter" && inputRef.current.value) {
@@ -105,7 +116,7 @@ export default function Createquiz() {
                 description,
                 secretid: isPublic ? '' : secretid.trim(),
                 createdBy: uid,
-                ownerName: name,
+                ownerName: name || null,
                 createdAt: new Date(),
                 tags,
                 isPublic,
@@ -268,7 +279,7 @@ export default function Createquiz() {
                                                         ...prev,
                                                         [key]: {
                                                             ...prev[key],
-                                                            count: parseInt(e.target.value) || 0,
+                                                            count: parseInt(e.target.value) || '',
                                                         },
                                                     }))
                                                 }
