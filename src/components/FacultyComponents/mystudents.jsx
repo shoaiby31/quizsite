@@ -82,7 +82,8 @@ const StudentsByTeacherTable = ({ selectedTeacherUid }) => {
       (r) =>
         r.name?.toLowerCase().includes(search.toLowerCase()) ||
         r.email?.toLowerCase().includes(search.toLowerCase()) ||
-        r.phone?.includes(search)
+        r.phone?.includes(search) || 
+        r.rollNo?.includes(search)
     );
   }, [rows, search]);
 
@@ -127,7 +128,7 @@ const StudentsByTeacherTable = ({ selectedTeacherUid }) => {
       <Box display="flex" justifyContent="space-between" mb={2}>
         <TextField
           size="small"
-          placeholder="Search by name, email, phone..."
+          placeholder="Search by roll no, name, email, phone..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -154,7 +155,9 @@ const StudentsByTeacherTable = ({ selectedTeacherUid }) => {
                   />
                 </TableCell>
               )}
+              <TableCell>RoLL No</TableCell>
               <TableCell>Name</TableCell>
+              <TableCell>Class</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Phone</TableCell>
             </TableRow>
@@ -181,7 +184,9 @@ const StudentsByTeacherTable = ({ selectedTeacherUid }) => {
                       />
                     </TableCell>
                   )}
+                  <TableCell>{r.rollNo || "—"}</TableCell>
                   <TableCell>{r.name || "—"}</TableCell>
+                  <TableCell>{r.className || "—"}</TableCell>
                   <TableCell>{r.email || "—"}</TableCell>
                   <TableCell>{r.phone || "—"}</TableCell>
                 </TableRow>

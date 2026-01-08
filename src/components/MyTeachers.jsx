@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import {
   Box, Typography, CircularProgress, Avatar,
-  Card, CardContent, Grid, Stack, Button, Chip
+  Card, CardContent, Grid, Stack, Button, Chip,
+  CardActionArea
 } from '@mui/material';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
@@ -140,10 +141,17 @@ const JoinedTeachersList = () => {
                       </Avatar>
                       <Box>
                         <Typography variant="h6">{teacher.name || 'Unnamed'}</Typography>
-                        <Typography variant="body2">{teacher.email}</Typography>
+                        <Typography variant="caption">{teacher.qualification}</Typography>
+                        <Typography variant="caption" sx={{display:'block'}}>{teacher.email}</Typography>
+
                       </Box>
                     </Stack>
+
                   </CardContent>
+                  <CardActionArea>
+                      <Button fullWidth variant="contained" color="primary">View Profile</Button>
+
+                  </CardActionArea>
                 </Card>
               </Grid>
             ))}

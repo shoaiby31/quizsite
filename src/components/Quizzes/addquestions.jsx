@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box, Button, TextField, Radio, RadioGroup, FormControl, FormControlLabel,
-  FormLabel, Typography, Alert, CircularProgress, Paper, Tabs, Tab, Input, MenuItem, Select
+  FormLabel, Typography, Alert, CircularProgress, Paper, Tabs, Tab, Input, MenuItem, Select, LinearProgress
 } from '@mui/material';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../config/firebase';
@@ -19,9 +19,20 @@ const AddQuestions = ({ id, title }) => {
   const [loading, setLoading] = useState(false);
   const [csvUploadWait, setCsvUploadWait] = useState(false);
   const [csvFile, setCsvFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [message, setMessage] = useState({ type: '', text: '' });
-  // const [btnloading, setBtnloading] = useState(false);
 
+  // Prevent page reload/close during CSV upload
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (csvUploadWait) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [csvUploadWait]);
 
   const handleOptionChange = (index, value) => {
     const updatedOptions = [...options];
@@ -102,14 +113,18 @@ const AddQuestions = ({ id, title }) => {
       setMessage({ type: 'error', text: 'Please select a CSV file to upload.' });
       return;
     }
+
     setCsvUploadWait(true);
+    setUploadProgress(0);
+
     Papa.parse(csvFile, {
       header: true,
       skipEmptyLines: true,
       complete: async (results) => {
         const parsedData = results.data;
         try {
-          for (const row of parsedData) {
+          for (let i = 0; i < parsedData.length; i++) {
+            const row = parsedData[i];
             let questionData = {
               text: row.question,
               type: row.type,
@@ -130,6 +145,9 @@ const AddQuestions = ({ id, title }) => {
             }
 
             await addDoc(collection(db, 'quizzes', id, 'questions'), questionData);
+
+            // Update progress
+            setUploadProgress(Math.round(((i + 1) / parsedData.length) * 100));
           }
           setMessage({ type: 'success', text: 'CSV questions uploaded successfully!' });
         } catch (error) {
@@ -137,12 +155,14 @@ const AddQuestions = ({ id, title }) => {
           setMessage({ type: 'error', text: 'Failed to upload CSV questions. Please try again.' });
         } finally {
           setCsvUploadWait(false);
+          setUploadProgress(0);
         }
       },
       error: (error) => {
         console.error('Error parsing CSV file:', error);
         setMessage({ type: 'error', text: 'Failed to parse CSV file. Please check the file format.' });
         setCsvUploadWait(false);
+        setUploadProgress(0);
       },
     });
   };
@@ -157,6 +177,7 @@ const AddQuestions = ({ id, title }) => {
           <Tab label="Upload CSV" />
         </Tabs>
 
+        {/* Manual Entry Tab */}
         {tabIndex === 0 && (
           <Box component="form" onSubmit={handleManualSubmit} noValidate>
             <FormControl fullWidth sx={{ mb: 2 }}>
@@ -168,7 +189,15 @@ const AddQuestions = ({ id, title }) => {
               </Select>
             </FormControl>
 
-            <TextField label="Question" size='small' fullWidth margin="normal" value={questionText} onChange={(e) => setQuestionText(e.target.value)} required />
+            <TextField
+              label="Question"
+              size='small'
+              fullWidth
+              margin="normal"
+              value={questionText}
+              onChange={(e) => setQuestionText(e.target.value)}
+              required
+            />
 
             {questionType === 'mcq' && (
               <FormControl component="fieldset" margin="normal">
@@ -222,23 +251,42 @@ const AddQuestions = ({ id, title }) => {
             )}
 
             <Box mt={3}>
-              <Button type="submit" variant="contained" color="primary" disabled={loading} startIcon={loading && <CircularProgress size={20} />}>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                disabled={loading}
+                startIcon={loading && <CircularProgress size={20} />}
+              >
                 {loading ? 'Adding...' : 'Add Question'}
               </Button>
             </Box>
           </Box>
         )}
 
+        {/* CSV Upload Tab */}
         {tabIndex === 1 && (
           <Box>
             <Input type="file" accept=".csv" onChange={handleCsvFileChange} />
-            <Button variant="contained" color="primary" disabled={csvUploadWait} onClick={handleCsvUpload} sx={{ mt: 2, mx:1 }}>
-            {csvUploadWait? "Uploading File" : "Upload CSV"}
+            <Button
+              variant="contained"
+              color="primary"
+              disabled={csvUploadWait}
+              onClick={handleCsvUpload}
+              sx={{ mt: 2, mx: 1 }}
+            >
+              {csvUploadWait ? "Uploading File" : "Upload CSV"}
             </Button>
+
+            {csvUploadWait && (
+              <Box mt={2}>
+                <LinearProgress variant="determinate" value={uploadProgress} />
+                <Typography variant="body2" align="center" mt={1}>{uploadProgress}%</Typography>
+              </Box>
+            )}
+
             {message.text && (
-              <Alert severity={message.type} sx={{ mt: 2 }}>
-                {message.text}
-              </Alert>
+              <Alert severity={message.type} sx={{ mt: 2 }}>{message.text}</Alert>
             )}
           </Box>
         )}

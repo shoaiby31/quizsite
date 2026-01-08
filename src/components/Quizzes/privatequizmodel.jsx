@@ -77,8 +77,8 @@ const Privatequizmodel = ({ open, onClose }) => {
   
       const relationQuery = query(
         collection(db, 'studentTeacherRelations'),
-        where('userId', '==', firestoreUser.uid),
-        where('adminUid', '==', quizData.createdBy)
+        where('studentUid', '==', firestoreUser.uid),
+        where('teacherUid', '==', quizData.createdBy)
       );
   
       const relationSnapshot = await getDocs(relationQuery);
@@ -90,7 +90,7 @@ const Privatequizmodel = ({ open, onClose }) => {
       }
 
     const validRelation = relationSnapshot.docs.some((doc) => {
-      const studentClass = Number(doc.data().className);
+      const studentClass = Number(firestoreUser.className);
       const quizClass = Number(quizData.class); // or quizData.className if that's the correct field
       return !isNaN(studentClass) && !isNaN(quizClass) && studentClass === quizClass;
     });

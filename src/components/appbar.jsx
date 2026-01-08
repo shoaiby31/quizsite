@@ -32,13 +32,9 @@ const pages = [
     ]
   },
   { id: 5, name: 'Upgrade Account', to: '/upgrade-account' },
-  {
-    id: 6, name: 'More', submenu: [
-      { name: 'Services', to: 'services' },
-      { name: 'About', to: '#about' },
-      { name: 'Contact', to: '#contact' },
-    ]
-  },
+  { id: 6, name: 'Services', to: '/services' },
+  { id: 7, name: 'About', to: '/about' },
+  { id: 8, name: 'Contact', to: '/contact' },
 ];
 
 export default function Appbar({ window }) {
@@ -57,32 +53,49 @@ export default function Appbar({ window }) {
   const themeMode = useSelector((state) => state.mode.value);
 
   const visiblePages = useMemo(() => {
-    const filtered = [];
-    for (const item of pages) {
-      if (item.name === 'Dashboard' && (!userRole || userRole === 'student')) continue;
-      if (item.name === 'Upgrade Account' && userRole === 'admin') continue;
-      if (item.name === 'My Teachers' && userRole === 'teacher') continue;
-      if (item.name === 'Join' && userRole === 'admin') continue;
+  const filtered = [];
 
-      if (item.name === 'Join' && item.submenu) {
-        const filteredSubmenu = item.submenu.filter(sub =>
-          !(userRole === 'teacher' && ['Join Teacher', 'Join Quiz'].includes(sub.name))
-        );
-        if (filteredSubmenu.length > 0) filtered.push({ ...item, submenu: filteredSubmenu });
-        continue;
+  for (const item of pages) {
+    // Hide Dashboard for students or no role
+    if (item.name === 'Dashboard' && (!userRole || userRole === 'student')) continue;
+
+    // Show Join and Upgrade Account ONLY for students
+    if (['Join', 'Upgrade Account'].includes(item.name) && userRole !== 'student') continue;
+
+    // Hide My Teachers for teachers
+    if (item.name === 'My Teachers' && userRole === 'teacher') continue;
+
+    // Handle Join submenu filtering for teachers
+    if (item.name === 'Join' && item.submenu) {
+      const filteredSubmenu = item.submenu.filter(
+        sub => !(userRole === 'teacher' && ['Join Teacher', 'Join Quiz'].includes(sub.name))
+      );
+
+      if (filteredSubmenu.length > 0) {
+        filtered.push({ ...item, submenu: filteredSubmenu });
       }
-
-      if (item.name === 'More' && userRole === 'admin') {
-        if (item.submenu) {
-          filtered.push(...item.submenu.map(sub => ({ ...sub, id: `${item.id}-${sub.name}` })));
-        }
-        continue;
-      }
-
-      filtered.push(item);
+      continue;
     }
-    return filtered;
-  }, [userRole]);
+
+    // Expand "More" for admin into root
+    if (item.name === 'More' && userRole === 'admin') {
+      if (item.submenu) {
+        filtered.push(
+          ...item.submenu.map(sub => ({
+            ...sub,
+            id: `${item.id}-${sub.name}`,
+          }))
+        );
+      }
+      continue;
+    }
+
+    filtered.push(item);
+  }
+
+  return filtered;
+}, [userRole]);
+
 
   const handleDrawerToggle = useCallback(() => setMobileOpen(open => !open), []);
   const toggleDrawerSubmenu = useCallback(id => setOpenDrawerSubmenus(prev => ({ ...prev, [id]: !prev[id] })), []);
