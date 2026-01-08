@@ -38,7 +38,7 @@ const JoinedAdminsList = () => {
         setLoading(true);
 
         const relRef = collection(db, 'studentTeacherRelations');
-        const relQuery = query(relRef, where('userId', '==', currentUser.uid));
+        const relQuery = query(relRef, where('studentUid', '==', currentUser.uid));
         const relSnap = await getDocs(relQuery);
 
         const adminIds = relSnap.docs.map(doc => doc.data().adminUid);

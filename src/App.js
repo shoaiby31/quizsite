@@ -25,7 +25,7 @@ import AttemptShortAnswers from './components/Quizzes/PrivateTests/AttemptShortA
 
 import UpgradeAccount from './components/UpgradeAccount';
 import Profile from './components/profile';
-import JoinedAdminsList from './components/JoinedAdminsList';
+import MyTeachers from './components/MyTeachers';
 import JoinTeacher from './components/FacultyComponents/JoinTeacher';
 import JoinAdmin from './components/AdminComponents/JoinAdmin';
 
@@ -80,7 +80,7 @@ const AppRoutes = () => {
         <Route path="/mcqs-test/:quizId" element={<GeneralRoute><AttemptMcqs /></GeneralRoute>} />
         <Route path="/true-false-test/:quizId" element={<GeneralRoute><AttemptTrueFalse /></GeneralRoute>} />
         <Route path="/short-questions-test/:quizId" element={<GeneralRoute><AttemptShortAnswers /></GeneralRoute>} />
-        <Route path="/my-teachers" element={<GeneralRoute><JoinedAdminsList /></GeneralRoute>} />
+        <Route path="/my-teachers" element={<GeneralRoute><MyTeachers /></GeneralRoute>} />
         {/* <Route path="/typing-practice" element={<TypingPractice />} /> */}
 
         
