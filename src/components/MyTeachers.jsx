@@ -1,64 +1,71 @@
 import React, { useEffect, useState } from 'react';
 import {
   Box, Typography, CircularProgress, Avatar,
-  Card, CardContent, Grid, Stack, Button,
-  Chip
+  Card, CardContent, Grid, Stack, Button, Chip
 } from '@mui/material';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { db } from '../config/firebase'; // adjust path as needed
+import { db } from '../config/firebase';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import SchoolIcon from '@mui/icons-material/School';
-const JoinedAdminsList = () => {
+
+const JoinedTeachersList = () => {
   const [currentUser, setCurrentUser] = useState(null);
-  const [admins, setAdmins] = useState([]);
+  const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Listen for auth
   useEffect(() => {
     const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, user => {
-      if (user) {
-        setCurrentUser(user);
-      } else {
-        setCurrentUser(null);
-        setLoading(false);
-      }
+    const unsub = onAuthStateChanged(auth, user => {
+      setCurrentUser(user || null);
+      if (!user) setLoading(false);
     });
-
-    return () => unsubscribe();
+    return () => unsub();
   }, []);
 
+  // Fetch teachers
   useEffect(() => {
-    const fetchJoinedAdmins = async () => {
-      if (!currentUser) return;
+    if (!currentUser) return;
 
+    const fetchTeachers = async () => {
       try {
         setLoading(true);
 
-        const relRef = collection(db, 'studentTeacherRelations');
-        const relQuery = query(relRef, where('studentUid', '==', currentUser.uid));
+        // 1️⃣ Get relations for this student
+        const relQuery = query(
+          collection(db, 'studentTeacherRelations'),
+          where('studentUid', '==', currentUser.uid)
+        );
+
         const relSnap = await getDocs(relQuery);
+        const teacherUids = relSnap.docs.map(d => d.data().teacherUid);
 
-        const adminIds = relSnap.docs.map(doc => doc.data().adminUid);
+        if (teacherUids.length === 0) {
+          setTeachers([]);
+          return;
+        }
 
-        const adminPromises = adminIds.map(id => getDoc(doc(db, 'users', id)));
-        const adminSnaps = await Promise.all(adminPromises);
+        // 2️⃣ Fetch teacher profiles
+        const teacherSnaps = await Promise.all(
+          teacherUids.map(uid => getDoc(doc(db, 'users', uid)))
+        );
 
-        const adminData = adminSnaps
+        const teacherData = teacherSnaps
           .filter(snap => snap.exists())
           .map(snap => ({ id: snap.id, ...snap.data() }));
 
-        setAdmins(adminData);
-      } catch (error) {
-        console.error('Error fetching joined admins:', error);
+        setTeachers(teacherData);
+      } catch (err) {
+        console.error('Error fetching teachers:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchJoinedAdmins();
+    fetchTeachers();
   }, [currentUser]);
 
   if (loading) {
@@ -71,7 +78,7 @@ const JoinedAdminsList = () => {
 
   return (
     <Box p={2}>
-      {admins.length === 0 ? (
+      {teachers.length === 0 ? (
         <Box
           component={motion.div}
           initial={{ opacity: 0, y: 30 }}
@@ -86,10 +93,10 @@ const JoinedAdminsList = () => {
         >
           <Typography variant="h3" mb={1}>🎓</Typography>
           <Typography variant="h5" gutterBottom>
-            No joined admins found.
+            You are not enrolled with any teacher yet.
           </Typography>
           <Typography variant="body1" color="text.secondary" mb={2}>
-            Start learning by connecting with your teacher now!
+            Send a request to join a teacher to start learning.
           </Typography>
           <Button
             variant="contained"
@@ -101,10 +108,23 @@ const JoinedAdminsList = () => {
         </Box>
       ) : (
         <>
-          <Chip icon={<SchoolIcon />} label={'Your are enroled with these teachers'} color='secondary' variant="outlined" sx={{ fontSize: { xs: 14, md: 17 }, width:{xs:'100%', md:'auto'}, px: 1, py: 1.5, mb:1, fontWeight: 'bold', borderRadius: '14px'}} />
+          <Chip
+            icon={<SchoolIcon />}
+            label="You are enrolled with these teachers"
+            color="secondary"
+            variant="outlined"
+            sx={{
+              fontSize: { xs: 14, md: 17 },
+              width: { xs: '100%', md: 'auto' },
+              px: 1, py: 1.5, mb: 1,
+              fontWeight: 'bold',
+              borderRadius: '14px'
+            }}
+          />
+
           <Grid container spacing={3} mt={1}>
-            {admins.map((admin) => (
-              <Grid size={{xs:12, sm:6, md:4, lg:3}} key={admin.id}>
+            {teachers.map((teacher) => (
+              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={teacher.id}>
                 <Card
                   variant="outlined"
                   sx={{ borderRadius: 3, p: 1, width: '100%' }}
@@ -115,12 +135,12 @@ const JoinedAdminsList = () => {
                 >
                   <CardContent>
                     <Stack direction="row" alignItems="center" spacing={2}>
-                      <Avatar src={admin.photoURL || ''} sx={{ width: 56, height: 56 }}>
-                        {admin.name?.[0] || '?'}
+                      <Avatar src={teacher.photoURL || ''} sx={{ width: 56, height: 56 }}>
+                        {teacher.name?.[0] || '?'}
                       </Avatar>
-                      <Box display="flex" flexDirection="column">
-                        <Typography variant="h6">{admin.name || 'Unnamed'}</Typography>
-                        <Typography variant="body2">{admin.email}</Typography>
+                      <Box>
+                        <Typography variant="h6">{teacher.name || 'Unnamed'}</Typography>
+                        <Typography variant="body2">{teacher.email}</Typography>
                       </Box>
                     </Stack>
                   </CardContent>
@@ -134,4 +154,4 @@ const JoinedAdminsList = () => {
   );
 };
 
-export default JoinedAdminsList;
+export default JoinedTeachersList;
