@@ -232,7 +232,7 @@ const AddQuestions = ({ id, title }) => {
         {tabIndex === 1 && (
           <Box>
             <Input type="file" accept=".csv" onChange={handleCsvFileChange} />
-            <Button variant="contained" color="primary" disabled={csvUploadWait} onClick={handleCsvUpload} sx={{ mt: 2 }}>
+            <Button variant="contained" color="primary" disabled={csvUploadWait} onClick={handleCsvUpload} sx={{ mt: 2, mx:1 }}>
             {csvUploadWait? "Uploading File" : "Upload CSV"}
             </Button>
             {message.text && (

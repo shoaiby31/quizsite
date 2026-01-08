@@ -5,15 +5,17 @@ import {
 import {
   collection, addDoc, query, where, getDocs, serverTimestamp
 } from 'firebase/firestore';
-import { db, auth } from '../config/firebase';
+import { db, auth } from '../../config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
-const JoinTeacherRequest = () => {
+const JoinTeacher = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
-    adminId: '',
+    teacherSecretId: '',
     rollNo: '',
     class: '',
+    phone: '',
+    address: '',
   });
 
   const [userInfo, setUserInfo] = useState(null);
@@ -51,8 +53,8 @@ const JoinTeacherRequest = () => {
       return;
     }
   
-    const { adminId, rollNo, class: studentClass } = formData;
-    if (!adminId || !rollNo || !studentClass) {
+    const { teacherSecretId, rollNo, class: studentClass, phone, address } = formData;
+    if (!teacherSecretId || !rollNo || !studentClass || !phone || !address) {
       setMessage({ type: 'error', text: 'Please fill all fields.' });
       setIsLoading(false);
       return;
@@ -63,7 +65,7 @@ const JoinTeacherRequest = () => {
       const relationQuery = query(
         collection(db, 'studentTeacherRelations'),
         where('studentEmail', '==', userInfo.email),
-        where('adminId', '==', adminId)
+        where('teacherSecretId', '==', teacherSecretId)
       );
       const relationSnapshot = await getDocs(relationQuery);
       if (!relationSnapshot.empty) {
@@ -75,7 +77,7 @@ const JoinTeacherRequest = () => {
       const existingRequestQuery = query(
         collection(db, 'joinRequests'),
         where('studentEmail', '==', userInfo.email),
-        where('adminId', '==', adminId)
+        where('teacherSecretId', '==', teacherSecretId)
       );
       const requestSnapshot = await getDocs(existingRequestQuery);
       if (!requestSnapshot.empty) {
@@ -86,7 +88,7 @@ const JoinTeacherRequest = () => {
       // Step 3: Prevent duplicate rollNo + class for same admin in studentTeacherRelations
       const duplicateRelationQuery = query(
         collection(db, 'studentTeacherRelations'),
-        where('adminId', '==', adminId),
+        where('teacherSecretId', '==', teacherSecretId),
         where('rollNo', '==', rollNo),
         where('className', '==', studentClass)
       );
@@ -99,7 +101,7 @@ const JoinTeacherRequest = () => {
       // Step 4: Prevent duplicate rollNo + class for same admin in joinRequests
       const duplicateRequestQuery = query(
         collection(db, 'joinRequests'),
-        where('adminId', '==', adminId),
+        where('teacherSecretId', '==', teacherSecretId),
         where('rollNo', '==', rollNo),
         where('className', '==', studentClass)
       );
@@ -110,7 +112,7 @@ const JoinTeacherRequest = () => {
       }
   
       // Step 5: Check if adminId is valid
-      const adminQuery = query(collection(db, 'users'), where('adminid', '==', adminId));
+      const adminQuery = query(collection(db, 'users'), where('teacherSecretId', '==', teacherSecretId));
       const adminSnapshot = await getDocs(adminQuery);
       if (adminSnapshot.empty) {
         setMessage({ type: 'error', text: 'Invalid Admin ID. No matching admin found.' });
@@ -124,13 +126,15 @@ const JoinTeacherRequest = () => {
         studentEmail: userInfo.email,
         rollNo,
         className: studentClass,
-        adminId,
+        phone,
+        address,
+        teacherSecretId,
         status: 'pending',
         timestamp: serverTimestamp(),
       });
   
       setMessage({ type: 'success', text: 'Join request sent successfully.' });
-      setFormData({ adminId: '', rollNo: '', class: '' });
+      setFormData({ teacherSecretId: '', rollNo: '', class: '', phone: '', address: '' });
     } catch (error) {
       console.error('Error sending join request:', error);
       setMessage({ type: 'error', text: 'Failed to send join request.' });
@@ -141,36 +145,16 @@ const JoinTeacherRequest = () => {
 
   return (
     <Box sx={{ maxWidth: 500, mx: 'auto', mt: 4 }}>
-      <Typography variant="h5" gutterBottom>
-        Join a Teacher/Admin
-      </Typography>
+      <Typography variant="h5" gutterBottom>Join a Teacher</Typography>
       <form onSubmit={handleSubmit}>
         <Stack spacing={2}>
           {message.text && <Alert severity={message.type}>{message.text}</Alert>}
 
-          <TextField
-            label="Admin/Teacher ID"
-            name="adminId"
-            value={formData.adminId}
-            onChange={handleChange}
-            fullWidth
-          />
-          <TextField
-            label="Your Roll Number"
-            name="rollNo"
-            value={formData.rollNo}
-            onChange={handleChange}
-            fullWidth
-          />
-
+          <TextField label="Teacher ID" name="teacherSecretId" value={formData.teacherSecretId} onChange={handleChange} fullWidth />
+          <TextField label="Your Roll Number" name="rollNo" value={formData.rollNo} onChange={handleChange} fullWidth />
           <FormControl fullWidth>
             <InputLabel>Class</InputLabel>
-            <Select
-              name="class"
-              value={formData.class}
-              onChange={handleChange}
-              label="Class"
-            >
+            <Select name="class" value={formData.class} onChange={handleChange} label="Class" >
               {Array.from({ length: 12 }, (_, i) => (
                 <MenuItem key={i + 1} value={`${i + 1}`}>
                   Class {i + 1}
@@ -178,6 +162,10 @@ const JoinTeacherRequest = () => {
               ))}
             </Select>
           </FormControl>
+          <TextField label="Phone Number" name="phone" type='number' value={formData.phone} onChange={handleChange} fullWidth />
+
+          <TextField label="Your Address" name="address" value={formData.address} onChange={handleChange} fullWidth />
+          
 
           <Button type="submit" disabled={isLoading} variant="contained" startIcon={isLoading && <CircularProgress size={20} />}>
             {isLoading ? 'Request Sending...' : 'Send Join Request'}
@@ -188,4 +176,4 @@ const JoinTeacherRequest = () => {
   );
 };
 
-export default JoinTeacherRequest;
+export default JoinTeacher;

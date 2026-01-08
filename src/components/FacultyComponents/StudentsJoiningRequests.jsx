@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  collection, query, where, onSnapshot, getDocs, addDoc, deleteDoc, doc
+  collection, query, where, onSnapshot, getDoc, doc
 } from 'firebase/firestore';
 import {
   Box, Button, Checkbox, MenuItem, Paper, Snackbar, Table, TableBody,
@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import { db } from '../../config/firebase';
 import { useSelector } from 'react-redux';
-
+import { acceptStudentRequest, denyStudentRequest } from './studentRequests.service';
 const JoinRequestsManager = () => {
   const [requests, setRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
@@ -20,15 +20,26 @@ const JoinRequestsManager = () => {
   const uid = useSelector((state) => state.auth.uid);
 
 
-  useEffect(() => {
-    const q = query(collection(db, 'joinRequests'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setRequests(data);
-    });
-
-    return () => unsubscribe();
-  }, []);
+    useEffect(() => {
+            if (!uid) return;
+    
+            const fetchAdminIdAndListen = async () => {
+                const userDocRef = doc(db, 'users', uid);
+                const userSnap = await getDoc(userDocRef);
+                if (!userSnap.exists()) return;
+    
+                const teacherSecretId = userSnap.data().teacherSecretId || uid;
+                const q = query(collection(db, 'joinRequests'), where('teacherSecretId', '==', teacherSecretId));
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    setRequests(data);
+                });
+    
+                return () => unsubscribe();
+            };
+    
+            fetchAdminIdAndListen();
+        }, [uid]);
 
   // Filter requests by className
   useEffect(() => {
@@ -52,67 +63,33 @@ const JoinRequestsManager = () => {
       setSelectedIds([]);
     }
   };
+ // Single accept
+const handleAccept = async (request) => {
+  setLoading(true);
+  try {
+    await acceptStudentRequest(request, uid);
+    return true;
+  } catch (err) {
+    console.error(err);
+    return false;
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const handleAccept = async (request) => {
-    setLoading(true)
-    try {
-      const { studentEmail, className, adminId, id, rollNo, studentName, } = request;
-
-      if (!studentEmail || !className || !adminId) {
-        console.error('Missing data in request:', request);
-        return false;
-      }
-
-      // Check if student already related
-      const existingQuery = query(
-        collection(db, 'studentTeacherRelations'),
-        where('studentEmail', '==', studentEmail),
-        where('className', '==', className),
-        where('adminId', '==', adminId)
-      );
-
-      const existingSnapshot = await getDocs(existingQuery);
-
-      if (!existingSnapshot.empty) {
-        console.warn('Student already joined this class.');
-        await deleteDoc(doc(db, 'joinRequests', id));
-        return true;
-      }
-      // Add relation
-      await addDoc(collection(db, 'studentTeacherRelations'), {
-        studentEmail,
-        className,
-        adminId,
-        adminUid: uid ,
-        rollNo,
-        studentName,
-        userId:request.studentId,
-        timestamp: new Date(),
-      });
-
-      // Delete request after accepting
-      await deleteDoc(doc(db, 'joinRequests', id));
-      return true;
-    } catch (error) {
-      console.error('Error accepting request:', error);
-      return false;
-    } finally {
-      setLoading(false)
-    }
-  };
-
-  const handleDeny = async (id) => {
-    setLoading1(true)
-    try {
-      await deleteDoc(doc(db, 'joinRequests', id));
-      return true;
-    } catch (err) {
-      console.error('Error denying request:', err);
-      return false;
-    } finally {
-      setLoading1(false)
-    }
-  };
+// Single deny
+const handleDeny = async (id) => {
+  setLoading1(true);
+  try {
+    await denyStudentRequest(id);
+    return true;
+  } catch (err) {
+    console.error(err);
+    return false;
+  } finally {
+    setLoading1(false);
+  }
+};
 
   const handleBulkAccept = async () => {
     if (selectedIds.length === 0) return;

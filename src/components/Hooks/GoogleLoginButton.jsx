@@ -15,47 +15,48 @@ const GoogleLoginButton = () => {
   const from = location.state?.from?.pathname || '/';
 
   const handleGoogleLogin = async () => {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
 
-      const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
 
-      let role = 'student';
+    let role = 'student';
 
-      if (!userSnap.exists()) {
-        await setDoc(userRef, {
-          uid: user.uid,
-          name: user.displayName,
-          email: user.email,
-          role,
-          enrolledSubjects: [],
-          createdAt: serverTimestamp(), // ✅ use Firestore server time
-        });
-      } else {
-        const userData = userSnap.data();
-        role = userData.role || 'student';
-      }
-
-      dispatch(
-        setUser({
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          role,
-        })
-      );
-
-      // ✅ Delay navigation slightly to avoid internal promise assertion bug
-      setTimeout(() => {
-        navigate(from, { replace: true });
-      }, 50);
-    } catch (error) {
-      console.error('Google sign-in error:', error);
+    if (!userSnap.exists()) {
+      // ✅ Store photoURL and displayName in Firestore
+      await setDoc(userRef, {
+        uid: user.uid,
+        name: user.displayName || '',
+        email: user.email,
+        photoURL: user.photoURL || '',
+        role: 'student',
+        enrolledSubjects: [],
+        createdAt: serverTimestamp(), // better than new Date()
+      });
+    } else {
+      const userData = userSnap.data();
+      role = userData.role || 'student';
     }
-  };
+
+    dispatch(
+      setUser({
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        role,
+      })
+    );
+
+    setTimeout(() => {
+      navigate(from, { replace: true });
+    }, 50);
+  } catch (error) {
+    console.error('Google sign-in error:', error);
+  }
+};
 
   return (
     <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>

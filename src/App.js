@@ -10,7 +10,7 @@ import { useMediaQuery } from '@mui/material';
 import { setDarkMode } from './redux/slices/theme/index'
 import Signup from './components/signup';
 import CreactquizPage from './pages/CreactquizPage';
-import PrivateRoute from './components/PrivateRoute/PrivateRoute'
+import GeneralRoute from './components/PrivateRoute/GeneralRoute'
 import Footer from './components/footer';
 import BrowseQuizzes from './pages/QuizzesPage';
 import AttemptQuizPage from './pages/AttemptQuizPage';
@@ -23,14 +23,46 @@ import AttemptMcqs from './components/Quizzes/PrivateTests/AttemptMcqs';
 import AttemptTrueFalse from './components/Quizzes/PrivateTests/AttemptTrueFalse';
 import AttemptShortAnswers from './components/Quizzes/PrivateTests/AttemptShortAnswers';
 
-import JoinTeacherRequest from './components/JoinTeacherRequest';
+import UpgradeAccount from './components/UpgradeAccount';
 import Profile from './components/profile';
-import AdminRoute from './components/PrivateRoute/AdminRoute';
 import JoinedAdminsList from './components/JoinedAdminsList';
+import JoinTeacher from './components/FacultyComponents/JoinTeacher';
+import JoinAdmin from './components/AdminComponents/JoinAdmin';
+
+
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from './config/firebase';
+import { setUser } from './redux/slices/authSlice';
 
 const AppRoutes = () => {
   const location = useLocation();
   const isDashboard = location.pathname.startsWith('/dashboard');
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userDocRef);
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          dispatch(setUser({
+            uid: user.uid,
+            email: user.email,
+            role: userData.role,
+            displayName: userData.displayName,
+            // ...any other data
+          }));
+        }
+      } else {
+        // Optionally dispatch logout/reset
+        dispatch(setUser(null));
+      }
+    });
+
+    return () => unsubscribe();
+  }, [dispatch]);
 
   return (
     <>
@@ -38,22 +70,24 @@ const AppRoutes = () => {
       <Routes>
         <Route path="/" element={<Homepage />} />
         <Route path="/login" element={<Signup />} />
-        <Route path="/createquiz" element={<PrivateRoute><CreactquizPage /></PrivateRoute>} />
+        <Route path="/createquiz" element={<GeneralRoute><CreactquizPage /></GeneralRoute>} />
         <Route path="/browsequiz" element={<BrowseQuizzes />} />
-        <Route path="/attemptQuiz/:quizId" element={<PrivateRoute><AttemptQuizPage /></PrivateRoute>} />
-        <Route path="/result-card/:quizId" element={<PrivateRoute><ResultCard /></PrivateRoute>} />
-        <Route path="/dashboard/*" element={<AdminRoute><DashboardRoutes /></AdminRoute>} />
-        <Route path="/start-test/:quizId" element={<PrivateRoute><Attemptprivatequiz /></PrivateRoute>} />
-        <Route path="/start-public-test/:quizId" element={<PrivateRoute><Attemptpublicquiz /></PrivateRoute>} />
-        <Route path="/mcqs-test/:quizId" element={<PrivateRoute><AttemptMcqs /></PrivateRoute>} />
-        <Route path="/true-false-test/:quizId" element={<PrivateRoute><AttemptTrueFalse /></PrivateRoute>} />
-        <Route path="/short-questions-test/:quizId" element={<PrivateRoute><AttemptShortAnswers /></PrivateRoute>} />
-        <Route path="/my-teachers" element={<PrivateRoute><JoinedAdminsList /></PrivateRoute>} />
-
+        <Route path="/attemptQuiz/:quizId" element={<GeneralRoute><AttemptQuizPage /></GeneralRoute>} />
+        <Route path="/result-card/:quizId" element={<GeneralRoute><ResultCard /></GeneralRoute>} />
+        <Route path="/dashboard/*" element={<DashboardRoutes />} />
+        <Route path="/start-test/:quizId" element={<GeneralRoute><Attemptprivatequiz /></GeneralRoute>} />
+        <Route path="/start-public-test/:quizId" element={<GeneralRoute PrivateRoute><Attemptpublicquiz /></GeneralRoute>} />
+        <Route path="/mcqs-test/:quizId" element={<GeneralRoute><AttemptMcqs /></GeneralRoute>} />
+        <Route path="/true-false-test/:quizId" element={<GeneralRoute><AttemptTrueFalse /></GeneralRoute>} />
+        <Route path="/short-questions-test/:quizId" element={<GeneralRoute><AttemptShortAnswers /></GeneralRoute>} />
+        <Route path="/my-teachers" element={<GeneralRoute><JoinedAdminsList /></GeneralRoute>} />
+        {/* <Route path="/typing-practice" element={<TypingPractice />} /> */}
 
         
-        <Route path="/join-teacher" element={<PrivateRoute><JoinTeacherRequest /></PrivateRoute>} />
-        <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+        <Route path="/upgrade-account" element={<GeneralRoute><UpgradeAccount /></GeneralRoute>} />
+        <Route path="/join-admin" element={<GeneralRoute><JoinAdmin /></GeneralRoute>} />
+        <Route path="/join-teacher" element={<GeneralRoute><JoinTeacher /></GeneralRoute>} />
+        <Route path="/profile" element={<GeneralRoute><Profile /></GeneralRoute>} />
         
 
       </Routes>

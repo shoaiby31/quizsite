@@ -1,25 +1,16 @@
 import { Grid, Box } from '@mui/material';
-import InfoCard from '../components/DashbaordComponents/infocard';
-import { People, 
-  // AttachMoney, LocalCarWash, 
-  Quiz } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
 import { onSnapshot, collection, query, where, doc, getDoc } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
 import { db } from '../config/firebase';
-import QuizzesAttemptedCard from '../components/DashbaordComponents/QuizzesAttemptedCard';
-import AverageScoreCard from '../components/DashbaordComponents/AverageScoreCard';
 import RecentActivityCard from '../components/DashbaordComponents/RecentActivityCard';
 import AverageScorePieChart from '../components/DashbaordComponents/AverageScorePieChart';
 import TopScorersCard from '../components/DashbaordComponents/TopScorersCard';
 
 const Dashboard = () => {
-  const [studentCount, setStudentCount] = useState(0);
   const [adminId, setAdminId] = useState(null);
-  const [quizCount, setQuizCount] = useState(0); // ✅ New state for quiz count
   const currentUid = useSelector((state) => state.auth.uid);
-
-  // Step 1: Get adminId from Firestore based on current user's UID
+  const userRole = useSelector((state) => state.auth.role);
   useEffect(() => {
     if (!currentUid) return;
 
@@ -30,7 +21,7 @@ const Dashboard = () => {
 
         if (userSnap.exists()) {
           const userData = userSnap.data();
-          setAdminId(userData.adminid); // could be same as UID or different
+          setAdminId(userData.adminid);
         }
       } catch (error) {
         console.error('Error fetching adminId:', error);
@@ -40,7 +31,6 @@ const Dashboard = () => {
     fetchAdminId();
   }, [currentUid]);
 
-  // Step 2: Get live student count based on adminId
   useEffect(() => {
     if (!adminId) return;
 
@@ -50,7 +40,6 @@ const Dashboard = () => {
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setStudentCount(snapshot.size);
     });
 
     return () => unsubscribe();
@@ -65,47 +54,61 @@ const Dashboard = () => {
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setQuizCount(snapshot.size);
     });
 
     return () => unsubscribe();
-  },);
+  }, [adminId, currentUid]);
 
+  if (!userRole) return null;
 
   return (
     <>
-      <Grid container spacing={3}>
-        <Grid size={{xs:12, sm:6, md:3}}>
-          <InfoCard icon={<People />} label="Total Students" value={String(studentCount).padStart(2, '0')} color="purple" />
-        </Grid>
-        <Grid size={{xs:12, sm:6, md:3}}>
-          <InfoCard icon={<Quiz />} label="My Quizzes" value={String(quizCount).padStart(2, '0')} color="blue" />
-        </Grid>
-        <Grid size={{xs:12, sm:6, md:3}}>
-          <QuizzesAttemptedCard/>
-        </Grid>
-        <Grid size={{xs:12, sm:6, md:3}}>
-          <AverageScoreCard/>
-        </Grid>
-      </Grid>
+      {userRole === 'teacher' && (
+        <>
+          <Grid container spacing={3} rowSpacing={2}>
+            <Grid size={{xs:12, md:8, xl:5}}>
+              <AverageScorePieChart />
+            </Grid>
+            <Grid size={{xs:12, md:4, xl:3}}>
+              <TopScorersCard />
+            </Grid>
+            <Grid size={{xs:12, md:6, lg:4, xl:4}}>
+              <RecentActivityCard />
+            </Grid>
+          </Grid>
+        </>
+      )}
 
-      <Grid container spacing={3} rowSpacing={2} sx={{ mt: 2 }}>
-        <Grid size={{xs:12, md:8, xl:5}}>
-            <AverageScorePieChart/>
-        </Grid>
-        <Grid size={{xs:12, md:4, xl:3}}>
-          <TopScorersCard/>
+      {userRole === 'admin' && (
+        <>
+        {/* <Grid container spacing={3}>
+            <Grid size={{xs:12, sm:6, md:3}}>
+              <InfoCard icon={<People />} label="Total Teachers" value="--" color="purple" />
+            </Grid>
+            <Grid size={{xs:12, sm:6, md:3}}>
+              <InfoCard icon={<Quiz />} label="Total Students" value="--" color="blue" />
+            </Grid>
+            <Grid size={{xs:12, sm:6, md:3}}>
+              <InfoCard icon={<History />} label="Total Attempts" value="--" color="green" />
+            </Grid>
+            <Grid size={{xs:12, sm:6, md:3}}>
+              <InfoCard icon={<Map />} label="Avg Score" value="--" color="orange" />
+            </Grid>
+          </Grid> */}
+          
 
-        </Grid>
-        <Grid size={{xs:12, md:6, lg:4, xl:4}}>
-            <RecentActivityCard/>
-        </Grid>
-        <Grid size={{xs:12, md:4}}>
-          <Box sx={{ height: 300, bgcolor: 'white', borderRadius: 2 }}>
-            Table: Patients by Division
-          </Box>
-        </Grid>
-      </Grid>
+          <Grid container spacing={3} rowSpacing={2}>
+            <Grid size={{xs:12, md:8}}>
+              <RecentActivityCard />
+            </Grid>
+            <Grid size={{xs:12, md:4}}>
+              <Box sx={{ height: 300, bgcolor: 'white', borderRadius: 2 }}>
+                Super Admin Chart Placeholder
+              </Box>
+            </Grid>
+          </Grid>
+        </>
+      )}
     </>
   );
 };

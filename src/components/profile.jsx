@@ -1,16 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Box,
-  Card,
-  CardContent,
-  CardActions,
-  Typography,
-  TextField,
-  Button,
-  Avatar,
-  Stack,
-  Alert,
-  Modal,
+  Box, Card, CardContent, CardActions, Typography, TextField, Button, Avatar, Stack, Alert,
 } from '@mui/material';
 import { auth } from '../config/firebase'; // adjust the path as needed
 import {
@@ -20,10 +10,9 @@ import {
   EmailAuthProvider,
 } from 'firebase/auth';
 import { doc, updateDoc, onSnapshot } from 'firebase/firestore';
-import { useDispatch } from 'react-redux';
-import { changeUserRole } from '../redux/slices/authSlice/index';
 import { db } from '../config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import UpgradeAccount from './UpgradeAccount';
 const Profile = () => {
   const [editMode, setEditMode] = useState(false);
   const [authProvider, setAuthProvider] = useState('');
@@ -39,38 +28,36 @@ const Profile = () => {
 
   // Admin Modal States
   const [openAdminModal, setOpenAdminModal] = useState(false);
-  const [secritId, setSecritId] = useState('');
-  const [error, setError] = useState('');
-  const dispatch = useDispatch();
 
 
-useEffect(() => {
-  const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-    if (user) {
-      const providerId = user.providerData[0]?.providerId || '';
-      setAuthProvider(providerId);
 
-      // Real-time listener for user data
-      const userRef = doc(db, 'users', user.uid);
-      const unsubscribeUser = onSnapshot(userRef, (docSnap) => {
-        if (docSnap.exists()) {
-          const userData = docSnap.data();
-          setFormData({
-            name: userData.name || user.displayName || '',
-            email: user.email || '',
-            role: userData.role || '',
-            currentPassword: '',
-            newPassword: '',
-          });
-        }
-      });
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const providerId = user.providerData[0]?.providerId || '';
+        setAuthProvider(providerId);
 
-      return () => unsubscribeUser(); // Cleanup Firestore listener
-    }
-  });
+        // Real-time listener for user data
+        const userRef = doc(db, 'users', user.uid);
+        const unsubscribeUser = onSnapshot(userRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            setFormData({
+              name: userData.name || user.displayName || '',
+              email: user.email || '',
+              role: userData.role || '',
+              currentPassword: '',
+              newPassword: '',
+            });
+          }
+        });
 
-  return () => unsubscribeAuth(); // Cleanup auth listener
-}, []);
+        return () => unsubscribeUser(); // Cleanup Firestore listener
+      }
+    });
+
+    return () => unsubscribeAuth(); // Cleanup auth listener
+  }, []);
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
@@ -128,33 +115,6 @@ useEffect(() => {
     }
   };
 
-  // Handle Admin Role Update
-  const handleAdminUpgrade = async () => {
-    if(secritId!=='' && secritId.length>=6){
-        setError('')
-        try {
-            const user = auth.currentUser;
-            const userRef = doc(db, 'users', user.uid);
-      
-            await updateDoc(userRef, {
-              role: 'admin',
-              adminid:secritId,
-            });
-      
-            setMessage({ type: 'success', text: 'You are now an admin!' });
-            setOpenAdminModal(false);
-            dispatch(changeUserRole())
-
-          } catch (error) {
-            setMessage({ type: 'error', text: 'Failed to upgrade to admin.' });
-            console.error(error);
-          }
-
-    } else{
-        setError('please enter alteast 6 digits long secrit id*')
-    }
-    
-  };
 
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4 }}>
@@ -214,67 +174,34 @@ useEffect(() => {
               </>
             )}
           </Stack>
-
-          {/* Admin Button */}
-          {formData.role !== 'admin' && (
-            <Button variant="contained" color="secondary" onClick={() => setOpenAdminModal(true)} sx={{ mt: 2 }}>
-              I Want to Be an Admin
-            </Button>
-          )}
         </CardContent>
 
         <CardActions sx={{ justifyContent: 'flex-end', px: 2, pb: 2 }}>
           {editMode ? (
             <>
               <Button variant="contained" onClick={handleSave}>Save</Button>
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  setEditMode(false);
-                  setAllowNewPassword(false);
-                  setMessage({ type: '', text: '' });
-                  setFormData((prev) => ({
-                    ...prev,
-                    currentPassword: '',
-                    newPassword: ''
-                  }));
-                }}
-              >
-                Cancel
-              </Button>
+              <Button variant="outlined" onClick={() => {
+                setEditMode(false); setAllowNewPassword(false); setMessage({ type: '', text: '' }); setFormData((prev) => ({
+                  ...prev,
+                  currentPassword: '',
+                  newPassword: ''
+                }));
+              }}>Cancel</Button>
             </>
           ) : (
             <Button variant="outlined" onClick={() => setEditMode(true)}>Edit Profile</Button>
           )}
+          {(formData.role !== 'admin') && (
+          <Button variant="outlined" color="secondary" onClick={() => setOpenAdminModal(!openAdminModal)}>
+            {openAdminModal ? 'Cancel' : 'I Want to Be an Admin'}
+          </Button>
+        )}
         </CardActions>
+        {/* Admin Button */}
+        
+        {openAdminModal &&
+          <UpgradeAccount />}
       </Card>
-
-      {/* Modal for Admin Role Upgrade */}
-      <Modal open={openAdminModal} onClose={() => setOpenAdminModal(false)}>
-        <Box sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          padding: 3,
-          width: 400,
-          margin: 'auto',
-          backgroundColor: 'white',
-          marginTop: '10%',
-          borderRadius: 2,
-          boxShadow: 3
-        }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>Become an Admin</Typography>
-          {error !== '' && <Typography variant='body2' gutterBottom color='error.main'>{error}</Typography>}
-          <TextField
-            label="Secret ID"
-            name="sectedid"
-            value={secritId}
-            onChange={(e) => setSecritId(e.target.value)}
-            fullWidth
-            sx={{ mb: 2 }}
-          />
-          <Button variant="contained" onClick={handleAdminUpgrade}>Upgrade to Admin</Button>
-        </Box>
-      </Modal>
     </Box>
   );
 };

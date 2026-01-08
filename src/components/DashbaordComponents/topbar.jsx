@@ -14,9 +14,9 @@ import Brightness4Icon from '@mui/icons-material/Brightness4';
 import { Link, useNavigate } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import { setdrawerState } from '../../redux/slices/drawerSlice/index';
-import {
-    doc, getDoc, onSnapshot, collection, query, where, deleteDoc, addDoc, getDocs
-} from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, collection, query, where } from 'firebase/firestore';
+import { approveTeacherRequest, denyTeacherRequest } from "../AdminComponents/AcceptRequests.service";
+import { acceptStudentRequest, denyStudentRequest } from '../FacultyComponents/studentRequests.service';
 
 const TopBar = () => {
     const dispatch = useDispatch();
@@ -26,41 +26,60 @@ const TopBar = () => {
     const themeMode = useSelector((state) => state.mode.value);
     const uid = useSelector((state) => state.auth.uid);
 
-    const [adminId, setAdminId] = useState(null);
+    const [institutePassword, setInstitutePassword] = useState(null);
     const [anchorElUser, setAnchorElUser] = useState(null);
     const [anchorElNotif, setAnchorElNotif] = useState(null);
-    const [joinRequests, setJoinRequests] = useState([]);
+
+    const [role, setRole] = useState(null);
+    const [notifications, setNotifications] = useState([]);
 
     // Fetch adminId from user document
     useEffect(() => {
         if (!auth.currentUser) return;
-        const userDocRef = doc(db, 'users', auth.currentUser.uid);
 
-        getDoc(userDocRef).then((docSnap) => {
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                setAdminId(data.adminid || auth.currentUser.uid);
-            } else {
-                setAdminId(auth.currentUser.uid);
+        const userDocRef = doc(db, 'users', auth.currentUser.uid);
+        getDoc(userDocRef).then((snap) => {
+            if (snap.exists()) {
+                const data = snap.data();
+                setRole(data.role);
+                setInstitutePassword(data.institutePassword || data.teacherSecretId);
             }
-        }).catch(() => {
-            setAdminId(auth.currentUser.uid);
         });
     }, []);
 
+
     // Listen for joinRequests
     useEffect(() => {
-        if (!adminId) return;
+        if (!role) return;
 
-        const q = query(collection(db, 'joinRequests'), where('adminId', '==', adminId));
+        let q;
+
+        if (role === 'admin') {
+            if (!institutePassword) return;
+            q = query(
+                collection(db, 'teacherRequests'),
+                where('institutePassword', '==', institutePassword)
+            );
+        }
+
+        if (role === 'teacher') {
+            q = query(
+                collection(db, 'joinRequests'),
+                where('teacherSecretId', '==', institutePassword)
+            );
+        }
+
+        if (!q) return;
+
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            const sorted = [...requests].sort((a, b) => Number(!a.read) - Number(!b.read));
-            setJoinRequests(sorted);
+            const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const sorted = [...items].sort((a, b) => Number(!a.read) - Number(!b.read));
+            setNotifications(sorted);
         });
 
         return () => unsubscribe();
-    }, [adminId]);
+    }, [role, institutePassword]);
+
 
     const handleOpenUserMenu = (e) => setAnchorElUser(e.currentTarget);
     const handleCloseUserMenu = () => setAnchorElUser(null);
@@ -76,64 +95,25 @@ const TopBar = () => {
         }
     };
 
+const handleApprove = async (req) => {
+  if (role === 'admin') await approveTeacherRequest(req, uid);
+  if (role === 'teacher') await acceptStudentRequest(req, uid);
+};
 
-    const handleAccept = async (request) => {
-        try {
-            const { studentEmail, className, adminId, id, rollNo, studentName } = request;
+const handleReject = async (id) => {
+  if (role === 'admin') await denyTeacherRequest(id);
+  if (role === 'teacher') await denyStudentRequest(id);
+};
 
-            if (!studentEmail || !className || !adminId) {
-                console.error('Missing data in request:', request);
-                return;
-            }
 
-            // Check if the student already has a relation with this class/admin
-            const existingQuery = query(
-                collection(db, 'studentTeacherRelations'),
-                where('studentEmail', '==', studentEmail),
-                where('className', '==', className),
-                where('adminId', '==', adminId)
-            );
 
-            const existingSnapshot = await getDocs(existingQuery);
-
-            if (!existingSnapshot.empty) {
-                console.warn('Student already joined this class.');
-                await deleteDoc(doc(db, 'joinRequests', id));
-                return;
-            }
-
-            // Add the relation
-            await addDoc(collection(db, 'studentTeacherRelations'), {
-                studentEmail,
-                className,
-                adminId,
-                adminUid: uid ,
-                rollNo,
-                studentName,
-                userId: request.studentId,
-                timestamp: new Date()
-            });
-
-            // Delete the join request after accepting
-            await deleteDoc(doc(db, 'joinRequests', id));
-
-        } catch (error) {
-            console.error('Error accepting request:', error);
-        }
-    };
-
-    const handleDeny = async (id) => {
-        try {
-            await deleteDoc(doc(db, 'joinRequests', id));
-        } catch (err) {
-            console.error('Error denying request:', err);
-        }
-    };
-
-    const unreadCount = joinRequests.filter(r => !r.read).length;
+    const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
-        <AppBar position="static" elevation={0} color="inherit">
+        <AppBar position="static" elevation={0} color="inherit" sx={{
+            backgroundColor: 'rgba(255, 255, 255, 0.5)', // 50% opacity white
+            backdropFilter: 'blur(8px)', // optional: nice glass effect
+        }}>
             <Toolbar sx={{ justifyContent: 'space-between', px: 2 }}>
                 <IconButton sx={{ display: { xs: 'flex', md: 'none' } }} onClick={() => dispatch(setdrawerState())}>
                     <MenuIcon />
@@ -170,24 +150,26 @@ const TopBar = () => {
                         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                     >
-                        {joinRequests.length === 0 && (
+                        {notifications.length === 0 && (
                             <MenuItem disabled>No join requests</MenuItem>
                         )}
 
-                        {joinRequests.map((req) => (
+                        {notifications.map((req) => (
                             <Box key={req.id} sx={{ px: 2, py: 1 }}>
                                 <Stack spacing={0.5}>
                                     <Typography variant="subtitle2" fontWeight={req.read ? 'medium' : 'bold'}>
-                                        {req.studentName || 'Unknown'} wants to join
+                                        {role === 'admin' && `${req.name} wants to join your school`}
+                                        {role === 'teacher' && `${req.studentName || 'A student'} wants to join your class`}
+
                                     </Typography>
                                     <Typography variant="body2" color="text.secondary">
-                                        Roll No: {req.rollNo} • Class: {req.className}
+                                        Name: {req.name}
                                     </Typography>
                                     <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                                        <Button size="small" variant="text" color="success" onClick={() => handleAccept(req)}>
+                                        <Button size="small" variant="text" color="success" onClick={() => handleApprove(req)}>
                                             Accept
                                         </Button>
-                                        <Button size="small" variant="text" color="error" onClick={() => handleDeny(req.id)}>
+                                        <Button size="small" variant="text" color="error" onClick={() => handleReject(req.id)}>
                                             Deny
                                         </Button>
                                     </Stack>
@@ -196,10 +178,10 @@ const TopBar = () => {
                             </Box>
                         ))}
 
-                        {joinRequests.length > 0 && (
+                        {notifications.length > 0 && (
                             <MenuItem onClick={() => {
                                 handleCloseNotifMenu();
-                                navigate('/dashboard/join-requests');
+                               role === 'admin'? navigate('/dashboard/faculty-requests') : navigate('/dashboard/students-requests');  
                             }} sx={{ justifyContent: 'center', fontWeight: 600, fontSize: 14 }}>
                                 View All Requests
                             </MenuItem>
@@ -226,7 +208,7 @@ const TopBar = () => {
                             anchorEl={anchorElUser}
                             open={Boolean(anchorElUser)}
                             onClose={handleCloseUserMenu}
-                            sx={{ mt: '45px' }}
+                            sx={{ mt: '10px' }}
                         >
                             <MenuItem component={Link} to='/'>Home</MenuItem>
                             <MenuItem component={Link} to='/dashboard/profile'>Profile</MenuItem>

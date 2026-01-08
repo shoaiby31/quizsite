@@ -14,8 +14,24 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
+    // setUser(state, action) {
+    //   const { uid, email, displayName, photoURL, role } = action.payload;
+    //   state.uid = uid;
+    //   state.email = email;
+    //   state.displayName = displayName;
+    //   state.photoURL = photoURL;
+    //   state.role = role;
+    //   state.isAuthenticated = true;
+    // }
     setUser(state, action) {
-      const { uid, email, displayName, photoURL, role } = action.payload;
+      const payload = action.payload;
+
+      if (!payload) {
+        // Don't do anything if payload is null (or clear if desired)
+        return;
+      }
+
+      const { uid, email, displayName, photoURL, role } = payload;
       state.uid = uid;
       state.email = email;
       state.displayName = displayName;
@@ -28,7 +44,7 @@ const authSlice = createSlice({
       state.userReady = true;
     },
     changeUserRole: (state) => {
-      state.role = state.role==='student'? 'admin': 'student'
+      state.role = state.role === 'student' ? 'admin' : 'student'
     },
     clearUser(state) {
       state.uid = null;

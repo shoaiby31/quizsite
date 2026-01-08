@@ -5,7 +5,7 @@ import { CircularProgress, Box } from '@mui/material';
 import { auth, db } from '../../config/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
-const AdminRoute = ({ children, allowedRoles = ['teacher', 'admin'] }) => {
+const TeacherRoute = ({ children, allowedRoles = ['teacher'] }) => {
   const [user, loading] = useAuthState(auth);
   const [userRole, setUserRole] = useState(null);
   const [roleLoading, setRoleLoading] = useState(true);
@@ -63,4 +63,4 @@ const AdminRoute = ({ children, allowedRoles = ['teacher', 'admin'] }) => {
   return children;
 };
 
-export default AdminRoute;
+export default TeacherRoute;

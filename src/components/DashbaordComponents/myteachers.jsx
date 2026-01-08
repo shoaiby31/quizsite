@@ -5,18 +5,17 @@ import {
 import { useSelector } from 'react-redux';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-  Typography, CircularProgress, Box, Checkbox, Button, TextField, MenuItem,
+  Typography, CircularProgress, Box, Checkbox, Button, TextField,
   Snackbar, TablePagination, Alert, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText
 } from '@mui/material';
 import { db } from '../../config/firebase';
 
-const Mystudents = () => {
+const Myteachers = () => {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState([]);
   const [search, setSearch] = useState('');
-  const [classFilter, setClassFilter] = useState('');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [idsToDelete, setIdsToDelete] = useState([]);
@@ -39,7 +38,7 @@ const Mystudents = () => {
           const adminid = adminDoc.data()?.adminid;
           if (!adminid) return;
 
-          const q = query(collection(db, 'studentTeacherRelations'), where('adminId', '==', adminid));
+          const q = query(collection(db, 'teacherAdminRelations'), where('schoolId', '==', adminid));
 
           unsubscribeStudents = onSnapshot(q, (snapshot) => {
             const studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -63,7 +62,7 @@ const Mystudents = () => {
           });
         });
       } catch (error) {
-        console.error('Error fetching students live:', error);
+        console.error('Error fetching teachers live:', error);
         setLoading(false);
       }
     };
@@ -79,11 +78,10 @@ const Mystudents = () => {
   useEffect(() => {
     const lowerSearch = search.toLowerCase();
     const filtered = students.filter(s =>
-      (s.studentName?.toLowerCase().includes(lowerSearch) || s.rollNo?.includes(lowerSearch)) &&
-      (!classFilter || s.className === classFilter)
+      (s.teacherName?.toLowerCase().includes(lowerSearch) || s.teacherEmail?.includes(lowerSearch))
     );
     setFilteredStudents(filtered);
-  }, [search, classFilter, students]);
+  }, [search, students]);
 
   const handleSelect = (id) => {
     setSelectedIds((prev) =>
@@ -99,13 +97,13 @@ const Mystudents = () => {
   const handleConfirmDelete = async () => {
     setDialogOpen(false);
     try {
-      await Promise.all(idsToDelete.map(id => deleteDoc(doc(db, 'studentTeacherRelations', id))));
+      await Promise.all(idsToDelete.map(id => deleteDoc(doc(db, 'teacherAdminRelations', id))));
       setStudents(prev => prev.filter(s => !idsToDelete.includes(s.id)));
       setSelectedIds([]);
-      setSnackbar({ open: true, message: 'Student(s) deleted successfully.', severity: 'success' });
+      setSnackbar({ open: true, message: 'Teacher(s) deleted successfully.', severity: 'success' });
     } catch (err) {
       console.error("Error deleting students:", err);
-      setSnackbar({ open: true, message: 'Failed to delete students.', severity: 'error' });
+      setSnackbar({ open: true, message: 'Failed to delete teachers.', severity: 'error' });
     }
   };
 
@@ -126,16 +124,10 @@ const Mystudents = () => {
 
   return (
     <Box sx={{ mt: 2 }}>
-      <Typography variant="h6" sx={{ mb: 2 }}>Students Assigned to You</Typography>
+      <Typography variant="h6" sx={{ mb: 2 }}>Teachers Assigned to You</Typography>
 
       <Box display="flex" gap={2} mb={2}>
-        <TextField size='small' label="Search by Name or Roll No" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <TextField size='small' select label="Filter by Class" value={classFilter} onChange={(e) => setClassFilter(e.target.value)} sx={{ minWidth: 120 }}>
-          <MenuItem value="">All Classes</MenuItem>
-          {Array.from({ length: 12 }, (_, i) => (
-            <MenuItem key={i + 1} value={`${i + 1}`}>Class {i + 1}</MenuItem>
-          ))}
-        </TextField>
+        <TextField size='small' label="Search by Name or Email" value={search} onChange={(e) => setSearch(e.target.value)} />
         <Button
           variant="contained"
           color="error"
@@ -162,9 +154,10 @@ const Mystudents = () => {
                   }}
                 />
               </TableCell>
-              <TableCell>Roll Number</TableCell>
               <TableCell>Name</TableCell>
-              <TableCell>Class</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Secret Id</TableCell>
+
             </TableRow>
           </TableHead>
           <TableBody>
@@ -176,9 +169,9 @@ const Mystudents = () => {
                     onChange={() => handleSelect(student.id)}
                   />
                 </TableCell>
-                <TableCell>{student.rollNo || '-'}</TableCell>
-                <TableCell>{student.studentName}</TableCell>
-                <TableCell>{student.className + 'th'}</TableCell>
+                <TableCell>{student.teacherName || '-'}</TableCell>
+                <TableCell>{student.teacherEmail}</TableCell>
+                <TableCell>{student.teacherSecretId + 'th'}</TableCell>
               </TableRow>
             ))}
             {filteredStudents.length === 0 && (
@@ -234,4 +227,4 @@ const Mystudents = () => {
   );
 };
 
-export default Mystudents;
+export default Myteachers;
