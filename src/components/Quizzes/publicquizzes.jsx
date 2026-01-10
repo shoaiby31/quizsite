@@ -139,7 +139,7 @@ const PublicQuizzes = () => {
           <Typography variant="body1">No matching quizzes found.</Typography>
         ) : (
           paginatedQuizzes.map(quiz => (
-            <Grid size={{ sx: 12, sm: 6, md: 3 }} key={quiz.id}>
+            <Grid size={{ sx: 12, md: 3 }} key={quiz.id}>
               <Card elevation={3} sx={{ borderRadius: 4, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <CardContent>
                   <Typography variant="body2" fontWeight='bold' gutterBottom>{quiz.title}</Typography>

@@ -21,6 +21,7 @@ const AddQuestions = ({ id, title }) => {
   const [csvFile, setCsvFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [message, setMessage] = useState({ type: '', text: '' });
+const [refreshKey, setRefreshKey] = useState(0);
 
   // Prevent page reload/close during CSV upload
   useEffect(() => {
@@ -96,6 +97,7 @@ const AddQuestions = ({ id, title }) => {
       await addDoc(collection(db, 'quizzes', id, 'questions'), questionData);
       resetForm();
       setMessage({ type: 'success', text: 'Question added successfully!' });
+      setRefreshKey(prev => prev + 1); // 🔄 refresh questions
     } catch (error) {
       console.error('Error adding question:', error);
       setMessage({ type: 'error', text: 'Failed to add question. Please try again.' });
@@ -150,6 +152,7 @@ const AddQuestions = ({ id, title }) => {
             setUploadProgress(Math.round(((i + 1) / parsedData.length) * 100));
           }
           setMessage({ type: 'success', text: 'CSV questions uploaded successfully!' });
+          setRefreshKey(prev => prev + 1); // 🔄 refresh questions
         } catch (error) {
           console.error('Error uploading CSV questions:', error);
           setMessage({ type: 'error', text: 'Failed to upload CSV questions. Please try again.' });
@@ -169,7 +172,8 @@ const AddQuestions = ({ id, title }) => {
 
   return (
     <Box my={3}>
-      <ViewQuestions quizId={id} qtitle={title} />
+    <ViewQuestions key={refreshKey} quizId={id} qtitle={title} />
+
       <Typography variant='h6' mb={2}>Add Questions</Typography>
       <Paper elevation={3} sx={{ padding: 4 }}>
         <Tabs value={tabIndex} onChange={(e, newValue) => setTabIndex(newValue)} sx={{ marginBottom: 2 }}>
