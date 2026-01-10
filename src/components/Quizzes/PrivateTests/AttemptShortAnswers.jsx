@@ -155,17 +155,20 @@ const AttemptShort = () => {
         // 🔍 Fetch roll number from studentTeacherRelations
         let rollNo = null;
         try {
-          const relationQuery = query(
-            collection(db, "studentTeacherRelations"),
-            where("userId", "==", user.uid)
-          );
-          const relationSnap = await getDocs(relationQuery);
-          if (!relationSnap.empty) {
-            const relationData = relationSnap.docs[0].data();
-            rollNo = relationData.rollNo || null;
+          // Reference the user's document
+          const userDocRef = doc(db, "users", user.uid);
+
+          // Fetch the document
+          const userDocSnap = await getDoc(userDocRef);
+
+          if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            rollNo = userData.rollNo || null;
+          } else {
+            console.log("User document does not exist!");
           }
         } catch (err) {
-          console.warn("Error fetching roll number:", err.message);
+          console.warn("Error fetching roll number from users collection:", err.message);
         }
 
         const newAttemptId = uuidv4();

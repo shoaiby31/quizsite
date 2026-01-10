@@ -178,17 +178,20 @@ const AttemptMcqs = () => {
 
         let rollNo = null;
         try {
-          const relationQuery = query(
-            collection(db, "studentTeacherRelations"),
-            where("userId", "==", user.uid)
-          );
-          const relationSnap = await getDocs(relationQuery);
-          if (!relationSnap.empty) {
-            const relationData = relationSnap.docs[0].data();
-            rollNo = relationData.rollNo || null;
+          // Reference the user's document
+          const userDocRef = doc(db, "users", user.uid);
+
+          // Fetch the document
+          const userDocSnap = await getDoc(userDocRef);
+
+          if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            rollNo = userData.rollNo || null;
+          } else {
+            console.log("User document does not exist!");
           }
         } catch (err) {
-          console.warn("Error fetching roll number:", err.message);
+          console.warn("Error fetching roll number from users collection:", err.message);
         }
 
         const newAttemptData = {
@@ -226,28 +229,28 @@ const AttemptMcqs = () => {
   }, [user, quizId, navigate, secretId, warningCount]);
 
   useEffect(() => {
-  if (!attemptId) return;
+    if (!attemptId) return;
 
-  const attemptRef = doc(db, "attempts", attemptId);
+    const attemptRef = doc(db, "attempts", attemptId);
 
-  const unsubscribe = onSnapshot(attemptRef, (snap) => {
-    if (!snap.exists()) return;
+    const unsubscribe = onSnapshot(attemptRef, (snap) => {
+      if (!snap.exists()) return;
 
-    const data = snap.data();
+      const data = snap.data();
 
-    if (data.hasSubmitted === true) {
-      localStorage.removeItem("secretId");
+      if (data.hasSubmitted === true) {
+        localStorage.removeItem("secretId");
 
-      if (isPublicRef.current) {
-        navigate(`/start-public-test/${quizId}`);
-      } else {
-        navigate(`/start-test/${quizId}`, { state: { secretId } });
+        if (isPublicRef.current) {
+          navigate(`/start-public-test/${quizId}`);
+        } else {
+          navigate(`/start-test/${quizId}`, { state: { secretId } });
+        }
       }
-    }
-  });
+    });
 
-  return () => unsubscribe();
-}, [attemptId, navigate, quizId, secretId]);
+    return () => unsubscribe();
+  }, [attemptId, navigate, quizId, secretId]);
 
   const handleSubmit = useCallback(async () => {
     let calculatedScore = 0;
@@ -281,19 +284,19 @@ const AttemptMcqs = () => {
 
       // Step 4: Save the updated attempt with percentage
       // Check other sections before marking hasSubmitted
-const shouldMarkHasSubmitted =
-  existing.trueFalseSubmitted === true &&
-  existing.shortAnswersSubmitted === true;
+      const shouldMarkHasSubmitted =
+        existing.trueFalseSubmitted === true &&
+        existing.shortAnswersSubmitted === true;
 
-await setDoc(attemptRef, {
-  mcqsSubmitted: true,
-  mcqsScore: calculatedScore,
-  totalMcqsScore: totalMcqsScore,
-  percentage: parseFloat(percentage.toFixed(2)),
-  warningCount: 0,
-  currentIdx: 0,
-  ...(shouldMarkHasSubmitted && { hasSubmitted: true })
-}, { merge: true });
+      await setDoc(attemptRef, {
+        mcqsSubmitted: true,
+        mcqsScore: calculatedScore,
+        totalMcqsScore: totalMcqsScore,
+        percentage: parseFloat(percentage.toFixed(2)),
+        warningCount: 0,
+        currentIdx: 0,
+        ...(shouldMarkHasSubmitted && { hasSubmitted: true })
+      }, { merge: true });
 
     }
 
