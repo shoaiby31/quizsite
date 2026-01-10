@@ -203,29 +203,29 @@ const AttemptShort = () => {
 
     fetchQuiz();
   }, [user, quizId, navigate, secretId, warningCount]);
-useEffect(() => {
-  if (!attemptId) return;
+  useEffect(() => {
+    if (!attemptId) return;
 
-  const attemptRef = doc(db, "attempts", attemptId);
+    const attemptRef = doc(db, "attempts", attemptId);
 
-  const unsubscribe = onSnapshot(attemptRef, (snap) => {
-    if (!snap.exists()) return;
+    const unsubscribe = onSnapshot(attemptRef, (snap) => {
+      if (!snap.exists()) return;
 
-    const data = snap.data();
+      const data = snap.data();
 
-    if (data.hasSubmitted === true) {
-      localStorage.removeItem("secretId");
+      if (data.hasSubmitted === true) {
+        localStorage.removeItem("secretId");
 
-      if (isPublicRef.current) {
-        navigate(`/start-public-test/${quizId}`);
-      } else {
-        navigate(`/start-test/${quizId}`, { state: { secretId } });
+        if (isPublicRef.current) {
+          navigate(`/start-public-test/${quizId}`);
+        } else {
+          navigate(`/start-test/${quizId}`, { state: { secretId } });
+        }
       }
-    }
-  });
+    });
 
-  return () => unsubscribe();
-}, [attemptId, navigate, quizId, secretId]);
+    return () => unsubscribe();
+  }, [attemptId, navigate, quizId, secretId]);
 
   const handleSubmit = useCallback(async () => {
     setSubmitted(true);
@@ -252,6 +252,10 @@ useEffect(() => {
         const percentage = overallTotal > 0 ? (overallScore / overallTotal) * 100 : 0;
 
         // Step 4: Save to Firestore
+        const shouldMarkHasSubmitted =
+          existing.mcqsSubmitted === true &&
+          existing.trueFalseSubmitted === true;
+
         await setDoc(attemptRef, {
           shortAnswersSubmitted: true,
           hasSubmitted: true,
@@ -259,6 +263,7 @@ useEffect(() => {
           totalShortScore,
           shortAnswerScores,
           percentage: parseFloat(percentage.toFixed(2)),
+          ...(shouldMarkHasSubmitted && { hasSubmitted: true })
         }, { merge: true });
       }
 

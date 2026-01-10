@@ -261,14 +261,20 @@ const AttemptTrueFalse = () => {
                 const percentage = overallTotal > 0 ? (overallScore / overallTotal) * 100 : 0;
 
                 // Step 4: Write updated data
-                await setDoc(attemptRef, {
-                    trueFalseSubmitted: true,
-                    hasSubmitted: true,
-                    trueFalseScore,
-                    totalTrueFalseScore,
-                    warningCount: 0,
-                    percentage: parseFloat(percentage.toFixed(2))
-                }, { merge: true });
+                // Only mark hasSubmitted if other sections are already done
+const shouldMarkHasSubmitted =
+  existing.mcqsSubmitted === true &&
+  existing.shortAnswersSubmitted === true;
+
+await setDoc(attemptRef, {
+  trueFalseSubmitted: true,
+  trueFalseScore,
+  totalTrueFalseScore,
+  warningCount: 0,
+  percentage: parseFloat(percentage.toFixed(2)),
+  ...(shouldMarkHasSubmitted && { hasSubmitted: true })
+}, { merge: true });
+
             } catch (err) {
                 console.error("Failed to submit true/false answers:", err);
             }

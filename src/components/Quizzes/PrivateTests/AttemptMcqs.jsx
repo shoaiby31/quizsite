@@ -280,15 +280,21 @@ const AttemptMcqs = () => {
       const percentage = overallTotal > 0 ? (overallScore / overallTotal) * 100 : 0;
 
       // Step 4: Save the updated attempt with percentage
-      await setDoc(attemptRef, {
-        mcqsSubmitted: true,
-        hasSubmitted: true,
-        mcqsScore: calculatedScore,
-        totalMcqsScore: totalMcqsScore,
-        percentage: parseFloat(percentage.toFixed(2)),
-        warningCount: 0,
-        currentIdx: 0,
-      }, { merge: true });
+      // Check other sections before marking hasSubmitted
+const shouldMarkHasSubmitted =
+  existing.trueFalseSubmitted === true &&
+  existing.shortAnswersSubmitted === true;
+
+await setDoc(attemptRef, {
+  mcqsSubmitted: true,
+  mcqsScore: calculatedScore,
+  totalMcqsScore: totalMcqsScore,
+  percentage: parseFloat(percentage.toFixed(2)),
+  warningCount: 0,
+  currentIdx: 0,
+  ...(shouldMarkHasSubmitted && { hasSubmitted: true })
+}, { merge: true });
+
     }
 
     // Step 5: Redirect
