@@ -258,7 +258,6 @@ const AttemptShort = () => {
 
         await setDoc(attemptRef, {
           shortAnswersSubmitted: true,
-          hasSubmitted: true,
           warningCount: 0,
           totalShortScore,
           shortAnswerScores,
