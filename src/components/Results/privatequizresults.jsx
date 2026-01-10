@@ -189,7 +189,7 @@ const Privatequizresults = () => {
             if (quizData?.questionTypes?.short != null) {
                 updatePayload.shortAnswersSubmitted = true;
             }
-
+            updatePayload.hasSubmitted = true;
             // If no active question types, do nothing
             if (Object.keys(updatePayload).length === 0) {
                 setError("No question types are active in this quiz.");
