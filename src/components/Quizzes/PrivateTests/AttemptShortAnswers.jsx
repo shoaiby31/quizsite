@@ -4,9 +4,8 @@ import {
   Grid,
 } from "@mui/material";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import {
-  doc, getDoc, setDoc, collection, getDocs, serverTimestamp, query, where,
-} from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, getDocs, serverTimestamp, query, where, onSnapshot, } from "firebase/firestore";
+
 import { db } from "../../../config/firebase";
 import { getAuth } from "firebase/auth";
 import { v4 as uuidv4 } from "uuid";
@@ -204,6 +203,29 @@ const AttemptShort = () => {
 
     fetchQuiz();
   }, [user, quizId, navigate, secretId, warningCount]);
+useEffect(() => {
+  if (!attemptId) return;
+
+  const attemptRef = doc(db, "attempts", attemptId);
+
+  const unsubscribe = onSnapshot(attemptRef, (snap) => {
+    if (!snap.exists()) return;
+
+    const data = snap.data();
+
+    if (data.hasSubmitted === true) {
+      localStorage.removeItem("secretId");
+
+      if (isPublicRef.current) {
+        navigate(`/start-public-test/${quizId}`);
+      } else {
+        navigate(`/start-test/${quizId}`, { state: { secretId } });
+      }
+    }
+  });
+
+  return () => unsubscribe();
+}, [attemptId, navigate, quizId, secretId]);
 
   const handleSubmit = useCallback(async () => {
     setSubmitted(true);
