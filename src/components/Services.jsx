@@ -113,8 +113,7 @@ const Services = () => {
           md:6
         },
 
-        background:
-        "linear-gradient(135deg,#f8fbff 0%,#f9f5ff 100%)",
+     
       }}
     >
 
@@ -265,9 +264,6 @@ const Services = () => {
                     minHeight:390,
 
                     borderRadius:4,
-
-                    background:
-                    "rgba(255,255,255,.8)",
 
                     backdropFilter:
                     "blur(10px)",

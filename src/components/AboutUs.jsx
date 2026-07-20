@@ -44,8 +44,6 @@ const AboutUs = () => {
       sx={{
         py:10,
         px:{xs:2,md:6},
-        background:
-        "linear-gradient(135deg,#f8fbff 0%,#f9f5ff 100%)"
       }}
     >
 
@@ -137,10 +135,6 @@ const AboutUs = () => {
               borderRadius:4,
 
               p:2,
-
-              background:
-              "rgba(255,255,255,.8)",
-
               boxShadow:
               "0 20px 40px rgba(0,0,0,.08)"
 
