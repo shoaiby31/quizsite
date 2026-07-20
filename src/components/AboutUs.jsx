@@ -5,7 +5,6 @@ import {
   Grid,
   Card,
   CardContent,
-  Stack,
 } from "@mui/material";
 
 import { motion } from "framer-motion";

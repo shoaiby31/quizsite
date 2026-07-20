@@ -17,8 +17,6 @@ import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import AnalyticsRoundedIcon from "@mui/icons-material/AnalyticsRounded";
 import SecurityRoundedIcon from "@mui/icons-material/SecurityRounded";
 import PsychologyRoundedIcon from "@mui/icons-material/PsychologyRounded";
-import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
-import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 
 
 const services = [
