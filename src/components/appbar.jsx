@@ -24,17 +24,19 @@ const pages = [
   { id: 1, name: 'Home', to: '/' },
   { id: 2, name: 'Dashboard', to: '/dashboard' },
   { id: 3, name: 'My Teachers', to: '/my-teachers' },
+  { id: 4, name: 'Typing Practice', to: '/typing-practice' },
+
   {
-    id: 4, name: 'Join', submenu: [
+    id: 5, name: 'Join', submenu: [
       { name: 'Join Teacher', to: '/join-teacher' },
       { name: 'Join School', to: '/join-admin' },
       { name: 'Join Quiz', to: '/join-quiz' }
     ]
   },
-  { id: 5, name: 'Upgrade Account', to: '/upgrade-account' },
-  { id: 6, name: 'Services', to: '/services' },
-  { id: 7, name: 'About', to: '/about' },
-  { id: 8, name: 'Contact', to: '/contact' },
+  { id: 6, name: 'Upgrade Account', to: '/upgrade-account' },
+  { id: 7, name: 'Services', to: '/services' },
+  { id: 8, name: 'About', to: '/about-us' },
+  { id: 9, name: 'Contact', to: '/contact' },
 ];
 
 export default function Appbar({ window }) {
