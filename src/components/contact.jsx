@@ -1,95 +1,241 @@
-import React, { useRef, useState } from 'react';
-import { Alert, Backdrop, Box, Button, Card, CardContent, CardMedia, CircularProgress, Divider, Grid, TextField, Typography } from '@mui/material';
-import svg from '../assets/contact.svg'
-import emailjs from '@emailjs/browser';
+import React, { useRef, useState } from "react";
+import {
+  Alert,
+  Backdrop,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CardMedia,
+  CircularProgress,
+  Grid,
+  TextField,
+  Typography,
+} from "@mui/material";
+
+import { motion } from "framer-motion";
+import emailjs from "@emailjs/browser";
+
+import svg from "../assets/contact.svg";
+
 const Contact = () => {
-    const [open, setOpen] = React.useState(false);
-    const [status, setStatus] = useState('');
-    const form = useRef();
+  const [open, setOpen] = useState(false);
+  const [status, setStatus] = useState("");
 
-    const sendEmail = (e) => {
-        e.preventDefault();
-        if (!form.current['name'].value.trim() || !form.current['reply_to'].value.trim() || !form.current['subject'].value.trim() || !form.current['message'].value.trim()) {
-            setStatus('error');
-        } else {
-            setOpen(true)
-            emailjs
-                .sendForm(
-                    'service_kpxo4vs',     // e.g., "service_xxxxx"
-                    'template_0yhjq6j',    // e.g., "template_abcd"
-                    form.current,
-                    'V7enx7yWsRHAnlnRG'      // e.g., "user_123abcXYZ"
-                )
-                .then(
-                    (result) => {
-                        setStatus('success');
-                        form.current.reset();
-                        setOpen(false);
-                        setTimeout(() => setStatus(''), 5000);
-                    },
-                    (error) => {
-                        setStatus('error');
-                        setOpen(false);
-                        setTimeout(() => setStatus(''), 5000);
-                    }
-                );
-        }
+  const form = useRef();
 
+  const sendEmail = (e) => {
+    e.preventDefault();
 
+    if (
+      !form.current["name"].value.trim() ||
+      !form.current["reply_to"].value.trim() ||
+      !form.current["subject"].value.trim() ||
+      !form.current["message"].value.trim()
+    ) {
+      setStatus("error");
+      return;
+    }
 
-    };
-    return (
-        <Box paddingX={{ xs: 2, md: 5 }} paddingTop={5}>
-            <Divider />
-            <Typography variant='h1' sx={{
-                typography: { xs: 'h4', md: 'h4', xl: 'h3' },
-                fontFamily: 'sans-serif', textAlign: 'center', background: 'linear-gradient(to right, #4facfe, #8e44ad 70%)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 'bold', paddingY: 2
-            }}>Let's Connect</Typography>
-            <Grid container>
-                <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }}>
-                    <Card elevation={0}>
-                        <CardContent>
-                            <Box component="form" ref={form} onSubmit={sendEmail} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                {status === 'success' && (
-                                    <Alert severity="success" sx={{ mt: 2 }}>
-                                        Message sent successfully!
-                                    </Alert>
-                                )}
-                                {status === 'error' && (
-                                    <Alert severity="error" sx={{ mt: 2 }}>
-                                        Something went wrong. Please try again.
-                                    </Alert>
-                                )}
-                                <TextField variant="outlined" name="name" placeholder="Name" />
-                                <TextField variant="outlined" name="reply_to" placeholder="Email" />
-                                <TextField variant="outlined" name="subject" placeholder="Subject" />
-                                <TextField variant="outlined" name="message" multiline minRows={4} placeholder="Message" />
-                                <Button variant="contained" type="submit"
-                                    sx={{
-                                        mt: 1, background: 'linear-gradient(to right, #4facfe, #8e44ad)', color: '#fff',
-                                        textTransform: 'none', fontWeight: 'bold',
-                                        '&:hover': { background: 'linear-gradient(to right, #8e44ad, #4facfe)' },
-                                    }}>
-                                    Message
-                                </Button>
-                                <Backdrop sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })} open={open}>
-                                    <CircularProgress color="inherit" />
-                                </Backdrop>
+    setOpen(true);
 
-                            </Box>
-                        </CardContent>
-                    </Card>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }} display={{ xs: "none", sm: 'none', md: 'flex', lg: "flex", xl: 'flex' }} justifyContent='center'>
-                    <CardMedia component="img" image={svg} alt="Contact Form" sx={{ width: '70%', objectFit: 'contain' }} />
-                </Grid>
+    emailjs
+      .sendForm(
+        "service_kpxo4vs",
+        "template_0yhjq6j",
+        form.current,
+        "V7enx7yWsRHAnlnRG"
+      )
+      .then(() => {
+        setStatus("success");
+        form.current.reset();
+        setOpen(false);
+        setTimeout(() => setStatus(""), 5000);
+      })
+      .catch(() => {
+        setStatus("error");
+        setOpen(false);
+        setTimeout(() => setStatus(""), 5000);
+      });
+  };
 
+  return (
+    <Box
+      sx={{
+        py: 8,
+        px: { xs: 2, md: 6 },
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.7 }}
+      >
+        <Typography
+          variant="h3"
+          textAlign="center"
+          fontWeight={800}
+        >
+          Let's{" "}
+          <Box
+            component="span"
+            sx={{
+              background:
+                "linear-gradient(to top left,hsl(315,93.8%,44.3%),rgb(104,70,253))",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Connect
+          </Box>
+        </Typography>
 
-            </Grid>
-        </Box>
-    );
+        <Typography
+          textAlign="center"
+          color="text.secondary"
+          maxWidth="700px"
+          mx="auto"
+          mt={2}
+        >
+          Have a question, suggestion, or partnership opportunity?
+          We'd love to hear from you.
+        </Typography>
+      </motion.div>
+
+      <Grid container spacing={5} mt={5} alignItems="center">
+        {/* Contact Form */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+          >
+            <Card
+              sx={{
+                borderRadius: 4,
+                boxShadow: "0 20px 40px rgba(0,0,0,.08)",
+              }}
+            >
+              <CardContent sx={{ p: 4 }}>
+                <Box
+                  component="form"
+                  ref={form}
+                  onSubmit={sendEmail}
+                  display="flex"
+                  flexDirection="column"
+                  gap={2.5}
+                >
+                  {status === "success" && (
+                    <Alert severity="success">
+                      Message sent successfully.
+                    </Alert>
+                  )}
+
+                  {status === "error" && (
+                    <Alert severity="error">
+                      Please fill all fields correctly.
+                    </Alert>
+                  )}
+
+                  <TextField
+                    label="Full Name"
+                    name="name"
+                    fullWidth
+                  />
+
+                  <TextField
+                    label="Email Address"
+                    name="reply_to"
+                    fullWidth
+                  />
+
+                  <TextField
+                    label="Subject"
+                    name="subject"
+                    fullWidth
+                  />
+
+                  <TextField
+                    label="Message"
+                    name="message"
+                    multiline
+                    rows={5}
+                    fullWidth
+                  />
+
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    sx={{
+                      py: 1.5,
+                      borderRadius: 3,
+                      fontWeight: 700,
+                      textTransform: "none",
+                      fontSize: 16,
+                      background:
+                        "linear-gradient(to top left,hsl(315,93.8%,44.3%),rgb(104,70,253))",
+                      "&:hover": {
+                        background:
+                          "linear-gradient(to top left,rgb(104,70,253),hsl(315,93.8%,44.3%))",
+                      },
+                    }}
+                  >
+                    Send Message
+                  </Button>
+
+                  <Backdrop
+                    open={open}
+                    sx={{
+                      color: "#fff",
+                      zIndex: (theme) =>
+                        theme.zIndex.drawer + 1,
+                    }}
+                  >
+                    <CircularProgress color="inherit" />
+                  </Backdrop>
+                </Box>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </Grid>
+
+        {/* Illustration */}
+        <Grid
+          size={{ xs: 12, md: 6 }}
+          display={{
+            xs: "none",
+            md: "block",
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+          >
+            <Card
+              sx={{
+                borderRadius: 4,
+                boxShadow: "0 20px 40px rgba(0,0,0,.08)",
+                p: 4,
+              }}
+            >
+              <CardMedia
+                component="img"
+                image={svg}
+                alt="Contact"
+                sx={{
+                  width: "100%",
+                  maxWidth: 450,
+                  mx: "auto",
+                }}
+              />
+            </Card>
+          </motion.div>
+        </Grid>
+      </Grid>
+    </Box>
+  );
 };
-
 
 export default Contact;
