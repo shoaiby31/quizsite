@@ -69,7 +69,7 @@ const HowSmartEducatorWorks = () => {
 
     <Box
       sx={{
-        py:2,
+        py:3,
         px:{xs:2,md:6},
         
       }}

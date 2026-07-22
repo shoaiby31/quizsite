@@ -41,7 +41,7 @@ const Whoisit = () => {
   return (
     <Box
       sx={{
-        py: 8,
+        py: 6,
         px: { xs: 2, md: 6 },
       }}
     >

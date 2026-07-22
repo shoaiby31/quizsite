@@ -6,8 +6,8 @@ import Appbar from "./components/appbar"
 import { Paper } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux'
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { useMediaQuery } from '@mui/material';
-import { setDarkMode } from './redux/slices/theme/index'
+// import { useMediaQuery } from '@mui/material';
+// import { setDarkMode } from './redux/slices/theme/index'
 import Signup from './components/signup';
 import CreactquizPage from './pages/CreactquizPage';
 import GeneralRoute from './components/PrivateRoute/GeneralRoute'
@@ -107,15 +107,8 @@ const AppRoutes = () => {
 
 
 function App() {
-  const dispatch = useDispatch();
-  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+  // const dispatch = useDispatch();
   const themeMode = useSelector((state) => state.mode.value);
-
-  useEffect(() => {
-    if (prefersDarkMode) {
-      dispatch(setDarkMode(prefersDarkMode));
-    }
-  }, [dispatch, prefersDarkMode]);
 
   const darkTheme = createTheme({
     palette: {
