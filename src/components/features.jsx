@@ -69,17 +69,6 @@ import {
   Grid,
 } from "@mui/material";
 
-import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
-import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
-import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
-import QuizRoundedIcon from "@mui/icons-material/QuizRounded";
-import PsychologyRoundedIcon from "@mui/icons-material/PsychologyRounded";
-import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
-import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
-import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
-import SchoolIcon from '@mui/icons-material/School';
-import AccessTimeFilledIcon from '@mui/icons-material/AccessTimeFilled';
-
 import { motion } from "framer-motion";
 
 
