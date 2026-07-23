@@ -33,7 +33,7 @@ export const approveTeacherRequest = async (req, adminUid) => {
 
   // Create relation
   await addDoc(collection(db, "teacherAdminRelations"), {
-    adminUid,
+    schoolUid: adminUid,
     institutePassword,
     teacherUid: userUid,
     teacherSecretId: secretCode,

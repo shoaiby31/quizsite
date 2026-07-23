@@ -95,7 +95,7 @@ const UpgradeAccountRequest = () => {
       }
 
       // Create school
-      await setDoc(doc(db, 'schools', userInfo.uid), {
+      await setDoc(doc(db, 'schools'), {
         institutePassword,
         instituteName,
         instituteAddress,

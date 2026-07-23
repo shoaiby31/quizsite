@@ -1,225 +1,208 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React from "react";
 import {
-    AppBar, Toolbar, Typography, InputBase, Avatar, Box, alpha,
-    IconButton, Tooltip, Menu, MenuItem, Badge, Divider, Button, Stack
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
-import { changeThemeMode } from '../../redux/slices/theme';
-import { auth, db } from '../../config/firebase';
-import { signOut } from 'firebase/auth';
-import Brightness7Icon from '@mui/icons-material/Brightness7';
-import Brightness4Icon from '@mui/icons-material/Brightness4';
-import { Link, useNavigate } from 'react-router-dom';
-import MenuIcon from '@mui/icons-material/Menu';
-import { setdrawerState } from '../../redux/slices/drawerSlice/index';
-import { doc, getDoc, onSnapshot, collection, query, where } from 'firebase/firestore';
-import { approveTeacherRequest, denyTeacherRequest } from "../AdminComponents/AcceptRequests.service";
-import { acceptStudentRequest, denyStudentRequest } from '../FacultyComponents/studentRequests.service';
+  AppBar,
+  Toolbar,
+  Box,
+  Typography,
+  Avatar,
+  IconButton,
+  InputBase,
+  Badge,
+  Paper,
+  useTheme,
+  useMediaQuery,
+} from "@mui/material";
+
+import {
+  MenuRounded,
+  SearchRounded,
+  NotificationsNoneRounded,
+  KeyboardArrowDownRounded,
+} from "@mui/icons-material";
+
+import { useSelector, useDispatch } from "react-redux";
+import { setdrawerState } from "../../redux/slices/drawerSlice";
 
 const TopBar = () => {
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
-    const displayName = useSelector((state) => state.auth.displayName);
-    const userpic = useSelector((state) => state.auth.photoURL);
-    const themeMode = useSelector((state) => state.mode.value);
-    const uid = useSelector((state) => state.auth.uid);
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
+  const dispatch = useDispatch();
 
-    const [institutePassword, setInstitutePassword] = useState(null);
-    const [anchorElUser, setAnchorElUser] = useState(null);
-    const [anchorElNotif, setAnchorElNotif] = useState(null);
+  const userName =
+    useSelector((state) => state.auth.displayName) || "Mr. Ahmed";
 
-    const [role, setRole] = useState(null);
-    const [notifications, setNotifications] = useState([]);
+  const userRole = useSelector((state) => state.auth.role);
 
-    // Fetch adminId from user document
-    useEffect(() => {
-        if (!auth.currentUser) return;
+  return (
+    <AppBar
+      position="sticky"
+      elevation={0}
+      sx={{
+        bgcolor: "#fff",
+        borderBottom: "1px solid #F1F1F4",
+        color: "#111827",
+        zIndex: (theme) => theme.zIndex.drawer + 1,
+      }}
+    >
+      <Toolbar
+        sx={{
+          height: 78,
+          minHeight: "78px !important",
+          px: { xs: 2, md: 3 },
+        }}
+      >
+        {/* LEFT - MENU */}
+        <IconButton
+          onClick={() => dispatch(setdrawerState())}
+          sx={{
+            width: 44,
+            height: 44,
+            borderRadius: 2,
+            color: "#111827",
+            mr: 2,
 
-        const userDocRef = doc(db, 'users', auth.currentUser.uid);
-        getDoc(userDocRef).then((snap) => {
-            if (snap.exists()) {
-                const data = snap.data();
-                setRole(data.role);
-                setInstitutePassword(data.institutePassword || data.teacherSecretId);
-            }
-        });
-    }, []);
+            "&:hover": {
+              bgcolor: "#F7F7FB",
+            },
+          }}
+        >
+          <MenuRounded sx={{ fontSize: 26 }} />
+        </IconButton>
 
+        <Box sx={{ flexGrow: 1 }} />
 
-    // Listen for joinRequests
-    useEffect(() => {
-        if (!role) return;
+        {/* CENTER - SEARCH */}
+        {isDesktop && (
+          <Paper
+            elevation={0}
+            sx={{
+              width: 290,
+              height: 42,
+              borderRadius: "14px",
+              border: "1px solid #ECECF3",
+              display: "flex",
+              alignItems: "center",
+              px: 1.8,
+              mr: 3,
+              bgcolor: "#fff",
 
-        let q;
+              "&:hover": {
+                borderColor: "#E0E0EA",
+              },
 
-        if (role === 'admin') {
-            if (!institutePassword) return;
-            q = query(
-                collection(db, 'teacherRequests'),
-                where('institutePassword', '==', institutePassword)
-            );
-        }
+              "&:focus-within": {
+                borderColor: "#8B5CF6",
+                boxShadow: "0 0 0 3px rgba(139,92,246,.08)",
+              },
+            }}
+          >
+            <SearchRounded
+              sx={{
+                color: "#6B7280",
+                fontSize: 20,
+                mr: 1.2,
+              }}
+            />
 
-        if (role === 'teacher') {
-            q = query(
-                collection(db, 'joinRequests'),
-                where('teacherSecretId', '==', institutePassword)
-            );
-        }
+            <InputBase
+              placeholder="Search anything..."
+              sx={{
+                flex: 1,
+                fontSize: 14,
+                color: "#111827",
 
-        if (!q) return;
+                "& input::placeholder": {
+                  color: "#9CA3AF",
+                  opacity: 1,
+                },
+              }}
+            />
+          </Paper>
+        )}
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            const sorted = [...items].sort((a, b) => Number(!a.read) - Number(!b.read));
-            setNotifications(sorted);
-        });
+        {/* RIGHT - NOTIFICATION */}
+        <IconButton
+          sx={{
+            width: 44,
+            height: 44,
+            borderRadius: 2,
+            color: "#111827",
+            mr: 2,
 
-        return () => unsubscribe();
-    }, [role, institutePassword]);
+            "&:hover": {
+              bgcolor: "#F7F7FB",
+            },
+          }}
+        >
+          <Badge
+            badgeContent={3}
+            sx={{
+              "& .MuiBadge-badge": {
+                background: "#EC4899",
+                color: "#fff",
+                fontSize: 10,
+                fontWeight: 700,
+                minWidth: 18,
+                height: 18,
+                borderRadius: "999px",
+                border: "2px solid #fff",
+              },
+            }}
+          >
+            <NotificationsNoneRounded sx={{ fontSize: 24 }} />
+          </Badge>
+        </IconButton>
 
+        {/* USER PROFILE */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            pl: 2,
+            borderLeft: "1px solid #F1F1F4",
+            cursor: "pointer",
+          }}
+        >
+          <Avatar
+            sx={{
+              width: 44,
+              height: 44,
+              mr: 1.5,
+              fontWeight: 700,
+              background:
+                "linear-gradient(135deg,#ec3aa6,#6b46ff)",
+            }}
+          >
+            {userName.charAt(0).toUpperCase()}
+          </Avatar>
 
-    const handleOpenUserMenu = (e) => setAnchorElUser(e.currentTarget);
-    const handleCloseUserMenu = () => setAnchorElUser(null);
+          {isDesktop && (
+            <>
+              <Box sx={{ mr: 1 }}>
+                <Typography sx={{ fontSize: 14, fontWeight: 700, lineHeight: 1.2, color: "#111827", }}>
+                  {userName}
+                </Typography>
 
-    const handleOpenNotifMenu = (e) => setAnchorElNotif(e.currentTarget);
-    const handleCloseNotifMenu = () => setAnchorElNotif(null);
+                <Typography
+                  sx={{ fontSize: 12, color: "#6B7280", mt: 0.2, }} >
+                  {userRole === "admin"
+                    ? "Principal"
+                    : "Teacher"}
+                </Typography>
+              </Box>
 
-    const handleLogout = async () => {
-        try {
-            await signOut(auth);
-        } catch (error) {
-            console.error('Logout error', error);
-        }
-    };
-
-const handleApprove = async (req) => {
-  if (role === 'admin') await approveTeacherRequest(req, uid);
-  if (role === 'teacher') await acceptStudentRequest(req, uid);
-};
-
-const handleReject = async (id) => {
-  if (role === 'admin') await denyTeacherRequest(id);
-  if (role === 'teacher') await denyStudentRequest(id);
-};
-
-
-
-    const unreadCount = notifications.filter(n => !n.read).length;
-
-    return (
-        <AppBar position="static" elevation={0} color="inherit" sx={{
-            backgroundColor: 'rgba(255, 255, 255, 0.5)', // 50% opacity white
-            backdropFilter: 'blur(8px)', // optional: nice glass effect
-        }}>
-            <Toolbar sx={{ justifyContent: 'space-between', px: 2 }}>
-                <IconButton sx={{ display: { xs: 'flex', md: 'none' } }} onClick={() => dispatch(setdrawerState())}>
-                    <MenuIcon />
-                </IconButton>
-
-                <Box
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        backgroundColor: alpha('#000', 0.05),
-                        borderRadius: 2,
-                        px: 2, py: 0.5,
-                        width: { xs: '100%', sm: '300px', md: '400px' },
-                    }}
-                >
-                    <SearchIcon color="action" sx={{ mr: 1 }} />
-                    <InputBase placeholder="Search dashboard..." fullWidth sx={{ fontSize: '0.95rem' }} />
-                </Box>
-
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    {/* Notifications */}
-                    <IconButton onClick={handleOpenNotifMenu}>
-                        <Badge badgeContent={unreadCount} color="error">
-                            <NotificationsNoneIcon />
-                        </Badge>
-                    </IconButton>
-
-                    {/* Notification Menu */}
-                    <Menu
-                        anchorEl={anchorElNotif}
-                        open={Boolean(anchorElNotif)}
-                        onClose={handleCloseNotifMenu}
-                        PaperProps={{ style: { maxHeight: 360, width: 360 } }}
-                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                    >
-                        {notifications.length === 0 && (
-                            <MenuItem disabled>No join requests</MenuItem>
-                        )}
-
-                        {notifications.map((req) => (
-                            <Box key={req.id} sx={{ px: 2, py: 1 }}>
-                                <Stack spacing={0.5}>
-                                    <Typography variant="subtitle2" fontWeight={req.read ? 'medium' : 'bold'}>
-                                        {role === 'admin' && `${req.name} wants to join your school`}
-                                        {role === 'teacher' && `${req.studentName || 'A student'} wants to join your class`}
-
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Name: {req.name}
-                                    </Typography>
-                                    <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                                        <Button size="small" variant="text" color="success" onClick={() => handleApprove(req)}>
-                                            Accept
-                                        </Button>
-                                        <Button size="small" variant="text" color="error" onClick={() => handleReject(req.id)}>
-                                            Deny
-                                        </Button>
-                                    </Stack>
-                                </Stack>
-                                <Divider sx={{ mt: 1.5 }} />
-                            </Box>
-                        ))}
-
-                        {notifications.length > 0 && (
-                            <MenuItem onClick={() => {
-                                handleCloseNotifMenu();
-                               role === 'admin'? navigate('/dashboard/faculty-requests') : navigate('/dashboard/students-requests');  
-                            }} sx={{ justifyContent: 'center', fontWeight: 600, fontSize: 14 }}>
-                                View All Requests
-                            </MenuItem>
-                        )}
-                    </Menu>
-
-
-
-                    <IconButton onClick={() => dispatch(changeThemeMode())}>
-                        {themeMode ? <Brightness7Icon fontSize="small" /> : <Brightness4Icon fontSize="small" />}
-                    </IconButton>
-
-                    <Typography variant="body1" sx={{ display: { xs: 'none', md: 'inline-block' }, fontWeight: 500 }}>
-                        {displayName}
-                    </Typography>
-
-                    <Box>
-                        <Tooltip title="Open Menu">
-                            <IconButton onClick={handleOpenUserMenu} size="small">
-                                <Avatar src={userpic} sx={{ width: 32, height: 32, bgcolor: 'green' }} />
-                            </IconButton>
-                        </Tooltip>
-                        <Menu
-                            anchorEl={anchorElUser}
-                            open={Boolean(anchorElUser)}
-                            onClose={handleCloseUserMenu}
-                            sx={{ mt: '10px' }}
-                        >
-                            <MenuItem component={Link} to='/'>Home</MenuItem>
-                            <MenuItem component={Link} to='/dashboard/profile'>Profile</MenuItem>
-                            <MenuItem onClick={() => alert("I am Settings function")}>Settings</MenuItem>
-                            <MenuItem onClick={handleLogout}>Logout</MenuItem>
-                        </Menu>
-                    </Box>
-                </Box>
-            </Toolbar>
-        </AppBar>
-    );
+              <KeyboardArrowDownRounded
+                sx={{
+                  color: "#6B7280",
+                  fontSize: 22,
+                }}
+              />
+            </>
+          )}
+        </Box>
+      </Toolbar>
+    </AppBar>
+  );
 };
 
 export default TopBar;
