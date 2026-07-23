@@ -111,16 +111,16 @@ const JoinAdmin = () => {
 
     // 5️⃣ Validate admin / school ID
     const adminQuery = query(
-      collection(db, 'users'),
-      where('institutePassword', '==', institutePassword),
-      where('role', '==', 'admin')
+      collection(db, 'schools'),
+      where('institutePassword', '==', institutePassword)
     );
     const adminSnapshot = await getDocs(adminQuery);
     if (adminSnapshot.empty) {
       setMessage({ type: 'error', text: 'Invalid School ID. No matching admin found.' });
       return;
     }
-    const adminUid = adminSnapshot.docs[0].id;
+    const relationData = adminSnapshot.docs[0].data();
+    const adminUid = relationData.schoolAdminUid;
 
 
 
