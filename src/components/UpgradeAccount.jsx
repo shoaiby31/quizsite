@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Button, TextField, Typography, Stack, CircularProgress, Alert } from '@mui/material';
-import { doc, setDoc, serverTimestamp, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, collection, query, where, getDocs, getDoc, addDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../config/firebase';
 import { useDispatch } from 'react-redux';
@@ -95,7 +95,8 @@ const UpgradeAccountRequest = () => {
       }
 
       // Create school
-      await setDoc(doc(db, 'schools'), {
+
+      await addDoc(collection(db, "schools"), {
         institutePassword,
         instituteName,
         instituteAddress,
