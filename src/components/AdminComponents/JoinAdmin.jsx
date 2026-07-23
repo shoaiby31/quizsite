@@ -120,10 +120,12 @@ const JoinAdmin = () => {
       setMessage({ type: 'error', text: 'Invalid School ID. No matching admin found.' });
       return;
     }
+    const adminUid = adminSnapshot.docs[0].id;
 
     // 6️⃣ Send join request
     await addDoc(collection(db, 'teacherRequests'), {
       userUid: userInfo.uid,
+      schoolAdminUid: adminUid,
       name: userInfo.name,
       email: userInfo.email,
       institutePassword,
