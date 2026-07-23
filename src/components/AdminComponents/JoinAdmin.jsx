@@ -122,10 +122,38 @@ const JoinAdmin = () => {
     }
     const adminUid = adminSnapshot.docs[0].id;
 
+
+
+
+
+
+
+
+    // Find the teacher relation
+    const relationQuery1 = query(
+      collection(db, "schools"),
+      where("institutePassword", "==", institutePassword)
+    );
+    
+    const relationSnapshot1 = await getDocs(relationQuery1);
+    
+    if (relationSnapshot1.empty) {
+      setMessage({
+        type: "error",
+        text: "Invalid School Secret ID.",
+      });
+      return;
+    }
+    
+    
+    const schoolUid = relationSnapshot1.docs[0].id;
+
+    
     // 6️⃣ Send join request
     await addDoc(collection(db, 'teacherRequests'), {
       userUid: userInfo.uid,
       schoolAdminUid: adminUid,
+      schoolUid: schoolUid,
       name: userInfo.name,
       email: userInfo.email,
       institutePassword,

@@ -12,7 +12,7 @@ import {
 import { db } from "../../config/firebase";
 
 export const approveTeacherRequest = async (req, adminUid) => {
-  const { userUid, institutePassword, id, email, secretCode, schoolAdminUid, address, phone, qualification } = req;
+  const { userUid, institutePassword, id, email, secretCode, schoolAdminUid, schoolUid, address, phone, qualification } = req;
 
   if (!userUid || !institutePassword || !id) {
     throw new Error("Missing required data");
@@ -33,7 +33,7 @@ export const approveTeacherRequest = async (req, adminUid) => {
 
   // Create relation
   await addDoc(collection(db, "teacherAdminRelations"), {
-    schoolUid: adminUid,
+    schoolUid: schoolUid,
     adminUid: schoolAdminUid,
     institutePassword,
     teacherUid: userUid,
