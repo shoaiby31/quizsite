@@ -15,6 +15,7 @@ export const acceptStudentRequest = async (request, adminUid) => {
     rollNo,
     phone,
     address,
+    schoolUid,
     studentId
   } = request;
   if (!studentEmail || !className || !teacherSecretId || !id) {
@@ -40,6 +41,7 @@ export const acceptStudentRequest = async (request, adminUid) => {
   await addDoc(collection(db, "studentTeacherRelations"), {
       teacherUid: adminUid,
       studentUid: studentId,
+      schoolUid: schoolUid,
       teacherSecretId,
       assignedAt: serverTimestamp()
     });
@@ -50,7 +52,9 @@ export const acceptStudentRequest = async (request, adminUid) => {
         rollNo,
         className,
         phone,
-        address
+        address,
+        schoolUid: schoolUid,
+
       });
 
   // Delete the request after accepting

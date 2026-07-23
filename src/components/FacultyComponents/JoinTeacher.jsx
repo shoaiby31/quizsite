@@ -118,12 +118,40 @@ const JoinTeacher = () => {
         setMessage({ type: 'error', text: 'Invalid Admin ID. No matching admin found.' });
         return;
       }
+
+
+
+
+      // Find the teacher relation
+const relationQuery1 = query(
+  collection(db, "teacherAdminRelations"),
+  where("teacherSecretId", "==", teacherSecretId)
+);
+
+const relationSnapshot1 = await getDocs(relationQuery1);
+
+if (relationSnapshot1.empty) {
+  setMessage({
+    type: "error",
+    text: "Invalid Teacher Secret ID.",
+  });
+  return;
+}
+
+const relationData = relationSnapshot1.docs[0].data();
+
+const teacherUid = relationData.teacherUid;
+const schoolUid = relationData.schoolUid;
+
+
   
       // Step 6: Send join request
       await addDoc(collection(db, 'joinRequests'), {
         studentId: userInfo.uid,
         studentName: userInfo.name,
         studentEmail: userInfo.email,
+        teacherUid: teacherUid,
+        schoolUid: schoolUid,
         rollNo,
         className: studentClass,
         phone,
