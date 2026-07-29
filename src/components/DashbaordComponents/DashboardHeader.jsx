@@ -33,11 +33,12 @@ import { db, auth } from "../../config/firebase";
 
 import { onAuthStateChanged } from "firebase/auth";
 import FacultyCount from '../AdminComponents/FacultyCount';
+import StudentsCount from './StudentsCount';
+
 
 const DashboardHeader = () => {
 
 
-  const [studentCount,setStudentCount]=useState(0);
 
   const [classCount,setClassCount]=useState(0);
 
@@ -59,10 +60,6 @@ const DashboardHeader = () => {
 
           try{
 
-              const students=await getCountFromServer(
-                  collection(db,"students")
-              );
-
               const classes=await getCountFromServer(
                   collection(db,"classes")
               );
@@ -70,9 +67,6 @@ const DashboardHeader = () => {
               const quizzes=await getCountFromServer(
                   collection(db,"quizzes")
               );
-
-
-              setStudentCount(students.data().count);
 
               setClassCount(classes.data().count);
 
@@ -118,7 +112,7 @@ const DashboardHeader = () => {
       },
       {
           title:"Total Students",
-          value:studentCount,
+          value: (<StudentsCount>{(count) => count}</StudentsCount>),
           subtitle:"+45 this month",
           icon:<SchoolRounded/>,
           color:"#EC4899",
