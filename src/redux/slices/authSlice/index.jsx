@@ -8,6 +8,7 @@ const initialState = {
   isAuthenticated: false,
   role: null,
   userReady: false,
+  schoolUid: null,
 };
 
 const authSlice = createSlice({
@@ -31,10 +32,11 @@ const authSlice = createSlice({
         return;
       }
 
-      const { uid, email, displayName, photoURL, role } = payload;
+      const { uid, email, displayName, schoolUid, photoURL, role } = payload;
       state.uid = uid;
       state.email = email;
       state.displayName = displayName;
+      state.schoolUid = schoolUid;
       state.photoURL = photoURL;
       state.role = role;
       state.isAuthenticated = true;

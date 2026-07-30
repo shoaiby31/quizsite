@@ -1,57 +1,21 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Box, Grid, Paper, Typography, Button, Avatar, Stack, IconButton, } from "@mui/material";
-import { Add, SchoolRounded, GroupsRounded, QuizRounded, ApartmentRounded, MoreVertRounded, CalendarTodayOutlined, BarChartRounded, AddBoxRounded, WavingHandRounded, } from "@mui/icons-material";
-import { collection, getCountFromServer, doc, getDoc, } from "firebase/firestore";
-import { db, auth } from "../../config/firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { Add, SchoolRounded, GroupsRounded, QuizRounded, InfoOutline, ApartmentRounded, MoreVertRounded, CalendarTodayOutlined, BarChartRounded, AddBoxRounded, WavingHandRounded, } from "@mui/icons-material";
+// import { collection, getCountFromServer, doc, getDoc, } from "firebase/firestore";
+// import { db, auth } from "../../config/firebase";
+// import { onAuthStateChanged } from "firebase/auth";
+import { useSelector } from "react-redux";
 
 import FacultyCount from "../AdminComponents/FacultyCount";
-import StudentsCount from "./StudentsCount";
+import StudentsCount from "../DashbaordComponents/StudentsCount";
 
 const DashboardHeader = () => {
-  const [classCount, setClassCount] = useState(0);
-  const [quizCount, setQuizCount] = useState(0);
-  const [userName, setUserName] = useState("Mr. Ahmed");
-  const [userRole, setUserRole] = useState("");
+  // const [classCount, setClassCount] = useState(0);
+  // const [quizCount, setQuizCount] = useState(0);
+  const userName = useSelector((state) => state.auth.displayName) || "Undefined";
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (!user) return;
-
-      if (user.displayName) {
-        setUserName(user.displayName);
-      }
-
-      try {
-        // Get logged-in user's role
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          setUserRole(userData.role);
-        }
-
-        // Get classes count
-        const classes = await getCountFromServer(
-          collection(db, "classes")
-        );
-
-        // Get quizzes count
-        const quizzes = await getCountFromServer(
-          collection(db, "quizzes")
-        );
-
-        setClassCount(classes.data().count);
-        setQuizCount(quizzes.data().count);
-      } catch (err) {
-        console.log(err);
-      }
-    });
-
-    return () => unsub();
-  }, []);
-
+  const userRole = useSelector((state) => state.auth.role);
+  
   const today = new Date();
 
   const formattedDate = today.toLocaleDateString("en-US", {
@@ -79,7 +43,9 @@ const DashboardHeader = () => {
         ]
       : []),
 
-    {
+    ...(userRole === "teacher"
+      ? [
+        {
       title: "Total Students",
       value: <StudentsCount>{(count) => count}</StudentsCount>,
       subtitle: "+45 this month",
@@ -87,9 +53,11 @@ const DashboardHeader = () => {
       color: "#EC4899",
       bg: "#FFE7F3",
     },
+     ]
+      : []),
     {
       title: "Active Classes",
-      value: classCount,
+      value: 0,
       subtitle: "12 grades",
       icon: <ApartmentRounded />,
       color: "#3B82F6",
@@ -97,9 +65,17 @@ const DashboardHeader = () => {
     },
     {
       title: "Quizzes Taken",
-      value: quizCount,
+      value: 0,
       subtitle: "This Year",
       icon: <QuizRounded />,
+      color: "#F59E0B",
+      bg: "#FFF2DE",
+    },
+    {
+      title: "My Admins",
+      value: 0,
+      subtitle: "This Year",
+      icon: <InfoOutline />,
       color: "#F59E0B",
       bg: "#FFF2DE",
     },

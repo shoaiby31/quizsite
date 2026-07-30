@@ -1,51 +1,76 @@
-import React from "react";
-import { Box, Typography } from "@mui/material";
-import CampaignIcon from "@mui/icons-material/Campaign";
+import React, { useEffect, useRef } from "react";
+import { Box, Typography, Chip } from "@mui/material";
+import CampaignRoundedIcon from "@mui/icons-material/CampaignRounded";
 
 const AnnouncementBar = () => {
+  const titleRef = useRef(null);
+  
+    useEffect(() => {
+      if (titleRef.current) {
+        const topOffset =
+          titleRef.current.getBoundingClientRect().top +
+          window.pageYOffset -
+          100;
+  
+        window.scrollTo({
+          top: topOffset,
+          behavior: "smooth",
+        });
+      }
+    }, []);
   return (
-    <Box
+    <Box ref={titleRef}
       sx={{
         width: "100%",
-        bgcolor: "#ff9800",
+        background:
+          "linear-gradient(90deg,#7C3AED,#8B5CF6,#A855F7)",
         color: "#fff",
         overflow: "hidden",
-        py: 1,
-        whiteSpace: "nowrap",
-        position: "relative",
-        boxShadow: 2,
-        my:2,
+        borderRadius: 2,
+        py: 1.2,
+        my: 2,
+        boxShadow: "0 8px 25px rgba(124,58,237,.25)",
       }}
     >
       <Box
         sx={{
           display: "inline-flex",
           alignItems: "center",
-          animation: "marquee 25s linear infinite",
+          gap: 2,
           pl: "100%",
+          whiteSpace: "nowrap",
+          animation: "marquee 28s linear infinite",
+
           "@keyframes marquee": {
-            "0%": {
+            from: {
               transform: "translateX(0)",
             },
-            "100%": {
+            to: {
               transform: "translateX(-100%)",
             },
           },
         }}
       >
-        <CampaignIcon sx={{ mr: 1 }} />
+        <Chip
+          label="NEW"
+          size="small"
+          sx={{
+            bgcolor: "#fff",
+            color: "#7C3AED",
+            fontWeight: 700,
+          }}
+        />
+
+        <CampaignRoundedIcon />
 
         <Typography
-          component="span"
           sx={{
             fontWeight: 600,
-            fontSize: {
-              xs: "0.85rem",
-              sm: "0.95rem",
-            },
+            letterSpacing: ".3px",
           }}
         >
-          🛠️ Development Update: Version 1.0 is currently 60% complete. Core modules are functional, while additional features and UI enhancements are under development.
+         🚧 Development Update • SmartEducator v1.0 is now approximately 75% complete. Teacher & Student school registration is now available, along with a redesigned user experience. We're currently working on AI-powered learning tools, notifications, and additional classroom features. Thank you for supporting SmartEducator!  
+
         </Typography>
       </Box>
     </Box>

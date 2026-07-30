@@ -81,21 +81,6 @@ const Dashboard = () => {
 
       {userRole === 'admin' && (
         <>
-        {/* <Grid container spacing={3}>
-            <Grid size={{xs:12, sm:6, md:3}}>
-              <InfoCard icon={<People />} label="Total Teachers" value="--" color="purple" />
-            </Grid>
-            <Grid size={{xs:12, sm:6, md:3}}>
-              <InfoCard icon={<Quiz />} label="Total Students" value="--" color="blue" />
-            </Grid>
-            <Grid size={{xs:12, sm:6, md:3}}>
-              <InfoCard icon={<History />} label="Total Attempts" value="--" color="green" />
-            </Grid>
-            <Grid size={{xs:12, sm:6, md:3}}>
-              <InfoCard icon={<Map />} label="Avg Score" value="--" color="orange" />
-            </Grid>
-          </Grid> */}
-          
 
           <Grid container spacing={3} rowSpacing={2}>
             <Grid size={{xs:12, md:8}}>

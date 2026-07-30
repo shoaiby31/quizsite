@@ -25,14 +25,16 @@ const pages = [
   { id: 2, name: 'Dashboard', to: '/dashboard' },
   { id: 3, name: 'My Teachers', to: '/my-teachers' },
   { id: 4, name: 'Typing Practice', to: '/typing-practice' },
+  { id: 5, name: 'Join School', to: '/join-school' },
 
-  {
-    id: 5, name: 'Join', submenu: [
-      { name: 'Join Teacher', to: '/join-teacher' },
-      { name: 'Join School', to: '/join-admin' },
-      { name: 'Join Quiz', to: '/join-quiz' }
-    ]
-  },
+
+  // {
+  //   id: 5, name: 'Join', submenu: [
+  //     { name: 'Join Teacher', to: '/join-teacher' },
+  //     { name: 'Join School', to: '/join-school' },
+  //     { name: 'Join Quiz', to: '/join-quiz' }
+  //   ]
+  // },
   { id: 6, name: 'Upgrade Account', to: '/upgrade-account' },
   { id: 7, name: 'Services', to: '/services' },
   { id: 8, name: 'About', to: '/about-us' },

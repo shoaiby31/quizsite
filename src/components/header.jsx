@@ -1,4 +1,6 @@
-import React, { useEffect, useRef } from "react";
+import React
+// , { useEffect, useRef } 
+from "react";
 import {
   Box,
   Typography,
@@ -20,25 +22,25 @@ import pic from "../assets/headerpic.png";
 const MotionBox = motion.create(Box);
 
 function Header() {
-  const titleRef = useRef(null);
+  // const titleRef = useRef(null);
 
-  useEffect(() => {
-    if (titleRef.current) {
-      const topOffset =
-        titleRef.current.getBoundingClientRect().top +
-        window.pageYOffset -
-        100;
+  // useEffect(() => {
+  //   if (titleRef.current) {
+  //     const topOffset =
+  //       titleRef.current.getBoundingClientRect().top +
+  //       window.pageYOffset -
+  //       100;
 
-      window.scrollTo({
-        top: topOffset,
-        behavior: "smooth",
-      });
-    }
-  }, []);
+  //     window.scrollTo({
+  //       top: topOffset,
+  //       behavior: "smooth",
+  //     });
+  //   }
+  // }, []);
 
   return (
     <Box
-      ref={titleRef}
+      // ref={titleRef}
       sx={{
         py: {
           xs: 2,
@@ -216,7 +218,7 @@ function Header() {
 
               <Button
                 component={Link}
-                to="/browsequiz"
+                to="/join-school"
                 variant="outlined"
                 sx={{
                   flex: {
@@ -241,7 +243,7 @@ function Header() {
                   },
                 }}
               >
-                Browse Quizzes
+                Join School
               </Button>
             </Box>
           </MotionBox>

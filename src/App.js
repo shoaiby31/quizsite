@@ -28,6 +28,8 @@ import Profile from './components/profile';
 import MyTeachers from './components/MyTeachers';
 import JoinTeacher from './components/FacultyComponents/JoinTeacher';
 import JoinAdmin from './components/AdminComponents/JoinAdmin';
+import JoinSchool from './pages/JoinSchool';
+
 import TypingPractice from './components/TypingPractice'
 
 import { onAuthStateChanged } from 'firebase/auth';
@@ -95,6 +97,8 @@ const AppRoutes = () => {
         
         <Route path="/upgrade-account" element={<GeneralRoute><UpgradeAccount /></GeneralRoute>} />
         <Route path="/join-admin" element={<GeneralRoute><JoinAdmin /></GeneralRoute>} />
+        <Route path="/join-school" element={<GeneralRoute><JoinSchool /></GeneralRoute>} />
+
         <Route path="/join-teacher" element={<GeneralRoute><JoinTeacher /></GeneralRoute>} />
         <Route path="/profile" element={<GeneralRoute><Profile /></GeneralRoute>} />
         
